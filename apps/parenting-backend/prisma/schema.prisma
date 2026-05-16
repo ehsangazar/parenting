@@ -1,40 +1,80 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
 }
 
-// ─── Identity domain ────────────────────────────────────────────────────────
+// ─── Identity ────────────────────────────────────────────────────────────────
 
 model Tenant {
-  id        String     @id @default(cuid())
-  name      String
-  locale    String     @default("en")
-  status    String     @default("active")
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  users     User[]
-  consents  Consent[]
-  auditLogs AuditLog[]
+  id              String           @id @default(cuid())
+  name            String
+  locale          String           @default("en")
+  planId          String?
+  currency        String?          @default("usd")
+  taxId           String?
+  status          String           @default("active")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  users           User[]
+  documents       Document[]
+  conversations   Conversation[]
+  usageLedgers    UsageLedger[]
+  subscriptions   Subscription[]
+  consents        Consent[]
+  auditLogs       AuditLog[]
+  savedSearches   SavedSearch[]
+  supportTickets  SupportTicket[]
+  analyticsEvents AnalyticsEvent[]
 }
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String?
-  googleId     String?
-  role         String     @default("user")
-  profile      Json?
-  locale       String     @default("en")
-  tenantId     String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  tenant       Tenant?    @relation(fields: [tenantId], references: [id])
-  consents     Consent[]
-  auditLogs    AuditLog[]
+  id                   String                @id @default(cuid())
+  email                String                @unique
+  passwordHash         String?
+  googleId             String?
+  role                 String                @default("user")
+  profile              Json?
+  locale               String                @default("en")
+  tenantId             String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  tenant               Tenant?               @relation(fields: [tenantId], references: [id])
+  conversations        Conversation[]
+  memories             UserMemory[]
+  auditLogs            AuditLog[]
+  feedback             Feedback[]
+  supportTickets       SupportTicket[]
+  consents             Consent[]
+  usageLedgers         UsageLedger[]
+  savedSearches        SavedSearch[]
+  analyticsEvents      AnalyticsEvent[]
+  familyMembers        FamilyMember[]
+  familyInvites        FamilyInvite[]
+  ownedFamilies        Family[]              @relation("FamilyOwner")
+  momentComments       MomentComment[]
+  momentReactions      MomentReaction[]
+  villagePosts         VillagePost[]
+  villageComments      VillageComment[]
+  villageReactions     VillageReaction[]
+  villageBookmarks     VillageBookmark[]
+  villageFollows       VillageFollow[]       @relation("VillageFollower")
+  villageFollowing     VillageFollow[]       @relation("VillageFollowing")
+  villageReports       VillageReport[]
+  villageNotifications VillageNotification[]
+  widgetLayouts        WidgetLayout[]
+  learningProgress     LearningProgress[]
+  playbookProgress     PlaybookProgress[]
+  userPoints           UserPoints?
+  userStreak           UserStreak?
+  userAchievements     UserAchievement[]
+  dailyQuests          DailyQuest[]
+  xpTransactions       XpTransaction[]
 }
 
 model Consent {
@@ -61,4 +101,1031 @@ model AuditLog {
   createdAt    DateTime @default(now())
   user         User?    @relation(fields: [userId], references: [id])
   tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+// ─── Billing ─────────────────────────────────────────────────────────────────
+
+model Plan {
+  id            String         @id @default(cuid())
+  name          String
+  stripePriceId String?
+  limits        Json
+  currency      String?        @default("usd")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  tenantId             String
+  planId               String
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  status               String    @default("active")
+  periodEnd            DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  tenant               Tenant    @relation(fields: [tenantId], references: [id])
+  plan                 Plan      @relation(fields: [planId], references: [id])
+
+  @@unique([tenantId, planId])
+}
+
+model UsageLedger {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  userId    String?
+  period    String
+  tokens    Int      @default(0)
+  requests  Int      @default(0)
+  storageMb Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@unique([period, userId])
+}
+
+// ─── Family ──────────────────────────────────────────────────────────────────
+
+model Family {
+  id            String          @id @default(cuid())
+  name          String
+  ownerId       String
+  modules       Json?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  owner         User            @relation("FamilyOwner", fields: [ownerId], references: [id])
+  members       FamilyMember[]
+  children      Child[]
+  invites       FamilyInvite[]
+  events        CalendarEvent[]
+  moments       Moment[]
+  albums        Album[]
+  widgetLayouts WidgetLayout[]
+
+  @@index([ownerId])
+}
+
+model FamilyMember {
+  id        String    @id @default(cuid())
+  familyId  String
+  userId    String
+  name      String?
+  role      String    @default("member")
+  birthday  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  family    Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, userId])
+  @@index([familyId])
+  @@index([userId])
+}
+
+model Child {
+  id            String          @id @default(cuid())
+  familyId      String
+  name          String
+  birthday      DateTime?
+  isUnborn      Boolean         @default(false)
+  dueDate       DateTime?
+  pregnancyType String?
+  modules       Json?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  family        Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  widgetLayouts WidgetLayout[]
+  events        CalendarEvent[]
+  kickSessions  KickSession[]
+
+  @@index([familyId])
+}
+
+model FamilyInvite {
+  id        String   @id @default(cuid())
+  familyId  String
+  email     String
+  token     String   @unique
+  status    String   @default("pending")
+  role      String?
+  invitedBy String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [invitedBy], references: [id])
+
+  @@index([familyId])
+  @@index([token])
+  @@index([email])
+}
+
+model CalendarEvent {
+  id          String    @id @default(cuid())
+  familyId    String
+  childId     String
+  title       String
+  description String?
+  eventType   String
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean   @default(false)
+  location    String?
+  assignedTo  String?
+  createdBy   String
+  repeatRule  Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child       Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+  @@index([childId])
+  @@index([startDate])
+  @@index([assignedTo])
+}
+
+model KickSession {
+  id         String    @id @default(cuid())
+  childId    String
+  startTime  DateTime  @default(now())
+  endTime    DateTime?
+  totalKicks Int       @default(0)
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  child      Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  kicks      Kick[]
+
+  @@index([childId])
+  @@index([startTime])
+}
+
+model Kick {
+  id        String      @id @default(cuid())
+  sessionId String
+  timestamp DateTime    @default(now())
+  session   KickSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([timestamp])
+}
+
+model WidgetLayout {
+  id        String   @id @default(cuid())
+  userId    String
+  scope     String
+  familyId  String?
+  childId   String?
+  layout    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family    Family?  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child     Child?   @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scope, familyId, childId])
+  @@index([userId, scope])
+  @@index([familyId])
+  @@index([childId])
+}
+
+// ─── Moments ─────────────────────────────────────────────────────────────────
+
+model Moment {
+  id           String           @id @default(cuid())
+  familyId     String
+  title        String
+  description  String?
+  momentType   String           @default("everyday")
+  location     String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  createdBy    String
+  family       Family           @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  media        Media[]
+  tags         MomentTag[]
+  comments     MomentComment[]
+  reactions    MomentReaction[]
+  albumMoments AlbumMoment[]
+
+  @@index([familyId])
+  @@index([createdBy])
+  @@index([createdAt])
+  @@index([momentType])
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  momentId  String
+  s3Key     String
+  mimeType  String
+  fileName  String?
+  fileSize  Int?
+  width     Int?
+  height    Int?
+  duration  Int?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  moment    Moment   @relation(fields: [momentId], references: [id], onDelete: Cascade)
+
+  @@index([momentId])
+  @@index([s3Key])
+}
+
+model MomentTag {
+  id        String   @id @default(cuid())
+  momentId  String
+  tagType   String
+  tagValue  String
+  createdAt DateTime @default(now())
+  moment    Moment   @relation(fields: [momentId], references: [id], onDelete: Cascade)
+
+  @@index([momentId])
+  @@index([tagType, tagValue])
+}
+
+model MomentComment {
+  id        String   @id @default(cuid())
+  momentId  String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  moment    Moment   @relation(fields: [momentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([momentId])
+  @@index([userId])
+}
+
+model MomentReaction {
+  id        String   @id @default(cuid())
+  momentId  String
+  userId    String
+  reaction  String
+  createdAt DateTime @default(now())
+  moment    Moment   @relation(fields: [momentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([momentId, userId])
+  @@index([momentId])
+  @@index([userId])
+}
+
+model Album {
+  id           String        @id @default(cuid())
+  familyId     String
+  name         String
+  description  String?
+  coverMediaId String?
+  albumType    String        @default("manual")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  createdBy    String
+  family       Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  albumMoments AlbumMoment[]
+
+  @@index([familyId])
+  @@index([createdBy])
+  @@index([albumType])
+}
+
+model AlbumMoment {
+  id        String   @id @default(cuid())
+  albumId   String
+  momentId  String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  moment    Moment   @relation(fields: [momentId], references: [id], onDelete: Cascade)
+
+  @@unique([albumId, momentId])
+  @@index([albumId])
+  @@index([momentId])
+}
+
+// ─── Community (Village) ─────────────────────────────────────────────────────
+
+model VillagePost {
+  id            String               @id @default(cuid())
+  authorId      String
+  title         String
+  content       String
+  postType      String               @default("discussion")
+  visibility    String               @default("public")
+  categoryId    String?
+  tags          Json?
+  searchVector  Unsupported("tsvector")?
+  isPinned      Boolean              @default(false)
+  isLocked      Boolean              @default(false)
+  isDraft       Boolean              @default(false)
+  viewCount     Int                  @default(0)
+  reactionCount Int                  @default(0)
+  commentCount  Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  editedAt      DateTime?
+  author        User                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category      VillageCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  comments      VillageComment[]
+  reactions     VillageReaction[]
+  bookmarks     VillageBookmark[]
+  reports       VillageReport[]
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([visibility, createdAt])
+  @@index([postType])
+  @@index([isPinned, createdAt])
+  @@index([createdAt])
+}
+
+model VillageCategory {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  description String?
+  color       String?
+  icon        String?
+  order       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  posts       VillagePost[]
+
+  @@index([order])
+}
+
+model VillageComment {
+  id              String            @id @default(cuid())
+  postId          String
+  authorId        String
+  content         String
+  parentCommentId String?
+  reactionCount   Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  editedAt        DateTime?
+  post            VillagePost       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author          User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentComment   VillageComment?   @relation("CommentThread", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies         VillageComment[]  @relation("CommentThread")
+  reactions       VillageReaction[]
+  reports         VillageReport[]
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentCommentId])
+  @@index([createdAt])
+}
+
+model VillageReaction {
+  id           String          @id @default(cuid())
+  postId       String?
+  commentId    String?
+  userId       String
+  reactionType String          @default("like")
+  createdAt    DateTime        @default(now())
+  post         VillagePost?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment      VillageComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@unique([commentId, userId])
+  @@index([postId])
+  @@index([commentId])
+  @@index([userId])
+}
+
+model VillageBookmark {
+  id        String      @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime    @default(now())
+  post      VillagePost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+}
+
+model VillageFollow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("VillageFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("VillageFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model VillageReport {
+  id         String          @id @default(cuid())
+  reporterId String
+  postId     String?
+  commentId  String?
+  reason     String
+  status     String          @default("pending")
+  reviewedAt DateTime?
+  createdAt  DateTime        @default(now())
+  post       VillagePost?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment    VillageComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reporter   User            @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([postId])
+  @@index([commentId])
+  @@index([status])
+}
+
+model VillageNotification {
+  id               String   @id @default(cuid())
+  userId           String
+  type             String
+  relatedPostId    String?
+  relatedCommentId String?
+  relatedUserId    String?
+  content          String?
+  read             Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@index([relatedPostId])
+  @@index([relatedCommentId])
+}
+
+// ─── Learning ────────────────────────────────────────────────────────────────
+
+model LearningCourse {
+  id            String                      @id @default(cuid())
+  title         String
+  description   String?
+  coverImageUrl String?
+  order         Int                         @default(0)
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+  phases        LearningPhase[]
+  translations  LearningCourseTranslation[]
+
+  @@index([order])
+}
+
+model LearningPhase {
+  id           String                     @id @default(cuid())
+  courseId     String
+  title        String
+  description  String?
+  order        Int                        @default(0)
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+  course       LearningCourse             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  modules      LearningModule[]
+  translations LearningPhaseTranslation[]
+
+  @@index([courseId])
+  @@index([order])
+}
+
+model LearningModule {
+  id           String                      @id @default(cuid())
+  phaseId      String
+  title        String
+  description  String?
+  minAgeMonths Int?
+  maxAgeMonths Int?
+  isGeneral    Boolean                     @default(false)
+  order        Int                         @default(0)
+  createdAt    DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt
+  phase        LearningPhase               @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  lessons      LearningLesson[]
+  translations LearningModuleTranslation[]
+
+  @@index([phaseId])
+  @@index([order])
+}
+
+model LearningLesson {
+  id           String                     @id @default(cuid())
+  moduleId     String
+  title        String
+  content      String
+  mediaUrl     String?
+  mediaType    String?
+  order        Int                        @default(0)
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+  module       LearningModule             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress     LearningProgress[]
+  translations LearningLessonTranslation[]
+
+  @@index([moduleId])
+  @@index([order])
+}
+
+model LearningProgress {
+  id           String         @id @default(cuid())
+  userId       String
+  lessonId     String
+  completedAt  DateTime       @default(now())
+  pointsEarned Int            @default(0)
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson       LearningLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
+}
+
+model Playbook {
+  id           String               @id @default(cuid())
+  leapNumber   Int
+  groupNumber  Int
+  sequence     Int
+  title        String
+  content      String
+  domains      String[]
+  createdAt    DateTime             @default(now())
+  progress     PlaybookProgress[]
+  translations PlaybookTranslation[]
+
+  @@index([leapNumber])
+  @@index([groupNumber])
+}
+
+model PlaybookProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  playbookId  String
+  triedCount  Int      @default(1)
+  lastTriedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playbook    Playbook @relation(fields: [playbookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, playbookId])
+  @@index([userId])
+  @@index([playbookId])
+}
+
+// ─── Content (Articles) ───────────────────────────────────────────────────────
+
+model Article {
+  id             String               @id @default(cuid())
+  slug           String               @unique
+  title          String
+  content        String
+  excerpt        String?
+  coverImage     String?
+  published      Boolean              @default(false)
+  aiSummary      String?
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String?
+  categoryId     String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  category       ArticleCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  media          ArticleMedia[]
+  actions        ArticleAction[]
+  citations      ArticleCitation[]
+  translations   ArticleTranslation[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([published])
+}
+
+model ArticleCategory {
+  id           String                       @id @default(cuid())
+  slug         String                       @unique
+  name         String
+  description  String?
+  icon         String?
+  parentId     String?
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+  parent       ArticleCategory?             @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     ArticleCategory[]            @relation("CategoryHierarchy")
+  articles     Article[]
+  translations ArticleCategoryTranslation[]
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model ArticleMedia {
+  id        String   @id @default(cuid())
+  articleId String
+  type      String
+  s3Key     String
+  mimeType  String?
+  duration  Int?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+}
+
+model ArticleAction {
+  id         String   @id @default(cuid())
+  articleId  String
+  label      String
+  actionType String
+  targetId   String?
+  url        String?
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+}
+
+model ArticleCitation {
+  id        String   @id @default(cuid())
+  articleId String
+  label     String
+  url       String
+  verified  Boolean  @default(false)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+}
+
+// ─── Gamification ────────────────────────────────────────────────────────────
+
+model UserPoints {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  totalXp            Int      @default(0)
+  gemsBalance        Int      @default(0)
+  gemsEarned         Int      @default(0)
+  currentDailyXp     Int      @default(0)
+  hearts             Int      @default(3)
+  lastHeartRegen     DateTime @default(now())
+  lastAwardedAt      DateTime @default(now())
+  leaderboardOptedIn Boolean  @default(true)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserStreak {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
+  lastActiveDate   DateTime?
+  freezesAvailable Int       @default(0)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Achievement {
+  id          String            @id @default(cuid())
+  key         String            @unique
+  title       String
+  description String
+  icon        String
+  xpReward    Int               @default(0)
+  gemsReward  Int               @default(0)
+  category    String
+  isSecret    Boolean           @default(false)
+  sortOrder   Int               @default(0)
+  users       UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  earnedAt      DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+model DailyQuest {
+  id           String   @id @default(cuid())
+  userId       String
+  date         String
+  quests       Json
+  allComplete  Boolean  @default(false)
+  bonusClaimed Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model XpTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int
+  reason    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// ─── Assistant (AI / RAG) ─────────────────────────────────────────────────────
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  tenantId  String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+  tenant    Tenant?   @relation(fields: [tenantId], references: [id])
+  messages  Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  docTypeFilter  String?
+  citations      Json?
+  flagged        Boolean      @default(false)
+  locale         String?      @default("en")
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  feedback       Feedback?
+}
+
+model UserMemory {
+  id              String                @id @default(cuid())
+  userId          String
+  summary         String
+  embedding       Unsupported("vector")
+  lastRefreshedAt DateTime?
+  tokens          Int?
+  metadata        Json?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  user            User                  @relation(fields: [userId], references: [id])
+}
+
+model Document {
+  id            String         @id @default(cuid())
+  tenantId      String?
+  title         String
+  docType       String
+  source        String
+  authorId      String?
+  version       String?
+  hash          String         @unique
+  s3Key         String
+  mime          String
+  size          Int
+  tags          Json?
+  retention     String?
+  locale        String?        @default("en")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tenant        Tenant?        @relation(fields: [tenantId], references: [id])
+  chunks        Chunk[]
+  ingestionJobs IngestionJob[]
+}
+
+model Chunk {
+  id         String                @id @default(cuid())
+  docId      String
+  content    String
+  embedding  Unsupported("vector")
+  position   Int
+  tokenCount Int
+  locale     String?               @default("en")
+  createdAt  DateTime              @default(now())
+  document   Document              @relation(fields: [docId], references: [id], onDelete: Cascade)
+}
+
+model IngestionJob {
+  id        String   @id @default(cuid())
+  docId     String
+  status    String   @default("pending")
+  error     String?
+  createdAt DateTime @default(now())
+  document  Document @relation(fields: [docId], references: [id], onDelete: Cascade)
+}
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+
+model AdminModuleDefaults {
+  id                   String   @id @default(cuid())
+  key                  String   @unique @default("default")
+  familyModules        Json?
+  childModulesByPeriod Json?
+  widgetDefaults       Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  messageId String   @unique
+  userId    String?
+  rating    String
+  notes     String?
+  createdAt DateTime @default(now())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String?
+  name      String
+  filters   Json
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  userId      String
+  tenantId    String?
+  subject     String
+  description String
+  contextRef  String?
+  status      String   @default("open")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+model SurveyResponse {
+  id        String   @id @default(cuid())
+  responses Json
+  createdAt DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  userId    String?
+  eventType String
+  props     Json?
+  createdAt DateTime @default(now())
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model TranslationKey {
+  id        String   @id @default(cuid())
+  key       String
+  locale    String
+  text      String?
+  status    String   @default("missing")
+  updatedAt DateTime @updatedAt
+}
+
+model MarketingLead {
+  id         String   @id @default(cuid())
+  email      String
+  resourceId String
+  metadata   Json?
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([email])
+  @@index([resourceId])
+}
+
+// ─── i18n Translations ────────────────────────────────────────────────────────
+
+model ArticleTranslation {
+  id             String   @id @default(cuid())
+  articleId      String
+  locale         String
+  title          String
+  content        String
+  excerpt        String?
+  seoTitle       String?
+  seoDescription String?
+  aiGenerated    Boolean  @default(true)
+  status         String   @default("draft")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  article        Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, locale])
+  @@index([articleId])
+  @@index([locale])
+}
+
+model LearningCourseTranslation {
+  id          String         @id @default(cuid())
+  courseId    String
+  locale      String
+  title       String
+  description String?
+  aiGenerated Boolean        @default(true)
+  status      String         @default("draft")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  course      LearningCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, locale])
+  @@index([courseId])
+}
+
+model LearningPhaseTranslation {
+  id          String        @id @default(cuid())
+  phaseId     String
+  locale      String
+  title       String
+  description String?
+  aiGenerated Boolean       @default(true)
+  status      String        @default("draft")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  phase       LearningPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  @@unique([phaseId, locale])
+  @@index([phaseId])
+}
+
+model LearningModuleTranslation {
+  id          String         @id @default(cuid())
+  moduleId    String
+  locale      String
+  title       String
+  description String?
+  aiGenerated Boolean        @default(true)
+  status      String         @default("draft")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  module      LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, locale])
+  @@index([moduleId])
+}
+
+model LearningLessonTranslation {
+  id          String         @id @default(cuid())
+  lessonId    String
+  locale      String
+  title       String
+  content     String
+  aiGenerated Boolean        @default(true)
+  status      String         @default("draft")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  lesson      LearningLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, locale])
+  @@index([lessonId])
+}
+
+model ArticleCategoryTranslation {
+  id          String          @id @default(cuid())
+  categoryId  String
+  locale      String
+  name        String
+  description String?
+  aiGenerated Boolean         @default(true)
+  status      String          @default("draft")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  category    ArticleCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locale])
+  @@index([categoryId])
+  @@index([locale])
+}
+
+model PlaybookTranslation {
+  id          String   @id @default(cuid())
+  playbookId  String
+  locale      String
+  title       String
+  content     String
+  aiGenerated Boolean  @default(true)
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  playbook    Playbook @relation(fields: [playbookId], references: [id], onDelete: Cascade)
+
+  @@unique([playbookId, locale])
+  @@index([playbookId])
 }
