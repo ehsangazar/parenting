@@ -79,12 +79,13 @@ await app.register(identityRoutes, { prefix: "/api/identity" });
 app.get("/health", async () => ({ ok: true }));
 
 app.setErrorHandler((error, _request, reply) => {
-  if ((error as { issues?: unknown[] }).issues != null) {
+  const zodLike = error as { issues?: unknown[]; message?: string };
+  if (zodLike.issues != null) {
     return reply.status(400).send({
       statusCode: 400,
       error: "Bad Request",
-      message: error.message,
-      issues: error.issues,
+      message: zodLike.message ?? "Validation error",
+      issues: zodLike.issues,
     });
   }
 

@@ -35,13 +35,14 @@ async function buildApp(): Promise<FastifyInstance> {
   const app = fastify();
 
   app.setErrorHandler((error, _req, reply) => {
-    if ((error as { issues?: unknown[] }).issues != null) {
-      return reply.status(400).send({ statusCode: 400, error: "Bad Request", message: error.message });
+    const zodLike = error as { issues?: unknown[]; message?: string };
+    if (zodLike.issues != null) {
+      return reply.status(400).send({ statusCode: 400, error: "Bad Request", message: zodLike.message ?? "Validation error" });
     }
     const status = typeof (error as { statusCode?: number }).statusCode === "number"
       ? (error as { statusCode: number }).statusCode
       : 500;
-    return reply.status(status).send({ statusCode: status, error: error.name, message: error.message });
+    return reply.status(status).send({ statusCode: status, error: (error as Error).name, message: (error as Error).message });
   });
 
   await app.register(sensible);
@@ -59,7 +60,7 @@ async function buildApp(): Promise<FastifyInstance> {
   return app;
 }
 
-function signToken(app: FastifyInstance, payload: object = { sub: "user-1", role: "user" }) {
+function signToken(app: FastifyInstance, payload: { sub: string; role?: string; kind?: string } = { sub: "user-1", role: "user" }) {
   return app.jwt.sign(payload, { expiresIn: "1h" });
 }
 

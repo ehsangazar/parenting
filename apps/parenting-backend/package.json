@@ -10,6 +10,8 @@
     "lint": "oxlint src",
     "test": "vitest run",
     "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "test:smoke": "tsx src/smoke/smoke.ts",
     "clean": "rm -rf dist",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

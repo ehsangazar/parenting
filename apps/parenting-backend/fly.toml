@@ -1,0 +1,31 @@
+app = 'parenting-backend'
+primary_region = 'sin'
+
+[build]
+  # Build context is the monorepo root so workspace files are available
+  context = '../..'
+  dockerfile = 'Dockerfile'
+
+[deploy]
+  # Run migrations before the new version goes live
+  release_command = "node apps/parenting-backend/node_modules/.bin/prisma migrate deploy --schema apps/parenting-backend/prisma/schema.prisma"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "4000"
+  APP_URL = "https://parenting-backend.fly.dev"
+  EMAIL_FROM = "noreply@example.com"
+  AWS_REGION = "ap-southeast-1"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpus = 1
+  memory_mb = 1024
