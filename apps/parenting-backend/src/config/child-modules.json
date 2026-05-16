@@ -1,0 +1,47 @@
+{
+  "periods": {
+    "pregnancy": { "name": "Pregnancy", "description": "Unborn child" },
+    "baby": { "name": "Baby", "ageRange": "0-2 years" },
+    "toddler": { "name": "Toddler", "ageRange": "2-5 years" },
+    "school": { "name": "School", "ageRange": "5-13 years" },
+    "teen": { "name": "Teen", "ageRange": "13-18 years" },
+    "adult": { "name": "Adult", "ageRange": "18+ years" }
+  },
+  "modules": {
+    "kickCounter": {
+      "name": "Kick Counter",
+      "description": "Track baby kicks and movements",
+      "periods": ["pregnancy"],
+      "icon": "human-child",
+      "enabled": true
+    },
+    "feedingTracker": {
+      "name": "Feeding Tracker",
+      "description": "Track feeding times and amounts",
+      "periods": ["baby"],
+      "icon": "baby-bottle",
+      "enabled": true
+    },
+    "sleepLog": {
+      "name": "Sleep Log",
+      "description": "Monitor sleep patterns and naps",
+      "periods": ["baby", "toddler"],
+      "icon": "sleep",
+      "enabled": true
+    },
+    "growthChart": {
+      "name": "Growth Chart",
+      "description": "Track height, weight, and milestones",
+      "periods": ["baby", "toddler", "school"],
+      "icon": "chart-line",
+      "enabled": true
+    },
+    "homeworkHelper": {
+      "name": "Homework Helper",
+      "description": "Manage assignments and study schedule",
+      "periods": ["school", "teen"],
+      "icon": "book-open-variant",
+      "enabled": true
+    }
+  }
+}

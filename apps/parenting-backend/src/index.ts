@@ -9,6 +9,15 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { env } from "./config/env.js";
 import identityRoutes from "./domains/identity/identity.routes.js";
+import familyRoutes from "./domains/family/family.routes.js";
+import momentsRoutes from "./domains/moments/moments.routes.js";
+import communityRoutes from "./domains/community/community.routes.js";
+import learningRoutes from "./domains/learning/learning.routes.js";
+import contentRoutes from "./domains/content/content.routes.js";
+import gamificationRoutes from "./domains/gamification/gamification.routes.js";
+import assistantRoutes from "./domains/assistant/assistant.routes.js";
+import billingRoutes from "./domains/billing/billing.routes.js";
+import adminRoutes from "./domains/admin/admin.routes.js";
 
 const app = fastify({
   logger: {
@@ -75,6 +84,15 @@ await app.register(swaggerUi, {
 
 // Domains
 await app.register(identityRoutes, { prefix: "/api/identity" });
+await app.register(familyRoutes, { prefix: "/api" });
+await app.register(momentsRoutes, { prefix: "/api" });
+await app.register(communityRoutes, { prefix: "/api" });
+await app.register(learningRoutes, { prefix: "/api" });
+await app.register(contentRoutes, { prefix: "/api" });
+await app.register(gamificationRoutes, { prefix: "/api" });
+await app.register(assistantRoutes, { prefix: "/api" });
+await app.register(billingRoutes, { prefix: "/api" });
+await app.register(adminRoutes, { prefix: "/api" });
 
 app.get("/health", async () => ({ ok: true }));
 

@@ -47,6 +47,37 @@ export const getSignedViewUrl = async (key: string, expiresIn = 3600) => {
   return getSignedUrl(client, command, { expiresIn });
 };
 
+/** Presigned PUT URL targeting a specific bucket (e.g. S3_BUCKET_SURVEY_AUDIO). */
+export const createUploadUrlForBucket = async (
+  bucket: string,
+  opts: PresignOptions,
+): Promise<{ key: string; url: string }> => {
+  if (!client) throw new Error("S3 not configured");
+  if (opts.maxSizeBytes && opts.contentLength > opts.maxSizeBytes) throw new Error("File too large");
+  if (opts.allowedMime && !opts.allowedMime.includes(opts.contentType)) throw new Error("Unsupported mime type");
+
+  const key = `uploads/${randomUUID()}`;
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    ContentType: opts.contentType,
+    ContentLength: opts.contentLength,
+  });
+  const url = await getSignedUrl(client, command, { expiresIn: 300 });
+  return { key, url };
+};
+
+/** Presigned GET URL for a specific bucket and key (e.g. survey audio). */
+export const getSignedViewUrlForBucket = async (
+  bucket: string,
+  key: string,
+  expiresIn = 3600,
+): Promise<string> => {
+  if (!client) throw new Error("S3 not configured");
+  const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+  return getSignedUrl(client, command, { expiresIn });
+};
+
 export const extractS3Key = (url: string): string | null => {
   if (!url) return null;
   const noQuery = url.trim().split("?")[0];
