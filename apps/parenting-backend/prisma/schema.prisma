@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Identity domain ────────────────────────────────────────────────────────
+
+model Tenant {
+  id        String     @id @default(cuid())
+  name      String
+  locale    String     @default("en")
+  status    String     @default("active")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  users     User[]
+  consents  Consent[]
+  auditLogs AuditLog[]
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String?
+  googleId     String?
+  role         String     @default("user")
+  profile      Json?
+  locale       String     @default("en")
+  tenantId     String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  tenant       Tenant?    @relation(fields: [tenantId], references: [id])
+  consents     Consent[]
+  auditLogs    AuditLog[]
+}
+
+model Consent {
+  id         String   @id @default(cuid())
+  userId     String?
+  tenantId   String?
+  type       String
+  version    String
+  locale     String?  @default("en")
+  acceptedAt DateTime @default(now())
+  metadata   Json?
+  user       User?    @relation(fields: [userId], references: [id])
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  tenantId     String?
+  action       String
+  resourceType String
+  resourceId   String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  user         User?    @relation(fields: [userId], references: [id])
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+}
