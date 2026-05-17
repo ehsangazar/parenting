@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactElement } from 'react';
 import { Route, Routes, Navigate, Outlet, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from './lib/api.js';
@@ -98,7 +98,7 @@ const SplashLoading = () => {
   );
 };
 
-const RequireAuth = ({ children }: { children: JSX.Element }) => {
+const RequireAuth = ({ children }: { children: ReactElement }) => {
   const { token, setUser, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -141,7 +141,7 @@ const RequireAuth = ({ children }: { children: JSX.Element }) => {
   return children;
 };
 
-const RequireOnboarding = ({ children }: { children: JSX.Element }) => {
+const RequireOnboarding = ({ children }: { children: ReactElement }) => {
   const { isOnboarded } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -158,7 +158,7 @@ const RequireOnboarding = ({ children }: { children: JSX.Element }) => {
   return children;
 };
 
-const RequireAdmin = ({ children }: { children: JSX.Element }) => {
+const RequireAdmin = ({ children }: { children: ReactElement }) => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { toApp } = useAppBase();

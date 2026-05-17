@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactElement } from 'react';
 import { toast } from 'sonner';
 import { api } from '../lib/api.js';
 import { Drawer } from '../components/Drawer.js';
@@ -55,7 +55,7 @@ function sortResponseEntries([a]: [string, unknown], [b]: [string, unknown]): nu
   return a.localeCompare(b);
 }
 
-function formatResponseValue(v: unknown): string | JSX.Element {
+function formatResponseValue(v: unknown): string | ReactElement {
   if (v === undefined || v === null) return '—';
   if (Array.isArray(v)) return (v as unknown[]).map(String).join(', ');
   if (typeof v === 'object') return JSON.stringify(v);
