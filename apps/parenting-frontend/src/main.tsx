@@ -7,18 +7,17 @@ import App from './App.js';
 import './i18n.js';
 import './index.css';
 
-Sentry.init({
-  dsn: "https://d69b91f04c25ec26f5287e126c37bae8@o4506670194360320.ingest.us.sentry.io/4511345359454208",
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
-  ],
-  tracesSampleRate: 1.0,
-  tracePropagationTargets: ["localhost", /^https:\/\/raised\.info/, /^https:\/\/parenting-frontend\.gazar\.dev/],
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-  sendDefaultPii: true,
-});
+// GlitchTip is Sentry-protocol compatible but doesn't support sessions or replay,
+// so we only enable tracing + error capture. Init only when a DSN is configured.
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    integrations: [Sentry.browserTracingIntegration()],
+    tracesSampleRate: 0.1,
+    tracePropagationTargets: ["localhost", /^https:\/\/raised\.info/, /^https:\/\/parenting-frontend\.gazar\.dev/],
+    sendDefaultPii: true,
+  });
+}
 
 function initGTM() {
   if (!import.meta.env.VITE_GOOGLE_TAG_ID || !import.meta.env.PROD) return;
