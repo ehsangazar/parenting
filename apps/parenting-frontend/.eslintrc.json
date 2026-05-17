@@ -35,10 +35,11 @@
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
     "import/no-unresolved": [
       "error",
       {
-        "ignore": ["\\.js$"]
+        "ignore": ["\\.js$", "^@parenting/shared/"]
       }
     ],
     "no-constant-condition": ["error", { "checkLoops": false }]
