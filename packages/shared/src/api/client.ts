@@ -1,4 +1,7 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import axios, {
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+} from 'axios';
 
 export interface ApiClientConfig {
   baseURL: string;
@@ -12,15 +15,13 @@ export function createApiClient(config: ApiClientConfig): AxiosInstance {
     baseURL: config.baseURL,
   });
 
-  client.interceptors.request.use((req: AxiosRequestConfig) => {
+  client.interceptors.request.use((req: InternalAxiosRequestConfig) => {
     const token = config.getToken();
-    if (token && req.headers) {
-      req.headers['Authorization'] = `Bearer ${token}`;
+    if (token) {
+      req.headers.set('Authorization', `Bearer ${token}`);
     }
     const locale = config.getLocale?.() ?? 'en';
-    if (req.headers) {
-      req.headers['Accept-Language'] = locale;
-    }
+    req.headers.set('Accept-Language', locale);
     return req;
   });
 

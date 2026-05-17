@@ -393,7 +393,13 @@ importers:
       react-native:
         specifier: '*'
         version: 0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0)
+      react-native-safe-area-context:
+        specifier: '*'
+        version: 5.7.0(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
     devDependencies:
+      '@types/react':
+        specifier: ^19.1.17
+        version: 19.1.17
       oxlint:
         specifier: ^1.64.0
         version: 1.65.0

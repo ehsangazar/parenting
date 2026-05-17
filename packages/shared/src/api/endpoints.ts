@@ -62,6 +62,8 @@ export function createLearningApi(api: AxiosInstance) {
     getModules: async () => (await api.get('/api/learning/modules')).data,
     getLessons: async (moduleId: string) => (await api.get(`/api/learning/modules/${moduleId}/lessons`)).data,
     getNextLesson: async () => (await api.get('/api/learning/next-lesson')).data,
+    translateAll: async (locale: string) =>
+      (await api.post('/api/learning/translate-all', { locale })).data,
   };
 }
 
@@ -92,6 +94,8 @@ export function createMomentsApi(api: AxiosInstance) {
       (await api.delete(`/api/moments/families/${familyId}/moments/${momentId}`)).data,
     presign: async (familyId: string, payload: { contentType: string; contentLength: number }) =>
       (await api.post(`/api/moments/families/${familyId}/moments/presign`, payload)).data,
+    addMedia: async (familyId: string, momentId: string, payload: unknown) =>
+      (await api.post(`/api/moments/families/${familyId}/moments/${momentId}/media`, payload)).data,
   };
 }
 

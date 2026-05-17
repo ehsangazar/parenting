@@ -16,14 +16,17 @@
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/react": "^19.1.17",
     "oxlint": "^1.64.0",
     "typescript": "^5.7.0"
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-safe-area-context": "*"
   },
   "peerDependenciesMeta": {
-    "react-native": { "optional": true }
+    "react-native": { "optional": true },
+    "react-native-safe-area-context": { "optional": true }
   }
 }
