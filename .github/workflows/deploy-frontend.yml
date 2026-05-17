@@ -1,10 +1,12 @@
-name: Deploy Backend
+name: Deploy Frontend
 
 on:
   push:
     branches: [main]
     paths:
-      - 'apps/parenting-backend/**'
+      - 'apps/parenting-frontend/**'
+      - 'packages/shared/**'
+      - 'packages/ui/**'
       - 'pnpm-lock.yaml'
   workflow_dispatch:
 
@@ -14,8 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       COOLIFY_HOST: http://178.105.103.56:8000
-      COOLIFY_APP_UUID: qlo0g5nv2ncxm4yfhdri5hsa
-      HEALTH_URL: https://parenting-backend.gazar.dev/health
+      COOLIFY_APP_UUID: dhmztdwzfrc1jje7y8ytug7q
+      SITE_URL: https://parenting-frontend.gazar.dev/
 
     steps:
       - name: Trigger Coolify deploy
@@ -58,6 +60,6 @@ jobs:
       - name: Smoke test
         run: |
           set -euo pipefail
-          code=$(curl -sS -o /dev/null -w "%{http_code}" "$HEALTH_URL")
-          echo "$HEALTH_URL -> $code"
+          code=$(curl -sS -o /dev/null -w "%{http_code}" "$SITE_URL")
+          echo "$SITE_URL -> $code"
           test "$code" = "200"
