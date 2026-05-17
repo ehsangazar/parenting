@@ -1,3 +1,5 @@
+import "./instrument.js";
+import * as Sentry from "@sentry/node";
 import fastify from "fastify";
 import cors from "@fastify/cors";
 import sensible from "@fastify/sensible";
@@ -29,6 +31,8 @@ const app = fastify({
   },
   disableRequestLogging: true,
 });
+
+Sentry.setupFastifyErrorHandler(app);
 
 await app.register(cors, {
   origin: (origin, cb) => {
@@ -92,7 +96,7 @@ await app.register(contentRoutes, { prefix: "/api" });
 await app.register(gamificationRoutes, { prefix: "/api" });
 await app.register(assistantRoutes, { prefix: "/api" });
 await app.register(billingRoutes, { prefix: "/api" });
-await app.register(adminRoutes, { prefix: "/api" });
+await app.register(adminRoutes, { prefix: "/api/admin" });
 
 app.get("/health", async () => ({ ok: true }));
 

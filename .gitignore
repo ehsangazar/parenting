@@ -26,3 +26,5 @@ pnpm-debug.log*
 
 # sensitive local notes
 *.txt
+coolify-setup.md
+raised-backup.sql
