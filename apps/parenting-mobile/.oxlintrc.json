@@ -1,0 +1,20 @@
+{
+  "plugins": ["react", "react-hooks", "typescript"],
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": "warn",
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "react/react-in-jsx-scope": "off"
+  },
+  "ignorePatterns": [
+    "node_modules",
+    ".expo"
+  ]
+}

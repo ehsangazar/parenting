@@ -1,0 +1,29 @@
+{
+  "name": "@parenting/ui",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": {
+      "react-native": "./src/index.native.ts",
+      "default": "./src/index.ts"
+    },
+    "./tokens": {
+      "default": "./src/tokens.ts"
+    }
+  },
+  "scripts": {
+    "lint": "oxlint src",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "oxlint": "^1.64.0",
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-native": { "optional": true }
+  }
+}

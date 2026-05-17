@@ -1,0 +1,33 @@
+---
+description: Raised · Midnight UI — tokens, components, no decorative gradients
+globs: "**/*.{tsx,ts,css}"
+alwaysApply: false
+---
+
+# Design system (quick reference)
+
+Canonical: **`DESIGN_SYSTEM.md`** (repo root) and `tailwind.config.cjs`. Human-readable spec: `design-system-proposal.html` (repo root).
+
+## Must do
+
+- Use **shared components** from `src/components/ui/` (`DuoButton`, `DuoCard`, `ProgressBar`, `StatPill`, `Avatar`, `Badge`, `ActionLink`, `SectionHeader`, `Skeleton`, `DuoInput`) for new UI. Barrel: `src/components/ui/index.ts`.
+- Use Tailwind tokens: `bg-background`, `bg-surface`, `border-card-border`, `bg-hub`, `bg-quest-track`, `bg-quest-fill`, `brand.*`, `primary.*`.
+- Use **`TwoColumnLayout`** when a page has a main column + right sidebar (e.g. Insights, Dashboard).
+- Use **`StatPill`** / patterns from **`DesktopStatsBar`** for streak/points/hearts-style stats—not ad-hoc icon+number rows.
+
+## Must not
+
+- Do **not** add `bg-gradient-*`, or `linear-gradient` / `radial-gradient` for page, card, or hero backgrounds. Exceptions: `.animate-shimmer` skeletons; **`Badge` `variant="super"`** only.
+- Do **not** hardcode `#37464f` for card borders—use `border-card-border` or the `card-border` color token.
+- Avoid new raw `btn-duo-*` classes on buttons—prefer **`DuoButton`**.
+
+## Layout
+
+- **`PageContainer`**: standard app page wrapper.
+- **`PageHeader`**: large title; icons show automatically when `icon` / `iconName` passed; use `showIcon={false}` to force headline-only.
+- **`AppLayout`**: flat sidebar, 5-tab mobile bottom nav, `DesktopStatsBar` on desktop.
+
+## Typography
+
+- Default UI text: **`font-sans`** (DM Sans). Long-form markdown / articles: add **`font-body`** on the prose wrapper. Section titles: **`font-heading`** (Sora). CTAs, stats, badges: **`font-game`** (Fredoka).
+- Nav and section labels: **uppercase**, **tracking-wider**, **font-bold** (often with `font-game`).

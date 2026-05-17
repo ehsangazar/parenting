@@ -1,0 +1,131 @@
+import { defineConfig, loadEnv, type Plugin } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import { VitePWA } from 'vite-plugin-pwa';
+
+/** Serve `/sitemap.xml` in dev (build writes it to `dist/`; dev has no dist until build). */
+function sitemapDevPlugin(): Plugin {
+  return {
+    name: 'sitemap-dev',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const pathname = req.url?.split('?')[0];
+        if (pathname !== '/sitemap.xml') {
+          next();
+          return;
+        }
+        const env = loadEnv(server.config.mode, process.cwd(), '');
+        const port = server.config.server.port ?? 5173;
+        const siteBaseUrl = (
+          env.VITE_SITEMAP_BASE_URL || `http://localhost:${port}`
+        ).replace(/\/+$/, '');
+        const apiBaseUrl = env.VITE_API_URL || 'http://localhost:4000';
+        try {
+          const { buildSitemapXml } = await import('./scripts/sitemap-core.mjs');
+          const xml = await buildSitemapXml({ siteBaseUrl, apiBaseUrl });
+          res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+          res.end(xml);
+        } catch (err) {
+          console.error('[sitemap-dev]', err);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          res.end('Sitemap generation failed');
+        }
+      });
+    },
+  };
+}
+
+export default defineConfig({
+  plugins: [
+    sitemapDevPlugin(),
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: null,
+      includeAssets: ['logo.png', 'archive.png'],
+      manifest: {
+        name: 'Raised — Science-backed Parenting',
+        short_name: 'Raised',
+        description: 'Your family hub for science-backed parenting. AI assistant, calendar, moments, and more.',
+        theme_color: '#F8F9FE',
+        background_color: '#F8F9FE',
+        display: 'standalone',
+        orientation: 'portrait',
+        start_url: '/',
+        scope: '/',
+        categories: ['lifestyle', 'health', 'education'],
+        icons: [
+          {
+            src: '/logo.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+          {
+            src: '/logo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+        screenshots: [
+          {
+            src: '/logo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            form_factor: 'narrow',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+          {
+            // Cache API responses briefly for snappier feel
+            urlPattern: /\/api\/(auth\/me|families|modules\/config)/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 5 },
+            },
+          },
+        ],
+      },
+      devOptions: {
+        // Enable in dev to test install prompt
+        enabled: false,
+      },
+    }),
+  ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-sentry': ['@sentry/react'],
+        },
+      },
+    },
+  },
+  server: {
+    port: 5173,
+  },
+});

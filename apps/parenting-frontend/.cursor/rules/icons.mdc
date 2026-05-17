@@ -1,0 +1,29 @@
+---
+description: Use asset SVG icons (Icon + iconMap) instead of react-icons or emoji in UI chrome
+globs: "**/*.{tsx,ts}"
+alwaysApply: false
+---
+
+# Icons (asset SVGs)
+
+## Pipeline
+
+1. Add or replace SVG files under `src/components/icons/assets/` (flat names, e.g. `my_feature.svg`).
+2. Regenerate the map: `npm run icons:gen` (runs `node scripts/generate-icon-map.mjs`).
+3. Import `Icon` and `IconName` from `src/components/icons/index.ts`. Render with `<Icon name="snake_case_key" className="h-4 w-4" alt="" />` (Tailwind for size).
+
+## Semantics
+
+- **Product features** (nav, dashboard widgets): prefer keys from `src/lib/appAssetIcons.ts` and pass `name={appAssetIcons.*}` or `iconName={...}` to headers and shared components.
+- **Generic controls** (chevrons, search, close): use `src/lib/iconSemantics.ts` → `uiIcons` (e.g. `uiIcons.chevronLeft`, `uiIcons.search`). Every `uiIcons` value must exist in `iconMap.ts`.
+
+## Do not
+
+- Do not add `react-icons` or other icon font packages for app UI.
+- Do not use inline emoji for navigation, buttons, stats, or list chrome. (Country flags or copy-only unicode in body text are fine.)
+- If no asset fits, add the concept to `missing_icons.txt` at the project root and pick the nearest `uiIcons` / `IconName` stand-in.
+
+## Related
+
+- Layout and shared components: see `design-system.mdc`.
+- After adding SVGs, always run `npm run icons:gen` before committing.

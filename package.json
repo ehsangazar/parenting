@@ -6,7 +6,15 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "dev:web": "pnpm --filter parenting-frontend dev",
+    "dev:mobile": "pnpm --filter parenting-mobile start",
+    "dev:backend": "pnpm --filter parenting-backend dev",
+    "build:web": "turbo run build --filter=parenting-frontend",
+    "build:backend": "turbo run build --filter=parenting-backend",
+    "build:mobile:ios": "pnpm --filter parenting-mobile build:ios",
+    "build:mobile:android": "pnpm --filter parenting-mobile build:android",
+    "type-check": "turbo run type-check"
   },
   "devDependencies": {
     "turbo": "latest"

@@ -1,0 +1,630 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Raised · Pastel — canvas matches tailwind `background` (#F8F9FE).
+   * Default type: DM Sans. Use `font-game` for Fredoka (CTAs, badges, gamification).
+   */
+  html {
+    background-color: #f8f9fe;
+    min-height: 100%;
+  }
+
+  #root {
+    min-height: 100%;
+    background-color: #f8f9fe;
+  }
+
+  body {
+    @apply bg-background font-sans text-text-primary;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Persian / RTL font — applied via useLocale hook on <html> */
+  html.font-persian body,
+  html.font-persian input,
+  html.font-persian textarea,
+  html.font-persian button,
+  html.font-persian .font-sans,
+  html.font-persian .font-game,
+  html.font-persian .font-display,
+  html.font-persian .font-body,
+  html.font-persian .font-heading {
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+  }
+
+  html.font-persian .font-body p,
+  html.font-persian .font-body li,
+  html.font-persian .font-body blockquote {
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-medium rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-border-focus; }
+
+  /* ===== TYPOGRAPHY ===== */
+  p, li {
+    margin-bottom: 0.5em;
+  }
+  
+  a {
+    @apply text-brand-blue;
+    text-underline-offset: 3px;
+  }
+  a:hover { @apply text-accent-blueHover; }
+
+  /* ===== INPUTS ===== */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="datetime-local"],
+  textarea {
+    @apply bg-surface border-2 border-border text-text-primary rounded-[14px];
+    font-size: 1rem !important; /* prevent iOS zoom */
+    min-height: 56px;
+  }
+  
+  input::placeholder, textarea::placeholder {
+    @apply text-text-tertiary;
+  }
+
+  input:focus, textarea:focus {
+    @apply border-border-focus outline-none ring-0;
+  }
+  
+  *:focus-visible {
+    @apply outline-none ring-2 ring-border-focus ring-offset-2 ring-offset-background rounded-sm;
+  }
+
+  button {
+    min-height: 44px; /* accessible touch target */
+  }
+
+  [data-sonner-toaster] [data-close-button] {
+    min-height: unset;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@layer components {
+  /* 3D tactile CTAs — Fredoka for playful caps (Pastel: gamification type) */
+  .btn-duo {
+    @apply font-game relative inline-flex items-center justify-center rounded-2xl font-bold uppercase tracking-[0.08em] transition-transform duration-100 ease-in-out cursor-pointer;
+    min-height: 56px;
+    padding: 0 24px;
+    border: none;
+    outline: none;
+  }
+  
+  .btn-duo:active:not(:disabled) {
+    transform: translateY(3px);
+  }
+  
+  .btn-duo:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .btn-duo-green {
+    @apply btn-duo bg-primary-400 text-text-inverse;
+  }
+  .btn-duo-green:active:not(:disabled) {
+  }
+
+  .btn-duo-blue {
+    @apply btn-duo bg-brand-blue text-white;
+  }
+  .btn-duo-blue:active:not(:disabled) {
+  }
+
+  /* Sky tactile — bright chip, dark label */
+  .btn-duo-sky {
+    @apply btn-duo bg-[#5ED4C8];
+    color: #0a1f14;
+  }
+  .btn-duo-sky:active:not(:disabled) {
+  }
+
+  /**
+   * Outlined pill on light canvas — CELEBRATE-style
+   * Thick border, white fill, dark caps label; pair with leading icon (e.g. 🎉).
+   */
+  .btn-duo-surface-pill {
+    @apply font-game relative inline-flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-150;
+    min-height: 56px;
+    padding: 0 32px;
+    border: 3px solid #e0e7ff;
+    background: #ffffff;
+    color: #1e293b;
+    outline: none;
+  }
+  .btn-duo-surface-pill:hover:not(:disabled) {
+    background: #f1f4ff;
+    border-color: #c7d2fe;
+  }
+  .btn-duo-surface-pill:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-duo-surface-pill:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /**
+   * Premium 3D pill — TRY N DAYS FREE-style saturated violet + deep slab shadow
+   * Taller depth (6px) than standard duo CTAs (4px) for a heavier press.
+   */
+  .btn-duo-violet-pill {
+    @apply font-game relative inline-flex items-center justify-center rounded-full font-bold uppercase tracking-[0.08em] transition-transform duration-100 ease-in-out cursor-pointer;
+    min-height: 56px;
+    padding: 0 36px;
+    border: none;
+    outline: none;
+    background: #5856d6;
+    color: #ffffff;
+  }
+  .btn-duo-violet-pill:active:not(:disabled) {
+    transform: translateY(2px);
+  }
+  .btn-duo-violet-pill:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .btn-duo-gold {
+    @apply btn-duo bg-secondary-400 text-text-inverse;
+  }
+  .btn-duo-gold:active:not(:disabled) {
+  }
+
+  .btn-duo-outline {
+    @apply btn-duo bg-surface text-brand-blue border-2 border-border;
+  }
+  .btn-duo-outline:active:not(:disabled) {
+  }
+
+  .btn-duo-ghost {
+    @apply btn-duo bg-surface-light text-text-secondary;
+  }
+  .btn-duo-ghost:active:not(:disabled) {
+  }
+  .btn-duo-ghost:hover:not(:disabled) {
+    @apply bg-surface-light;
+  }
+
+  /** Compact duo CTAs — navbar, tables, admin toolbars (same 3D language, smaller footprint) */
+  .btn-duo-green-sm {
+    @apply btn-duo-green inline-flex items-center justify-center gap-2 !min-h-10 !rounded-xl !px-4 !py-2 !text-sm;
+  }
+  .btn-duo-blue-sm {
+    @apply btn-duo-blue inline-flex items-center justify-center gap-2 !min-h-10 !rounded-xl !px-4 !py-2 !text-sm;
+  }
+  .btn-duo-outline-sm {
+    @apply btn-duo-outline inline-flex items-center justify-center gap-2 !min-h-10 !rounded-xl !px-4 !py-2 !text-sm;
+  }
+  .btn-duo-ghost-sm {
+    @apply btn-duo-ghost inline-flex items-center justify-center gap-2 !min-h-10 !rounded-xl !px-3 !py-2 !text-xs;
+  }
+
+  /** Full pills — marketing header / hero */
+  .btn-duo-green-pill {
+    @apply btn-duo-green inline-flex items-center justify-center gap-2 !min-h-11 !rounded-full !px-5 !py-2 !text-sm;
+  }
+  .btn-duo-green-pill-lg {
+    @apply btn-duo-green inline-flex items-center gap-2 !min-h-12 !rounded-full !px-7 !py-3 !text-sm;
+  }
+  .btn-duo-outline-pill {
+    @apply btn-duo-outline inline-flex items-center justify-center !min-h-11 !rounded-full !px-5 !py-2 !text-sm;
+  }
+  .btn-duo-outline-pill-lg {
+    @apply btn-duo-outline inline-flex items-center justify-center !min-h-12 !rounded-full !px-7 !py-3 !text-sm;
+  }
+  
+  /* Link utilities */
+  .duo-action-link {
+    @apply font-game text-brand-blue font-bold uppercase tracking-[0.08em] text-[13px] hover:underline cursor-pointer inline-flex items-center;
+  }
+
+  /* Progress Bar */
+  .duo-progress-track {
+    @apply relative w-full h-3 bg-quest-track rounded-full overflow-hidden;
+  }
+  .duo-progress-fill {
+    @apply absolute top-0 left-0 h-full bg-primary-500 rounded-full transition-all duration-500 ease-out;
+  }
+  .duo-progress-fill::after {
+    content: '';
+    @apply absolute top-[2px] left-1.5 right-1.5 h-[3px] bg-white/35 rounded-full;
+  }
+
+  /* Cards */
+  .duo-skill-card {
+    @apply bg-surface border-2 border-card-border rounded-2xl transition-all duration-150 cursor-pointer;
+  }
+  .duo-skill-card:hover:not(.locked) {
+    @apply transform -translate-y-[1px];
+  }
+  .duo-skill-card:active:not(.locked) {
+    @apply transform translate-y-[2px];
+  }
+  .duo-skill-card.active {
+    @apply border-primary-500;
+  }
+  .duo-skill-card.active:active:not(.locked) {
+  }
+  .duo-skill-card.locked {
+    @apply opacity-45 cursor-not-allowed;
+  }
+
+  /* Gamification */
+  .xp-badge {
+    @apply inline-flex items-center justify-center bg-secondary-50 text-secondary-fg font-bold rounded-full px-3 py-1 text-sm;
+  }
+  .streak-active {
+    filter: drop-shadow(0 0 8px rgba(255, 150, 0, 0.6));
+  }
+
+  /* ── Reading typography ─────────────────────────────────────────
+     Use font-body on reading-dense surfaces: articles, AI chat
+     bubbles, playbook descriptions, onboarding copy, settings.
+     Fredoka is a game font — DM Sans is built for mobile reading.
+  ─────────────────────────────────────────────────────────────── */
+  .font-body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  .font-body p,
+  .font-body li,
+  .font-body blockquote {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    margin-bottom: 0.75em;
+  }
+  .font-body strong { font-weight: 600; }
+  .font-body em     { font-style: italic; }
+
+  /* Use font-heading on section titles, feature page headers */
+  .font-heading {
+    font-family: 'Sora', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── Progress bar animated shimmer ────────────────────────────
+     Add .duo-progress-fill--active on bars that are in-progress
+     (not complete). Creates a moving light sweep.
+  ─────────────────────────────────────────────────────────────── */
+  .duo-progress-fill--active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    border-radius: inherit;
+    animation: progress-sweep 2s ease-in-out infinite;
+  }
+
+  /* ── Tactile press utility ─────────────────────────────────────
+     .press — quick scale-down on tap, spring back on release.
+     Use on any interactive card, row, or icon button.
+  ─────────────────────────────────────────────────────────────── */
+  .press {
+    @apply transition-transform duration-100 active:scale-95;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .press-sm {
+    @apply transition-transform duration-100 active:scale-[0.97];
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── Haptic-feel card ──────────────────────────────────────────
+     Replaces plain card-hover. Lifts on hover, squashes on tap.
+  ─────────────────────────────────────────────────────────────── */
+  .card-lift {
+    @apply transition-all duration-150 hover:-translate-y-[2px] hover:shadow-md active:translate-y-[2px] active:shadow-sm;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── Celebration glow ──────────────────────────────────────────
+     Wrap an icon or badge in .glow-primary / .glow-gold to add
+     a radiant halo during achievement moments.
+  ─────────────────────────────────────────────────────────────── */
+  .glow-primary {
+    filter: drop-shadow(0 0 10px rgba(82, 214, 140, 0.65));
+  }
+  .glow-gold {
+    filter: drop-shadow(0 0 10px rgba(255, 159, 81, 0.72));
+  }
+  .glow-blue {
+    filter: drop-shadow(0 0 10px rgba(123, 143, 255, 0.65));
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/85 backdrop-blur-md border border-border;
+  }
+  .glass-dark {
+    @apply glass;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-150;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card-hover:hover { @apply -translate-y-[2px] shadow-md; }
+  .card-hover:active { @apply translate-y-[1px] shadow-sm scale-[0.99]; }
+
+  /* Specific Animations */
+  .animate-bounce-in {
+    animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  .animate-correct {
+    animation: flash-green 0.5s ease-out;
+  }
+  .animate-wrong {
+    animation: shake-horizontal 0.4s ease-in-out;
+  }
+  .animate-xp-pop {
+    animation: pop-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  .animate-shimmer {
+    background: linear-gradient(90deg, #f1f4ff 25%, #e8edff 50%, #f1f4ff 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes scale-in {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .animate-scale-in { animation: scale-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+  @keyframes fade-up {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-up { animation: fade-up 0.6s ease-out both; }
+
+  @keyframes fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  .animate-fade-in { animation: fade-in 0.4s ease-out both; }
+
+  @keyframes slide-up {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up { animation: slide-up 0.35s cubic-bezier(0.23, 1, 0.32, 1) both; }
+  
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(82, 214, 140, 0.35); }
+    50% { box-shadow: 0 0 0 8px rgba(82, 214, 140, 0); }
+  }
+  .animate-pulse-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
+
+  /* ── Gamification celebration animations ───────────────────────
+     These should fire on meaningful moments only:
+     level up, streak milestone, first completion, achievement.
+  ─────────────────────────────────────────────────────────────── */
+
+  /* XP number rises and fades out (float "+50 XP" above the stat) */
+  @keyframes xp-rise {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    60%  { opacity: 1; transform: translateY(-28px) scale(1.1); }
+    100% { opacity: 0; transform: translateY(-48px) scale(0.9); }
+  }
+  .animate-xp-rise {
+    animation: xp-rise 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    pointer-events: none;
+  }
+
+  /* Level-up badge: scale-in with a yellow glow flash */
+  @keyframes level-up {
+    0%   { transform: scale(0.6); opacity: 0; filter: brightness(1); }
+    50%  { transform: scale(1.15); opacity: 1; filter: brightness(1.8) drop-shadow(0 0 14px rgba(255,200,0,0.9)); }
+    75%  { transform: scale(0.97); }
+    100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+  }
+  .animate-level-up {
+    animation: level-up 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Star earned: spin + scale-in */
+  @keyframes star-earn {
+    0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+    60%  { transform: scale(1.2) rotate(10deg); opacity: 1; }
+    80%  { transform: scale(0.95) rotate(-4deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .animate-star-earn {
+    animation: star-earn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Heart lost: red flash + shake */
+  @keyframes heart-break {
+    0%   { filter: brightness(1); }
+    15%  { filter: brightness(2) drop-shadow(0 0 8px rgba(255,75,75,0.8)); transform: scale(1.1); }
+    30%  { transform: scale(0.9); }
+    45%  { transform: scale(1.05) translateX(-3px); }
+    60%  { transform: scale(0.95) translateX(3px); }
+    75%  { transform: scale(1) translateX(0); }
+    100% { filter: brightness(1); transform: scale(1); }
+  }
+  .animate-heart-break {
+    animation: heart-break 0.55s ease-out forwards;
+  }
+
+  /* Streak flame pulse — use on active streak fire icon */
+  @keyframes streak-flame {
+    0%, 100% { filter: drop-shadow(0 0 6px rgba(255,150,0,0.5)); transform: scale(1); }
+    50%       { filter: drop-shadow(0 0 14px rgba(255,150,0,0.85)); transform: scale(1.08); }
+  }
+  .animate-streak-flame {
+    animation: streak-flame 1.8s ease-in-out infinite;
+  }
+
+  /* Achievement pop — for unlock modals and toast badges */
+  @keyframes achievement-pop {
+    0%   { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+    55%  { transform: scale(1.12) rotate(3deg); opacity: 1; }
+    75%  { transform: scale(0.96) rotate(-1deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  .animate-achievement-pop {
+    animation: achievement-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Confetti burst — scale up + fade on a decorative burst element */
+  @keyframes confetti-burst {
+    0%   { transform: scale(0.2); opacity: 0.9; }
+    60%  { transform: scale(1.4); opacity: 0.6; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  .animate-confetti-burst {
+    animation: confetti-burst 0.55s ease-out forwards;
+    pointer-events: none;
+  }
+
+  /* Stagger helpers — add delay-[n] to children for cascade entries */
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+}
+
+/* Typing dots */
+@keyframes typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: typing-dot 1.4s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Hide scrollbar while preserving scroll */
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* Keyframes */
+@keyframes bounce-in {
+  0% { transform: scale(0.5); opacity: 0; }
+  80% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+  @keyframes flash-green {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(150, 230, 179, 0.45); }
+  100% { background-color: transparent; }
+}
+
+@keyframes shake-horizontal {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-4px); }
+}
+
+@keyframes pop-up {
+  0% { transform: scale(0.8) translateY(10px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes progress-sweep {
+  0%   { left: -60%; }
+  100% { left: 120%; }
+}
+
+@keyframes blockEntrance {
+  0% { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+
+/* Toggle Switch — Apple iOS style */
+.toggle-switch {
+  @apply relative inline-flex items-center shrink-0 cursor-pointer border-none p-0;
+  width: 51px;
+  height: 31px;
+  border-radius: 15.5px;
+  min-height: unset;
+  background-color: #cbd5e1;
+  transition: background-color 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.toggle-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  transition: transform 0.25s ease, width 0.1s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.toggle-switch[data-on="true"] {
+  background-color: #34C759;
+}
+.toggle-switch[data-on="true"] .toggle-switch-thumb {
+  transform: translateX(20px);
+}
+/* Apple-style thumb stretch on press */
+.toggle-switch:active .toggle-switch-thumb {
+  width: 32px;
+}
+.toggle-switch[data-on="true"]:active .toggle-switch-thumb {
+  transform: translateX(15px);
+  width: 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

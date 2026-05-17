@@ -1,0 +1,189 @@
+import type { AxiosInstance } from 'axios';
+import type { LeaderboardScope, LeaderboardMetric, LeaderboardPeriod, LeaderboardResponse } from '../types/leaderboard.js';
+
+function normalizeDateInput(value?: string): string | undefined {
+  if (!value) return undefined;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Date(`${value}T00:00:00.000Z`).toISOString();
+  }
+  return value;
+}
+
+export function createFamiliesApi(api: AxiosInstance) {
+  return {
+    list: async () => (await api.get('/api/families')).data,
+    get: async (id: string) => (await api.get(`/api/families/${id}`)).data,
+    create: async (name: string) => (await api.post('/api/families', { name })).data,
+    update: async (id: string, data: {
+      name?: string;
+      modules?: {
+        welcome?: boolean; children?: boolean; insights?: boolean;
+        calendar?: boolean; moments?: boolean; village?: boolean; ai?: boolean;
+      };
+    }) => (await api.put(`/api/families/${id}`, data)).data,
+    delete: async (id: string) => (await api.delete(`/api/families/${id}`)).data,
+    listMembers: async (familyId: string) => (await api.get(`/api/families/${familyId}/members`)).data,
+    addMember: async (familyId: string, payload: Record<string, unknown>) =>
+      (await api.post(`/api/families/${familyId}/members`, {
+        ...payload,
+        birthday: normalizeDateInput(payload?.birthday as string),
+      })).data,
+    inviteMember: async (familyId: string, email: string) =>
+      (await api.post(`/api/families/${familyId}/invite`, { email })).data,
+    updateMember: async (familyId: string, memberId: string, payload: Record<string, unknown>) =>
+      (await api.put(`/api/families/${familyId}/members/${memberId}`, {
+        ...payload,
+        birthday: normalizeDateInput(payload?.birthday as string),
+      })).data,
+    removeMember: async (familyId: string, memberId: string) =>
+      (await api.delete(`/api/families/${familyId}/members/${memberId}`)).data,
+    listChildren: async (familyId: string) => (await api.get(`/api/families/${familyId}/children`)).data,
+    addChild: async (familyId: string, payload: Record<string, unknown>) =>
+      (await api.post(`/api/families/${familyId}/children`, {
+        ...payload,
+        birthday: normalizeDateInput(payload?.birthday as string),
+        dueDate: normalizeDateInput(payload?.dueDate as string),
+      })).data,
+    updateChild: async (familyId: string, childId: string, payload: Record<string, unknown>) =>
+      (await api.put(`/api/families/${familyId}/children/${childId}`, {
+        ...payload,
+        birthday: normalizeDateInput(payload?.birthday as string),
+        dueDate: normalizeDateInput(payload?.dueDate as string),
+      })).data,
+    deleteChild: async (familyId: string, childId: string) =>
+      (await api.delete(`/api/families/${familyId}/children/${childId}`)).data,
+  };
+}
+
+export function createLearningApi(api: AxiosInstance) {
+  return {
+    getCourses: async () => (await api.get('/api/learning/courses')).data,
+    getPhases: async (courseId: string) => (await api.get(`/api/learning/courses/${courseId}/phases`)).data,
+    getModules: async () => (await api.get('/api/learning/modules')).data,
+    getLessons: async (moduleId: string) => (await api.get(`/api/learning/modules/${moduleId}/lessons`)).data,
+    getNextLesson: async () => (await api.get('/api/learning/next-lesson')).data,
+  };
+}
+
+export function createCalendarApi(api: AxiosInstance) {
+  return {
+    listEvents: async (familyId: string) => (await api.get(`/api/calendar/families/${familyId}/events`)).data,
+    getUpcomingEvents: async (familyId: string) => (await api.get(`/api/calendar/families/${familyId}/events/upcoming`)).data,
+    createEvent: async (familyId: string, payload: unknown) =>
+      (await api.post(`/api/calendar/families/${familyId}/events`, payload)).data,
+    updateEvent: async (familyId: string, eventId: string, payload: unknown) =>
+      (await api.put(`/api/calendar/families/${familyId}/events/${eventId}`, payload)).data,
+    deleteEvent: async (familyId: string, eventId: string) =>
+      (await api.delete(`/api/calendar/families/${familyId}/events/${eventId}`)).data,
+  };
+}
+
+export function createMomentsApi(api: AxiosInstance) {
+  return {
+    list: async (familyId: string, params?: unknown) =>
+      (await api.get(`/api/moments/families/${familyId}/moments`, { params })).data,
+    get: async (familyId: string, momentId: string) =>
+      (await api.get(`/api/moments/families/${familyId}/moments/${momentId}`)).data,
+    create: async (familyId: string, payload: unknown) =>
+      (await api.post(`/api/moments/families/${familyId}/moments`, payload)).data,
+    update: async (familyId: string, momentId: string, payload: unknown) =>
+      (await api.put(`/api/moments/families/${familyId}/moments/${momentId}`, payload)).data,
+    delete: async (familyId: string, momentId: string) =>
+      (await api.delete(`/api/moments/families/${familyId}/moments/${momentId}`)).data,
+    presign: async (familyId: string, payload: { contentType: string; contentLength: number }) =>
+      (await api.post(`/api/moments/families/${familyId}/moments/presign`, payload)).data,
+  };
+}
+
+export function createChatApi(api: AxiosInstance) {
+  return {
+    listConversations: async (limit = 20, offset = 0) =>
+      (await api.get('/api/chat/conversations', { params: { limit, offset } })).data,
+    createConversation: async () => (await api.post('/api/chat/conversations')).data,
+    getMessages: async (conversationId: string) =>
+      (await api.get(`/api/chat/conversations/${conversationId}/messages`)).data,
+    deleteConversation: async (conversationId: string) =>
+      (await api.delete(`/api/chat/conversations/${conversationId}`)).data,
+  };
+}
+
+export function createGamificationApi(api: AxiosInstance) {
+  return {
+    getProfile: async () => (await api.get('/api/gamification/profile')).data,
+    getAchievements: async () => (await api.get('/api/gamification/achievements')).data,
+    getQuests: async () => (await api.get('/api/gamification/quests')).data,
+    buyStreakFreeze: async () => (await api.post('/api/gamification/streak-freeze')).data,
+  };
+}
+
+export function createProfileApi(api: AxiosInstance) {
+  return {
+    update: async (data: { name?: string; avatarUrl?: string; locale?: string }) =>
+      (await api.put('/api/auth/me', data)).data,
+    getAvatarUploadUrl: async (contentType: string, contentLength: number) =>
+      (await api.get('/api/auth/me/avatar-upload-url', { params: { contentType, contentLength } })).data,
+  };
+}
+
+export function createLeaderboardApi(api: AxiosInstance) {
+  return {
+    getLeaderboard: async (params: {
+      scope: LeaderboardScope;
+      metric: LeaderboardMetric;
+      period: LeaderboardPeriod;
+      familyId?: string;
+    }): Promise<LeaderboardResponse> => {
+      const res = await api.get('/api/leaderboard', { params });
+      return res.data;
+    },
+    updatePrivacy: async (optIn: boolean) => (await api.put('/api/leaderboard/privacy', { optIn })).data,
+  };
+}
+
+export function createVillageApi(api: AxiosInstance) {
+  return {
+    listPosts: async (params?: unknown) => (await api.get('/api/village/posts', { params })).data,
+    createPost: async (payload: unknown) => (await api.post('/api/village/posts', payload)).data,
+    getPost: async (postId: string) => (await api.get(`/api/village/posts/${postId}`)).data,
+    getPostComments: async (postId: string) => (await api.get(`/api/village/posts/${postId}/comments`)).data,
+    addComment: async (postId: string, content: string, parentCommentId?: string) =>
+      (await api.post(`/api/village/posts/${postId}/comments`, { content, parentCommentId })).data,
+    addReaction: async (postId: string, reactionType?: string) =>
+      (await api.post(`/api/village/posts/${postId}/reactions`, { reactionType })).data,
+    listCategories: async () => (await api.get('/api/village/categories')).data,
+  };
+}
+
+export function createModulesApi(api: AxiosInstance) {
+  return {
+    getConfig: async () => (await api.get('/api/modules/config')).data,
+  };
+}
+
+export function createInsightsApi(api: AxiosInstance) {
+  return {
+    getSummary: async () => (await api.get('/api/insights/summary')).data,
+  };
+}
+
+export function createAiApi(api: AxiosInstance) {
+  return {
+    getDailyPulse: async (locale?: string) =>
+      (await api.get('/api/ai/daily-pulse', { params: locale ? { lang: locale } : undefined })).data,
+  };
+}
+
+export function createAuthApi(api: AxiosInstance) {
+  return {
+    login: async (email: string, password: string) =>
+      (await api.post('/api/auth/login', { email, password })).data,
+    register: async (email: string, password: string, name?: string) =>
+      (await api.post('/api/auth/register', { email, password, name })).data,
+    me: async () => (await api.get('/api/auth/me')).data,
+    logout: async () => (await api.post('/api/auth/logout')).data,
+    forgotPassword: async (email: string) =>
+      (await api.post('/api/auth/forgot-password', { email })).data,
+    resetPassword: async (token: string, password: string) =>
+      (await api.post('/api/auth/reset-password', { token, password })).data,
+  };
+}
