@@ -13,7 +13,7 @@
     "format:write": "prettier --write .",
     "sitemap": "node scripts/generate-sitemap.mjs",
     "icons:gen": "node scripts/generate-icon-map.mjs",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@parenting/shared": "workspace:*",
