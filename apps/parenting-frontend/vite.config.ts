@@ -117,10 +117,15 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-sentry': ['@sentry/react'],
+        // Function form: route any nested import to a single home so shared deps
+        // (react, scheduler) are not duplicated into vendor-sentry / vendor-motion.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/@sentry/')) return 'vendor-sentry';
+          if (id.includes('node_modules/framer-motion/')) return 'vendor-motion';
         },
       },
     },
