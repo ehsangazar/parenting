@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "../db/index.js";
 import { embedText } from "./openai.js";
 

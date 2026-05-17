@@ -8,7 +8,7 @@
   "rules": {
     "no-console": "off",
     "no-unused-vars": "warn",
-    "eqeqeq": "error",
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
     "no-var": "error",
     "prefer-const": "error"
   }
