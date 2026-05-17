@@ -1,6 +1,17 @@
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import { VitePWA } from 'vite-plugin-pwa';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// packages/ui declares `react` as a peer dep with `*`, which makes pnpm
+// auto-install React 19 next to it (mobile uses 19). When imports flow
+// through @parenting/ui, Vite would resolve to that React 19 while the app
+// itself uses React 18 — two Reacts, broken hooks. Force every `react` /
+// `react-dom` import to this app's copy.
+const reactPath = path.resolve(__dirname, 'node_modules/react');
+const reactDomPath = path.resolve(__dirname, 'node_modules/react-dom');
 
 /** Serve `/sitemap.xml` in dev (build writes it to `dist/`; dev has no dist until build). */
 function sitemapDevPlugin(): Plugin {
@@ -114,6 +125,13 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: {
+      react: reactPath,
+      'react-dom': reactDomPath,
+    },
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
+  },
   build: {
     rollupOptions: {
       output: {
