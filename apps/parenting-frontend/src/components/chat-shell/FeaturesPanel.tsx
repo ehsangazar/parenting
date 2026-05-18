@@ -18,6 +18,24 @@ type Feature = {
 
 const FEATURES: Feature[] = [
   {
+    to: '/calendar',
+    tKey: 'nav.calendar',
+    fallback: 'Calendar',
+    descriptionKey: 'chatShell.calendarBlurb',
+    descriptionFallback: 'See appointments, milestones, and reminders.',
+    iconName: appAssetIcons.calendar,
+    accent: 'bg-brand-blue/15 text-brand-blue',
+  },
+  {
+    to: '/academy',
+    tKey: 'nav.academy',
+    fallback: 'Academy',
+    descriptionKey: 'chatShell.academyBlurb',
+    descriptionFallback: 'Courses and lessons for your parenting journey.',
+    iconName: appAssetIcons.academy,
+    accent: 'bg-brand-pink/15 text-brand-pink',
+  },
+  {
     to: '/settings',
     tKey: 'nav.settings',
     fallback: 'Settings',

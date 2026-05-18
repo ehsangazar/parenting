@@ -94,8 +94,36 @@ export async function createMessage(data: {
   content: string;
   docTypeFilter?: string;
   locale?: string;
+  clientMessageId?: string;
 }) {
   return prisma.message.create({ data });
+}
+
+export async function findUserMessageByClientId(
+  conversationId: string,
+  clientMessageId: string,
+) {
+  return prisma.message.findUnique({
+    where: {
+      conversationId_clientMessageId: { conversationId, clientMessageId },
+    },
+    select: { id: true, conversationId: true, createdAt: true },
+  });
+}
+
+export async function findAssistantReplyAfter(
+  conversationId: string,
+  afterCreatedAt: Date,
+) {
+  return prisma.message.findFirst({
+    where: {
+      conversationId,
+      role: "assistant",
+      createdAt: { gt: afterCreatedAt },
+    },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, content: true, citations: true, locale: true },
+  });
 }
 
 export async function findMessages(conversationId: string) {

@@ -44,6 +44,10 @@ export async function removeConversation(
 export type QueryStreamCallbacks = {
   onStream: (chunk: string) => void;
   onStatus: (status: string) => void;
+  onToolStart: (payload: { name: string; label: string; args: unknown }) => void;
+  onToolFinish: (payload: { name: string; ok: boolean; summary: string }) => void;
+  onNavCard: (card: { type: "navLink"; label: string; to: string }) => void;
+  onCard: (card: unknown) => void;
 };
 
 export async function runQuery(
@@ -54,6 +58,7 @@ export async function runQuery(
     message: string;
     docTypeFilter?: string;
     locale?: string;
+    clientMessageId?: string;
   },
   callbacks: QueryStreamCallbacks,
 ): Promise<{ conversationId: string } | { error: string; status: number }> {
@@ -71,6 +76,34 @@ export async function runQuery(
     conversationId = created.id;
   }
 
+  // Idempotency: if the client retried with the same clientMessageId, replay the
+  // stored assistant reply instead of orchestrating again.
+  if (input.clientMessageId) {
+    const existingUser = await repo.findUserMessageByClientId(
+      conversationId!,
+      input.clientMessageId,
+    );
+    if (existingUser) {
+      const existingAssistant = await repo.findAssistantReplyAfter(
+        conversationId!,
+        existingUser.createdAt,
+      );
+      if (existingAssistant) {
+        callbacks.onStream(existingAssistant.content);
+        const cites = existingAssistant.citations as
+          | { navCards?: unknown[]; cards?: unknown[] }
+          | null;
+        if (cites && Array.isArray(cites.navCards)) {
+          for (const c of cites.navCards) callbacks.onNavCard(c as never);
+        }
+        if (cites && Array.isArray(cites.cards)) {
+          for (const c of cites.cards) callbacks.onCard(c);
+        }
+      }
+      return { conversationId: conversationId! };
+    }
+  }
+
   const sanitizedMessage = applyBlocklist(redactPII(input.message), BLOCKLIST);
 
   try {
@@ -81,6 +114,7 @@ export async function runQuery(
       content: sanitizedMessage,
       docTypeFilter: input.docTypeFilter,
       locale: input.locale ?? "en",
+      clientMessageId: input.clientMessageId,
     });
   } catch (error) {
     if (
@@ -89,6 +123,14 @@ export async function runQuery(
     ) {
       return { error: "Conversation no longer exists", status: 409 };
     }
+    // Lost race: same clientMessageId raced past the dedupe check above.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002" &&
+      input.clientMessageId
+    ) {
+      return { conversationId: conversationId! };
+    }
     throw error;
   }
 
@@ -96,8 +138,13 @@ export async function runQuery(
     userId,
     conversationId: conversationId!,
     message: sanitizedMessage,
+    locale: input.locale,
     onStream: callbacks.onStream,
     onStatus: callbacks.onStatus,
+    onToolStart: callbacks.onToolStart,
+    onToolFinish: callbacks.onToolFinish,
+    onNavCard: callbacks.onNavCard,
+    onCard: callbacks.onCard,
   });
 
   // Award coins for AI chat interaction (fire-and-forget)

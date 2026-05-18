@@ -7,6 +7,7 @@ declare module "@fastify/jwt" {
       sub: string;
       role?: string;
       kind?: string;
+      familyId?: string;
     };
   }
 }

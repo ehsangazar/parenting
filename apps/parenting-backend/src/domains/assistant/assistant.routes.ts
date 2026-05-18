@@ -203,6 +203,7 @@ export default async function assistantRoutes(app: FastifyInstance) {
             message: { type: "string", minLength: 1 },
             docTypeFilter: { type: "string" },
             locale: { type: "string" },
+            clientMessageId: { type: "string", minLength: 1, maxLength: 128 },
           },
         },
       },
@@ -231,6 +232,12 @@ export default async function assistantRoutes(app: FastifyInstance) {
           {
             onStream: (chunk) => writeSSE(reply, null, chunk),
             onStatus: (status) => writeSSE(reply, "status", status),
+            onToolStart: (payload) =>
+              writeSSE(reply, "tool_start", JSON.stringify(payload)),
+            onToolFinish: (payload) =>
+              writeSSE(reply, "tool_finish", JSON.stringify(payload)),
+            onNavCard: (card) => writeSSE(reply, "nav_card", JSON.stringify(card)),
+            onCard: (card) => writeSSE(reply, "card", JSON.stringify(card)),
           },
         );
 

@@ -57,26 +57,70 @@ export function createFamiliesApi(api: AxiosInstance) {
 
 export function createLearningApi(api: AxiosInstance) {
   return {
-    getCourses: async () => (await api.get('/api/learning/courses')).data,
-    getPhases: async (courseId: string) => (await api.get(`/api/learning/courses/${courseId}/phases`)).data,
-    getModules: async () => (await api.get('/api/learning/modules')).data,
-    getLessons: async (moduleId: string) => (await api.get(`/api/learning/modules/${moduleId}/lessons`)).data,
-    getNextLesson: async () => (await api.get('/api/learning/next-lesson')).data,
-    translateAll: async (locale: string) =>
-      (await api.post('/api/learning/translate-all', { locale })).data,
+    getCourses: async () => (await api.get('/api/courses')).data,
+    getCourse: async (courseId: string) => (await api.get(`/api/courses/${courseId}`)).data,
+    getCourseModules: async (courseId: string) =>
+      (await api.get(`/api/courses/${courseId}/modules`)).data,
+    getLessons: async (courseId: string, moduleId: string) =>
+      (await api.get(`/api/courses/${courseId}/modules/${moduleId}/lessons`)).data,
+    getLesson: async (courseId: string, moduleId: string, lessonId: string) =>
+      (await api.get(`/api/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`)).data,
+    completeLesson: async (courseId: string, moduleId: string, lessonId: string) =>
+      (await api.post(`/api/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}/complete`)).data,
   };
 }
 
 export function createCalendarApi(api: AxiosInstance) {
   return {
-    listEvents: async (familyId: string) => (await api.get(`/api/calendar/families/${familyId}/events`)).data,
-    getUpcomingEvents: async (familyId: string) => (await api.get(`/api/calendar/families/${familyId}/events/upcoming`)).data,
+    listEvents: async (familyId: string) => (await api.get(`/api/families/${familyId}/events`)).data,
+    getUpcomingEvents: async (familyId: string) => (await api.get(`/api/families/${familyId}/events/upcoming`)).data,
     createEvent: async (familyId: string, payload: unknown) =>
-      (await api.post(`/api/calendar/families/${familyId}/events`, payload)).data,
+      (await api.post(`/api/families/${familyId}/events`, payload)).data,
     updateEvent: async (familyId: string, eventId: string, payload: unknown) =>
-      (await api.put(`/api/calendar/families/${familyId}/events/${eventId}`, payload)).data,
+      (await api.put(`/api/families/${familyId}/events/${eventId}`, payload)).data,
     deleteEvent: async (familyId: string, eventId: string) =>
-      (await api.delete(`/api/calendar/families/${familyId}/events/${eventId}`)).data,
+      (await api.delete(`/api/families/${familyId}/events/${eventId}`)).data,
+    createFeedToken: async (familyId: string) =>
+      (await api.post(`/api/families/${familyId}/calendar/feed-token`)).data as {
+        url: string;
+        webcalUrl: string;
+        token: string;
+      },
+    parseEvent: async (
+      familyId: string,
+      payload: {
+        text: string;
+        now?: string;
+        existingEvent?: Record<string, unknown> | null;
+      },
+    ) =>
+      (await api.post(`/api/families/${familyId}/calendar/parse-event`, payload))
+        .data as {
+        draft: {
+          childId: string | null;
+          title: string | null;
+          eventType:
+            | 'appointment'
+            | 'milestone'
+            | 'activity'
+            | 'reminder'
+            | 'other'
+            | null;
+          startDate: string | null;
+          endDate: string | null;
+          allDay: boolean | null;
+          location: string | null;
+          description: string | null;
+          repeatRule: {
+            type: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'weekdays';
+            interval: number;
+            endDate?: string | null;
+            count?: number | null;
+            daysOfWeek?: number[] | null;
+          } | null;
+          notes: string | null;
+        };
+      },
   };
 }
 

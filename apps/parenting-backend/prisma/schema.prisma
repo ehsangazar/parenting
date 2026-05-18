@@ -856,17 +856,20 @@ model Conversation {
 }
 
 model Message {
-  id             String       @id @default(cuid())
-  conversationId String
-  role           String
-  content        String
-  docTypeFilter  String?
-  citations      Json?
-  flagged        Boolean      @default(false)
-  locale         String?      @default("en")
-  createdAt      DateTime     @default(now())
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  feedback       Feedback?
+  id              String       @id @default(cuid())
+  conversationId  String
+  role            String
+  content         String
+  docTypeFilter   String?
+  citations       Json?
+  flagged         Boolean      @default(false)
+  locale          String?      @default("en")
+  clientMessageId String?
+  createdAt       DateTime     @default(now())
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  feedback        Feedback?
+
+  @@unique([conversationId, clientMessageId])
 }
 
 model UserMemory {

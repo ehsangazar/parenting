@@ -5,6 +5,7 @@ export const chatQuerySchema = z.object({
   message: z.string().min(1),
   docTypeFilter: z.string().optional(),
   locale: z.string().optional(),
+  clientMessageId: z.string().min(1).max(128).optional(),
 });
 
 export const listConversationsQuerySchema = z.object({

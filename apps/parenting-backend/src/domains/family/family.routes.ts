@@ -11,6 +11,11 @@ import {
   updateEventSchema,
 } from "./family.schema.js";
 import * as svc from "./family.service.js";
+import { buildIcsCalendar, type IcsEventInput } from "./ics.js";
+import { parseCalendarEvent } from "./calendar-parser.js";
+
+const ICS_FEED_KIND = "calendar-ics-feed";
+const ICS_FEED_EXPIRY = "3650d";
 
 const bearerSecurity = [{ bearerAuth: [] }];
 
@@ -794,5 +799,171 @@ export default async function familyRoutes(app: FastifyInstance) {
     }
 
     return reply.send({ ok: true });
+  });
+
+  // POST /families/:familyId/calendar/parse-event
+  // Parse a free-text description into a structured event draft for the
+  // create/edit drawer's "Ask AI" tab. Returns nullable fields so the client
+  // can merge into its form state.
+  app.post("/families/:familyId/calendar/parse-event", {
+    schema: {
+      tags: ["Family"],
+      summary: "Parse a natural-language description into an event draft",
+      security: bearerSecurity,
+      params: {
+        type: "object",
+        required: ["familyId"],
+        properties: { familyId: { type: "string" } },
+      },
+      body: {
+        type: "object",
+        required: ["text"],
+        properties: {
+          text: { type: "string", minLength: 1, maxLength: 2000 },
+          now: { type: "string" },
+          existingEvent: { type: "object", additionalProperties: true },
+        },
+      },
+      response: {
+        200: { type: "object", properties: { draft: { type: "object" } } },
+        401: { description: "Unauthorized", type: "object" },
+        404: { description: "Family not found", type: "object" },
+      },
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const { familyId } = req.params as { familyId: string };
+    const body = req.body as {
+      text: string;
+      now?: string;
+      existingEvent?: Record<string, unknown> | null;
+    };
+    const result = await parseCalendarEvent({
+      familyId,
+      userId: req.user.sub,
+      input: {
+        text: body.text,
+        now: body.now ?? null,
+        existingEvent: body.existingEvent ?? null,
+      },
+    });
+    if ("error" in result) return reply.notFound("Family not found");
+    return reply.send({ draft: result });
+  });
+
+  // POST /families/:familyId/calendar/feed-token
+  // Mint a long-lived signed token the user can paste into Google Calendar / Apple
+  // Calendar as a subscription URL. The token grants read-only access to this
+  // family's ICS feed for the issuing user.
+  app.post("/families/:familyId/calendar/feed-token", {
+    schema: {
+      tags: ["Family"],
+      summary: "Mint a subscription token for the family's ICS feed",
+      security: bearerSecurity,
+      params: {
+        type: "object",
+        required: ["familyId"],
+        properties: { familyId: { type: "string" } },
+      },
+      response: {
+        200: {
+          type: "object",
+          properties: {
+            url: { type: "string" },
+            webcalUrl: { type: "string" },
+            token: { type: "string" },
+          },
+        },
+        401: { description: "Unauthorized", type: "object" },
+        404: { description: "Family not found", type: "object" },
+      },
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const { familyId } = req.params as { familyId: string };
+    const events = await svc.listCalendarEvents(familyId, req.user.sub);
+    if (!events) return reply.notFound("Family not found");
+
+    const token = app.jwt.sign(
+      { sub: req.user.sub, familyId, kind: ICS_FEED_KIND },
+      { expiresIn: ICS_FEED_EXPIRY },
+    );
+    const proto = (req.headers["x-forwarded-proto"] as string) || req.protocol;
+    const host = (req.headers["x-forwarded-host"] as string) || req.headers.host;
+    const baseUrl = host ? `${proto}://${host}` : "";
+    const path = `/api/families/${familyId}/events.ics?token=${encodeURIComponent(token)}`;
+    const url = `${baseUrl}${path}`;
+    const webcalUrl = baseUrl
+      ? `webcal://${host}${path}`
+      : `webcal:${path}`;
+    return reply.send({ url, webcalUrl, token });
+  });
+
+  // GET /families/:familyId/events.ics
+  // Public-by-token ICS feed (text/calendar). Accepts either an
+  // Authorization Bearer token (same auth as the rest of the API) or a
+  // ?token=<signed feed jwt> query string so calendar apps that cannot
+  // send custom headers (Google / Apple) can subscribe directly.
+  app.get("/families/:familyId/events.ics", {
+    schema: {
+      tags: ["Family"],
+      summary: "ICS feed for a family's calendar",
+      params: {
+        type: "object",
+        required: ["familyId"],
+        properties: { familyId: { type: "string" } },
+      },
+      querystring: {
+        type: "object",
+        properties: { token: { type: "string" } },
+      },
+    },
+  }, async (req, reply) => {
+    const { familyId } = req.params as { familyId: string };
+    const { token: queryToken } = (req.query as { token?: string }) ?? {};
+
+    let userId: string | null = null;
+
+    if (queryToken) {
+      try {
+        const payload = app.jwt.verify(queryToken) as {
+          sub: string;
+          familyId?: string;
+          kind?: string;
+        };
+        if (payload.kind === ICS_FEED_KIND && payload.familyId === familyId) {
+          userId = payload.sub;
+        }
+      } catch {
+        // fall through to Bearer auth
+      }
+    }
+
+    if (!userId) {
+      try {
+        await req.jwtVerify();
+        userId = req.user?.sub ?? null;
+      } catch {
+        // unauth
+      }
+    }
+
+    if (!userId) return reply.unauthorized("Invalid or missing feed token");
+
+    const events = await svc.listCalendarEvents(familyId, userId);
+    if (!events) return reply.notFound("Family not found");
+
+    const host = (req.headers["x-forwarded-host"] as string) || req.headers.host || "parenting.app";
+    const ics = buildIcsCalendar({
+      calendarName: "Family Calendar",
+      events: events as unknown as IcsEventInput[],
+      productHost: host,
+    });
+
+    reply
+      .header("Content-Type", "text/calendar; charset=utf-8")
+      .header("Content-Disposition", `inline; filename="family-${familyId}.ics"`)
+      .header("Cache-Control", "private, max-age=300");
+    return ics;
   });
 }

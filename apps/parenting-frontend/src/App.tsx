@@ -27,6 +27,9 @@ import { ChatShell } from './components/chat-shell/ChatShell.js';
 import { ChatPanel } from './components/chat-shell/ChatPanel.js';
 import { FeaturePageFrame } from './components/chat-shell/FeaturePageFrame.js';
 import { SettingsPage } from './pages/app/SettingsPage.js';
+import { CalendarPage } from './pages/app/CalendarPage.js';
+import { AcademyPage } from './pages/app/AcademyPage.js';
+import { CourseDetailPage } from './pages/app/CourseDetailPage.js';
 import { OnboardingPage } from './pages/onboarding/OnboardingPage.js';
 import { isPublicMarketingPath } from './lib/publicRoutes.js';
 
@@ -295,8 +298,44 @@ export default function App() {
               </RequireAuth>
             }
           />
+          <Route
+            path="calendar"
+            element={
+              <RequireAuth>
+                <RequireOnboarding>
+                  <FeaturePageFrame title={t('nav.calendar', 'Calendar')}>
+                    <CalendarPage />
+                  </FeaturePageFrame>
+                </RequireOnboarding>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="academy"
+            element={
+              <RequireAuth>
+                <RequireOnboarding>
+                  <FeaturePageFrame title={t('nav.academy', 'Academy')}>
+                    <AcademyPage />
+                  </FeaturePageFrame>
+                </RequireOnboarding>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="academy/:courseId"
+            element={
+              <RequireAuth>
+                <RequireOnboarding>
+                  <FeaturePageFrame title={t('nav.academy', 'Academy')}>
+                    <CourseDetailPage />
+                  </FeaturePageFrame>
+                </RequireOnboarding>
+              </RequireAuth>
+            }
+          />
 
-          {/* Marketing & legal pages — same shell so the user keeps history
+          {/* Marketing & legal pages, same shell so the user keeps history
               and feature shortcuts visible while reading. */}
           <Route
             path="about"

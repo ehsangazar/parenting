@@ -9,10 +9,21 @@ import { chatApi, familiesApi } from '../../lib/appApi.js';
 import { useAuth } from '../../state/auth.js';
 import { useAppContext } from '../app/AppContext.js';
 import { useChatShell } from './ChatShellContext.js';
+import { CardRenderer } from './cards/CardRenderer.js';
+import type { Card, CardActionHandlers } from './cards/types.js';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
-type ChatMessage = { id: string; role: 'user' | 'assistant' | 'system'; content: string };
+type NavCard = { type: 'navLink'; label: string; to: string };
+type ToolPill = { id: string; label: string; state: 'running' | 'ok' | 'error'; summary?: string };
+type ChatMessage = {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  toolPills?: ToolPill[];
+  navCards?: NavCard[];
+  cards?: Card[];
+};
 type ChildCtx = { id: string; name: string; age: number | null };
 
 function getAge(birthday?: string | null): number | null {
@@ -250,8 +261,52 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   generating_response: 'chatPage.generatingResponse',
 };
 
+function ToolPillsRow({ pills }: { pills: ToolPill[] }) {
+  if (!pills.length) return null;
+  return (
+    <div className="mb-2 flex flex-wrap gap-1.5">
+      {pills.map((p) => {
+        const tone =
+          p.state === 'ok'
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            : p.state === 'error'
+            ? 'bg-rose-50 text-rose-700 border-rose-200'
+            : 'bg-brand-blue/10 text-brand-blue border-brand-blue/30';
+        return (
+          <span
+            key={p.id}
+            title={p.summary}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${tone}`}
+          >
+            {p.state === 'running' && <span className="typing-dot" />}
+            {p.label}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function NavCardsRow({ cards }: { cards: NavCard[] }) {
+  if (!cards.length) return null;
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {cards.map((c, i) => (
+        <Link
+          key={`${c.to}-${i}`}
+          to={c.to}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-brand-blue/30 bg-brand-blue/5 px-3 py-1.5 text-[13px] font-semibold text-brand-blue hover:bg-brand-blue/10"
+        >
+          {c.label}
+          <span aria-hidden>→</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export const ChatPanel = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { token } = useAuth();
   const { activeFamily } = useAppContext();
@@ -270,9 +325,10 @@ export const ChatPanel = () => {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const sendingRef = useRef(false);
 
   // Load children for the active family
-  useEffect(() => {
+  const refreshChildren = useCallback(() => {
     if (!activeFamily || !token) {
       setChildren([]);
       return;
@@ -282,16 +338,38 @@ export const ChatPanel = () => {
       .catch(() => {});
   }, [activeFamily, token]);
 
-  // Hydrate messages when conversation changes (and we're not actively streaming)
+  useEffect(() => { refreshChildren(); }, [refreshChildren]);
+
+  // Tool names that mutate the children list; on a successful tool_finish for
+  // any of these, refetch so the sidebar reflects the change without a reload.
+  const CHILD_MUTATION_TOOLS = useMemo(
+    () => new Set(['children_add', 'children_update', 'children_delete']),
+    [],
+  );
+
+  // Hydrate messages only when the conversation changes. We intentionally do NOT
+  // depend on `streaming` here: re-running this effect when a stream ends would
+  // overwrite freshly-streamed local state with whatever the server has
+  // persisted, causing flicker or duplicate user messages if a previous
+  // submission ever raced.
   useEffect(() => {
-    if (streaming) return;
     if (!activeConversationId) { setMessages([]); return; }
     if (!token) return;
+    if (sendingRef.current) return;
 
     chatApi.getMessages(activeConversationId)
-      .then((data) => setMessages((data.messages ?? []).filter((m: any) => m.role !== 'system')))
+      .then((data) => setMessages(
+        (data.messages ?? [])
+          .filter((m: any) => m.role !== 'system')
+          .map((m: any) => {
+            const cites = m.citations && typeof m.citations === 'object' ? m.citations : null;
+            const navCards = Array.isArray(cites?.navCards) ? (cites.navCards as NavCard[]) : undefined;
+            const cards = Array.isArray(cites?.cards) ? (cites.cards as Card[]) : undefined;
+            return { id: m.id, role: m.role, content: m.content, navCards, cards };
+          })
+      ))
       .catch(() => {});
-  }, [activeConversationId, streaming, token]);
+  }, [activeConversationId, token]);
 
   // Sidebar requested "new conversation" — reset local state
   useEffect(() => {
@@ -336,7 +414,11 @@ export const ChatPanel = () => {
 
   const handleSend = useCallback(async (messageText?: string) => {
     const message = (messageText ?? input).trim();
-    if (!message || streaming) return;
+    if (!message) return;
+    // Synchronous guard: blocks double-clicks / double-Enter in the same React
+    // tick before `streaming` state has had a chance to update.
+    if (sendingRef.current) return;
+    sendingRef.current = true;
 
     // Login gate — logged-out users get bounced to /login with the draft message
     // preserved as next-action context.
@@ -346,6 +428,7 @@ export const ChatPanel = () => {
       } catch {
         // localStorage unavailable; non-fatal.
       }
+      sendingRef.current = false;
       navigate('/login?next=/');
       return;
     }
@@ -353,7 +436,12 @@ export const ChatPanel = () => {
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
 
-    setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'user', content: message }]);
+    const clientMessageId =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    setMessages((prev) => [...prev, { id: clientMessageId, role: 'user', content: message }]);
     setStreaming(true);
     setLoadingStatus(t('chatPage.thinking'));
 
@@ -367,6 +455,7 @@ export const ChatPanel = () => {
         setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('chatPage.couldNotStart') }]);
         setStreaming(false);
         setLoadingStatus(null);
+        sendingRef.current = false;
         return;
       }
     }
@@ -387,7 +476,12 @@ export const ChatPanel = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${useAuth.getState().token ?? ''}`,
         },
-        body: JSON.stringify({ conversationId: convId, message: contextualMessage }),
+        body: JSON.stringify({
+          conversationId: convId,
+          message: contextualMessage,
+          locale: i18n.language,
+          clientMessageId,
+        }),
         signal: abort.signal,
       });
 
@@ -425,6 +519,93 @@ export const ChatPanel = () => {
           } else if (eventName === 'status') {
             const key = STATUS_LABEL_KEYS[dataLine];
             setLoadingStatus(key ? t(key) : t('chatPage.thinking'));
+          } else if (eventName === 'tool_start') {
+            try {
+              const payload = JSON.parse(dataLine) as { name: string; label: string };
+              const pillId = `${payload.name}-${Date.now()}-${Math.random()}`;
+              setLoadingStatus(null);
+              setMessages((prev) => {
+                const updated = [...prev];
+                let target = updated[updated.length - 1];
+                if (!target || target.id !== assistantId) {
+                  target = { id: assistantId, role: 'assistant', content: '', toolPills: [], navCards: [] };
+                  updated.push(target);
+                  hasContent = true;
+                }
+                target.toolPills = [
+                  ...(target.toolPills ?? []),
+                  { id: pillId, label: payload.label, state: 'running' },
+                ];
+                updated[updated.length - 1] = { ...target };
+                return updated;
+              });
+            } catch {
+              // ignore malformed payload
+            }
+          } else if (eventName === 'tool_finish') {
+            try {
+              const payload = JSON.parse(dataLine) as { name: string; ok: boolean; summary: string };
+              setMessages((prev) => {
+                const updated = [...prev];
+                const target = updated[updated.length - 1];
+                if (!target || target.id !== assistantId) return prev;
+                const pills = (target.toolPills ?? []).slice();
+                for (let i = pills.length - 1; i >= 0; i--) {
+                  if (pills[i].state === 'running') {
+                    pills[i] = {
+                      ...pills[i],
+                      state: payload.ok ? 'ok' : 'error',
+                      summary: payload.summary,
+                    };
+                    break;
+                  }
+                }
+                updated[updated.length - 1] = { ...target, toolPills: pills };
+                return updated;
+              });
+              if (payload.ok && CHILD_MUTATION_TOOLS.has(payload.name)) {
+                refreshChildren();
+              }
+            } catch {
+              // ignore malformed payload
+            }
+          } else if (eventName === 'nav_card') {
+            try {
+              const card = JSON.parse(dataLine) as NavCard;
+              setMessages((prev) => {
+                const updated = [...prev];
+                let target = updated[updated.length - 1];
+                if (!target || target.id !== assistantId) {
+                  target = { id: assistantId, role: 'assistant', content: '', toolPills: [], navCards: [] };
+                  updated.push(target);
+                  hasContent = true;
+                }
+                target.navCards = [...(target.navCards ?? []), card];
+                updated[updated.length - 1] = { ...target };
+                return updated;
+              });
+            } catch {
+              // ignore malformed payload
+            }
+          } else if (eventName === 'card') {
+            try {
+              const card = JSON.parse(dataLine) as Card;
+              setLoadingStatus(null);
+              setMessages((prev) => {
+                const updated = [...prev];
+                let target = updated[updated.length - 1];
+                if (!target || target.id !== assistantId) {
+                  target = { id: assistantId, role: 'assistant', content: '', toolPills: [], navCards: [], cards: [] };
+                  updated.push(target);
+                  hasContent = true;
+                }
+                target.cards = [...(target.cards ?? []), card];
+                updated[updated.length - 1] = { ...target };
+                return updated;
+              });
+            } catch {
+              // ignore malformed payload
+            }
           } else if (eventName === 'done') {
             setLoadingStatus(null);
           } else if (eventName === 'error') {
@@ -478,8 +659,9 @@ export const ChatPanel = () => {
     } finally {
       setStreaming(false);
       setLoadingStatus(null);
+      sendingRef.current = false;
     }
-  }, [input, streaming, activeConversationId, activeChild, token, navigate, t, setActiveConversationId]);
+  }, [input, activeConversationId, activeChild, token, navigate, t, i18n.language, setActiveConversationId, refreshChildren, CHILD_MUTATION_TOOLS]);
 
   // After login, resume any pending draft saved before the login redirect.
   useEffect(() => {
@@ -496,6 +678,18 @@ export const ChatPanel = () => {
   const placeholder = activeChild
     ? t('chatPage.askAboutChild', { name: activeChild.name })
     : t('chatPage.askParenting');
+
+  const cardHandlers = useMemo<CardActionHandlers>(
+    () => ({
+      onSend: (message: string) => {
+        void handleSend(message);
+      },
+      onNavigate: (to: string) => {
+        navigate(to);
+      },
+    }),
+    [handleSend, navigate],
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -589,10 +783,18 @@ export const ChatPanel = () => {
                     ? 'bg-brand-blue text-white rounded-br-sm text-[15px] leading-relaxed'
                     : 'bg-surface border border-border rounded-bl-sm'
                 }`}>
-                  {msg.role === 'assistant'
-                    ? <MarkdownContent content={msg.content} />
-                    : msg.content
-                  }
+                  {msg.role === 'assistant' ? (
+                    <>
+                      {msg.toolPills && msg.toolPills.length > 0 && <ToolPillsRow pills={msg.toolPills} />}
+                      <MarkdownContent content={msg.content} />
+                      {msg.cards && msg.cards.length > 0 && (
+                        <CardRenderer cards={msg.cards} handlers={cardHandlers} />
+                      )}
+                      {msg.navCards && msg.navCards.length > 0 && <NavCardsRow cards={msg.navCards} />}
+                    </>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
               </div>
             ))}
