@@ -1,14 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { Icon, type IconName } from '../components/icons/index.js';
 import { uiIcons } from '../lib/iconSemantics.js';
-import { PublicSiteHeader } from '../components/PublicSiteHeader.js';
-import { PublicFooter } from '../components/PublicFooter.js';
 import { SEO } from '../components/SEO.js';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <section className="bg-surface rounded-xl p-6 shadow-sm border border-border-light">
-    <h2 className="text-lg font-semibold text-text-primary mb-3">{title}</h2>
-    <div className="text-text-secondary leading-relaxed space-y-3">{children}</div>
+  <section className="bg-surface rounded-xl p-6 shadow-sm border border-border">
+    <h2 className="text-[18px] font-bold text-text-primary mb-3">{title}</h2>
+    <div className="text-[15px] text-text-primary leading-relaxed space-y-3">{children}</div>
   </section>
 );
 
@@ -50,15 +48,13 @@ export const SafeguardingPage = () => {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEO
         title={t('safeguarding.title')}
         description={t('safeguarding.intro')}
         canonical="/safeguarding"
       />
-      <PublicSiteHeader />
-
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <article className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-100">
@@ -68,12 +64,12 @@ export const SafeguardingPage = () => {
               <h1 className="text-3xl sm:text-4xl font-bold text-text-primary tracking-tight">
                 {t('safeguarding.title')}
               </h1>
-              <p className="text-sm text-text-tertiary mt-1">
+              <p className="text-[13px] text-text-secondary mt-1">
                 {t('safeguarding.lastUpdated', { date: lastUpdated })}
               </p>
             </div>
           </div>
-          <p className="text-text-secondary leading-relaxed max-w-2xl">
+          <p className="text-[15px] text-text-primary leading-relaxed max-w-2xl">
             {t('safeguarding.intro')}
           </p>
         </div>
@@ -82,8 +78,8 @@ export const SafeguardingPage = () => {
           <div className="flex items-start gap-3">
             <Icon name={uiIcons.alertTriangle} className="h-5 w-5 text-error flex-shrink-0 mt-0.5" alt="" />
             <div>
-              <p className="font-bold text-error text-sm">{t('safeguarding.emergencyTitle')}</p>
-              <p className="text-sm text-text-secondary mt-1">{t('safeguarding.emergencyBody')}</p>
+              <p className="font-bold text-error text-[15px]">{t('safeguarding.emergencyTitle')}</p>
+              <p className="text-[14px] text-text-primary mt-1 leading-relaxed">{t('safeguarding.emergencyBody')}</p>
             </div>
           </div>
         </div>
@@ -184,7 +180,7 @@ export const SafeguardingPage = () => {
                     >
                       {r.label}
                     </a>
-                    <p className="text-xs text-text-tertiary mt-0.5">{t(`safeguarding.${r.descKey}`)}</p>
+                    <p className="text-[13px] text-text-secondary mt-1">{t(`safeguarding.${r.descKey}`)}</p>
                   </div>
                   {r.phone && (
                     <a
@@ -205,8 +201,6 @@ export const SafeguardingPage = () => {
           </Section>
         </div>
       </article>
-
-      <PublicFooter />
-    </div>
+    </>
   );
 };

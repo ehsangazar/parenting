@@ -11,7 +11,4 @@ export {
   createProfileApi,
   createLeaderboardApi,
   createVillageApi,
-  createModulesApi,
-  createInsightsApi,
-  createAiApi,
 } from './endpoints.js';

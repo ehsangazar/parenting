@@ -1,0 +1,13 @@
+<!-- hero: learning/raised-logic/l4-anchors-pull/hero-title-778cf605-e2ec-4662-8b3a-2451e24c909e.png -->
+
+Your child is in the middle of a joyful exploration, crawling toward a distant toy or investigating the texture of a rug. Then, for no apparent reason, they suddenly stop, turn around, and rush back to your side, pressing their face against your leg or insisting on being held. Two minutes later, they are back on the floor, zooming away as if nothing happened.
+
+![Face against the leg, fists on the fabric — the secure base refueling that powers brave exploration](learning/raised-logic/l4-anchors-pull/body-opening-e7ce304a-962b-4b34-8b00-70b61a18e99e.png)
+
+This is the high-voltage cycle of **The Anchor's Pull**. Your child is mastering the core human dynamic of the **Secure Base**. As their **Locomotion** and **Symbolic Shift** move them further into the world, their nervous system periodically reaches its limit of independent stimulation. This triggers what developmental scientists call **Secure Base Refueling**. They return to you not because they have "regressed," but because they need to down-regulate their internal stress response through physical proximity to you. This period marks a peak in **Separation Protest** because their blossoming **Object Permanence** means they now hold a vivid, persistent mental image of you when you are gone—and they find your absence intolerable. Their brain is learning to balance the drive for **Autonomy** with the biological necessity of **Attachment**. They are building an internal "emotional battery," and you are the charging station that makes their brave exploration possible.
+
+**The Open Door Policy**: Be the "Passive Anchor." Whenever possible, allow them to initiate these brief refueling sessions on their own terms. Simply being physically available and offering a brief hug, a pat, or eye contact is often enough to reset their **Self-Regulation** and send them back out into the world with renewed confidence.
+
+**The Secure Goodbye**: Since separation anxiety is at a temporary peak, avoid "sneaking away" to prevent distress. Instead, use short, consistent goodbye rituals. This builds a sense of **Expectation** and trust, teaching their brain that while you go away, the "Anchor" always returns. It transforms an unpredictable crisis into a predictable, manageable transition.
+
+Your child’s clinging isn't a sign of weakness or over-dependence; it is the vital fuel of their future courage. By being a reliable anchor, you aren't making them helpless; you are providing the psychological safety that allows them to eventually sail across the entire ocean.

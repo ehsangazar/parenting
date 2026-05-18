@@ -6,7 +6,7 @@ export function isPresignedS3GetUrl(url: string): boolean {
 }
 
 /**
- * Prefer `/api/auth/me` avatar (signed). If missing, use leaderboard entry only when it
+ * Prefer `/api/identity/me` avatar (signed). If missing, use leaderboard entry only when it
  * already looks presigned — never pass a raw private S3 URL to `<img>`.
  */
 export function resolveMyRankAvatarSrc(

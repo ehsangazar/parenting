@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react';
-import { useAppBase } from '../hooks/useAppBase.js';
 import { toast } from 'sonner';
 import { api, parseApiError } from '../lib/api.js';
 import { useAuth } from '../state/auth.js';
@@ -25,7 +24,8 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { setToken, token, setUser } = useAuth();
   const navigate = useNavigate();
-  const { toApp } = useAppBase();
+  const [searchParams] = useSearchParams();
+  const next = searchParams.get('next') || '/';
 
   const isLoading = isSubmitting || isGoogleLoading;
 
@@ -36,32 +36,24 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
   useEffect(() => {
     if (token) {
       api
-        .get('/api/auth/me')
+        .get('/api/identity/me')
         .then((res) => {
           setUser(res.data.user);
-          if (res.data.user?.role === 'admin') {
-            navigate('/admin');
-          } else {
-            navigate(toApp('/app'));
-          }
+          navigate(next);
         })
         .catch(() => {});
     }
-  }, [token, navigate, setUser]);
+  }, [token, navigate, setUser, next]);
 
   const handleGoogleSignIn = useCallback(
     async (response: { credential: string }) => {
       setIsGoogleLoading(true);
       try {
-        const res = await api.post('/api/auth/google', { idToken: response.credential });
+        const res = await api.post('/api/identity/google', { idToken: response.credential });
         setToken(res.data.token);
-        const userRes = await api.get('/api/auth/me');
+        const userRes = await api.get('/api/identity/me');
         setUser(userRes.data.user);
-        if (userRes.data.user?.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate(toApp('/app'));
-        }
+        navigate(next);
       } catch (err: unknown) {
         const status = (err as { response?: { status?: number } })?.response?.status;
         if (!status || status >= 500) Sentry.captureException(err);
@@ -70,7 +62,7 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
         setIsGoogleLoading(false);
       }
     },
-    [navigate, setToken, setUser, t],
+    [navigate, setToken, setUser, t, next],
   );
 
   useEffect(() => {
@@ -132,17 +124,13 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
   const submit = async () => {
     setIsSubmitting(true);
     try {
-      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
+      const endpoint = mode === 'login' ? '/api/identity/login' : '/api/identity/signup';
       const res = await api.post(endpoint, { email, password });
       if (mode === 'login') {
         setToken(res.data.token);
-        const userRes = await api.get('/api/auth/me');
+        const userRes = await api.get('/api/identity/me');
         setUser(userRes.data.user);
-        if (userRes.data.user?.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate(toApp('/app'));
-        }
+        navigate(next);
 
         const displayName = formatDisplayName(userRes.data.user?.email?.split('@')[0]);
 

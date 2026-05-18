@@ -12,9 +12,6 @@ import {
   createProfileApi,
   createLeaderboardApi,
   createVillageApi,
-  createModulesApi,
-  createInsightsApi,
-  createAiApi,
 } from '@parenting/shared/api';
 import { useAuth } from '../state/auth.js';
 import i18n from '../i18n.js';
@@ -52,6 +49,3 @@ export const gamificationApi = createGamificationApi(api);
 export const profileApi = createProfileApi(api);
 export const leaderboardApi = createLeaderboardApi(api);
 export const villageApi = createVillageApi(api);
-export const modulesApi = createModulesApi(api);
-export const insightsApi = createInsightsApi(api);
-export const aiApi = createAiApi(api);

@@ -118,7 +118,23 @@ export default async function assistantRoutes(app: FastifyInstance) {
           200: {
             type: "object",
             properties: {
-              messages: { type: "array", items: { type: "object" } },
+              messages: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    conversationId: { type: "string" },
+                    role: { type: "string" },
+                    content: { type: "string" },
+                    docTypeFilter: { type: ["string", "null"] },
+                    citations: {},
+                    flagged: { type: "boolean" },
+                    locale: { type: ["string", "null"] },
+                    createdAt: { type: "string", format: "date-time" },
+                  },
+                },
+              },
             },
           },
           404: {

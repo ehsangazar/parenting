@@ -10,8 +10,6 @@ import { articleApi } from '../lib/articleApi.js';
 import { useAuth } from '../state/auth.js';
 import { Article } from '../types/Articles.js';
 import { LogoBrand } from '../components/ui/LogoBrand.js';
-import { PublicSiteHeader } from '../components/PublicSiteHeader.js';
-import { PublicFooter } from '../components/PublicFooter.js';
 import { SEO } from '../components/SEO.js';
 import { LazyImage } from '../components/ui/LazyImage.js';
 
@@ -104,7 +102,7 @@ export const ArticleDetailPage = ({ variant = 'public' }: ArticleDetailPageProps
   } : null;
 
   return (
-    <div className="min-h-screen bg-background text-text-primary">
+    <>
       {article && (
         <SEO
           title={article.seoTitle || article.title}
@@ -115,7 +113,6 @@ export const ArticleDetailPage = ({ variant = 'public' }: ArticleDetailPageProps
           structuredData={[articleJsonLd!, breadcrumbJsonLd!]}
         />
       )}
-      {variant === 'public' && <PublicSiteHeader />}
 
       <main className="max-w-5xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-6 sm:mb-8">
@@ -329,7 +326,6 @@ export const ArticleDetailPage = ({ variant = 'public' }: ArticleDetailPageProps
         </div>
       </section>
 
-      {variant === 'public' && <PublicFooter />}
-    </div>
+    </>
   );
 };

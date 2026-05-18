@@ -1,0 +1,13 @@
+<!-- hero: learning/raised-logic/l7-welcome/hero-title-4f16c5d7-cf61-4746-8912-ff79ce8388a6.png -->
+
+The previous months have been a whirlwind of internal architecture, a period where the "mirror" of self-recognition finally stabilized into a permanent sense of identity. You have watched your child move beyond simply reacting to the world to representing it—using symbols, single words, and "Mental Maps" to navigate their environment. That phase of building the inner library is now yielding to a much grander construction: the birth of the personal story.
+
+![Running to tell what happened — the first bid to pull the past into the present](learning/raised-logic/l7-welcome/body-opening-4f254c4a-6ad4-42bd-b296-7847668cd31a.png)
+
+We are standing at the threshold of the **Narrative Boundary**. Until this point, your child has lived in a world of "Things"—objects to be named, sorted, and mastered. But a profound neurological pivot is occurring. Their brain is beginning to transition from a collection of facts into a landscape of **Subjectivity**. They are no longer just an observer of the room; they are the central protagonist of a story. This is the developmental emergence of **Narrative Logic**, the ability to link distinct events together into a meaningful sequence. In this leap, the world is no longer just a series of "Whats"; it is becoming a series of "Whys" and "Meanings." The acquisition of pronouns like "I" and "Me" serves as the linguistic anchor for this new self, allowing them to draw a firm boundary between their internal desires and the external world. They are building their first **Historical Arc**, realizing that what happened "Then" is connected to what is happening "Now."
+
+This shift into a narrative-driven brain often triggers a new wave of behavioral friction, commonly characterized by intense possession and the assertive "No." As they realize they are the hero of their own script, any interruption to that internal plan feels like a structural violation. You may notice a spike in "Testing" behaviors as they attempt to verify their new **Subjective Agency** against your boundaries. Sleep may again become briefly unsettled as the brain works overtime to process the complex social and linguistic data of the day, weaving it into their emerging personal history. This is not a regression into defiance, but a sign of a brain that is finally waking up to its own power as a storyteller.
+
+Your role now matures into **The Narrative Scaffolder**. You are the bridge between their fragmented experiences and a coherent history. Your mission is to provide the narrative glue—the "Before," "During," and "After"—that helps them make sense of their world and their place within it.
+
+---

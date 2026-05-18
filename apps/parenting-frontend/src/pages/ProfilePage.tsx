@@ -15,7 +15,7 @@ export const ProfilePage = () => {
     }
 
     if (!user) {
-      api.get('/api/auth/me')
+      api.get('/api/identity/me')
         .then((res) => {
           setUser(res.data.user);
         })

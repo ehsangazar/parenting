@@ -5,9 +5,9 @@ import { SEO } from '../components/SEO.js';
 const linkClass = 'text-primary-600 underline underline-offset-2';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <section className="bg-surface rounded-xl p-6 shadow-sm border border-border-light">
-    <h2 className="text-lg font-semibold text-text-primary mb-3">{title}</h2>
-    <div className="text-text-secondary leading-relaxed space-y-3">{children}</div>
+  <section className="bg-surface rounded-xl p-6 shadow-sm border border-border">
+    <h2 className="text-[18px] font-bold text-text-primary mb-3">{title}</h2>
+    <div className="text-[15px] text-text-primary leading-relaxed space-y-3">{children}</div>
   </section>
 );
 
@@ -20,33 +20,21 @@ export const TermsOfServicePage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEO
         title={t('legal.terms.pageTitle')}
         description={t('legal.terms.lead')}
         canonical="/terms"
       />
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border-light">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <Link
-            to="/"
-            className="text-sm font-medium text-text-secondary hover:text-primary-600 transition-colors flex items-center gap-1.5"
-          >
-            <span aria-hidden>←</span> {t('legal.common.backToHome')}
-          </Link>
-          <span className="text-xs text-text-tertiary">{t('legal.common.brand')}</span>
-        </div>
-      </header>
-
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <article className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary tracking-tight">
             {t('legal.terms.pageTitle')}
           </h1>
-          <p className="mt-2 text-sm text-text-tertiary">
+          <p className="mt-2 text-[13px] text-text-secondary">
             {t('legal.common.lastUpdated', { date: lastUpdated })}
           </p>
-          <p className="mt-4 text-text-secondary leading-relaxed">{t('legal.terms.lead')}</p>
+          <p className="mt-4 text-[15px] text-text-primary leading-relaxed">{t('legal.terms.lead')}</p>
         </div>
 
         <div className="space-y-6">
@@ -160,12 +148,7 @@ export const TermsOfServicePage = () => {
           </Section>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border-light text-center">
-          <Link to="/" className="text-sm font-medium text-primary-600 hover:text-primary-700">
-            ← {t('legal.common.backToHome')}
-          </Link>
-        </div>
       </article>
-    </div>
+    </>
   );
 };

@@ -1,13 +1,12 @@
-import { Link } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO.js';
 
 const linkClass = 'text-primary-600 underline underline-offset-2';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <section className="bg-surface rounded-xl p-6 shadow-sm border border-border-light">
-    <h2 className="text-lg font-semibold text-text-primary mb-3">{title}</h2>
-    <div className="text-text-secondary leading-relaxed space-y-3">{children}</div>
+  <section className="bg-surface rounded-xl p-6 shadow-sm border border-border">
+    <h2 className="text-[18px] font-bold text-text-primary mb-3">{title}</h2>
+    <div className="text-[15px] text-text-primary leading-relaxed space-y-3">{children}</div>
   </section>
 );
 
@@ -59,30 +58,18 @@ export const CookiePolicyPage = () => {
   const analytics = t('legal.cookies.typeAnalytics');
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEO
         title={t('legal.cookies.pageTitle')}
         description={t('legal.cookies.whatP1')}
         canonical="/cookies"
       />
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border-light">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <Link
-            to="/"
-            className="text-sm font-medium text-text-secondary hover:text-primary-600 transition-colors flex items-center gap-1.5"
-          >
-            <span aria-hidden>←</span> {t('legal.common.backToHome')}
-          </Link>
-          <span className="text-xs text-text-tertiary">{t('legal.common.brand')}</span>
-        </div>
-      </header>
-
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <article className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary tracking-tight">
             {t('legal.cookies.pageTitle')}
           </h1>
-          <p className="mt-2 text-sm text-text-tertiary">
+          <p className="mt-2 text-[13px] text-text-secondary">
             {t('legal.common.lastUpdated', { date: lastUpdated })}
           </p>
         </div>
@@ -98,23 +85,23 @@ export const CookiePolicyPage = () => {
 
             <div className="mt-4 rounded-xl border border-border-light overflow-hidden">
               <div className="bg-surface-light px-4 py-3 border-b border-border-light">
-                <h3 className="text-sm font-bold text-text-primary">🔒 {t('legal.cookies.essentialHeading')}</h3>
-                <p className="text-xs text-text-tertiary mt-0.5">{t('legal.cookies.essentialSub')}</p>
+                <h3 className="text-[15px] font-bold text-text-primary">🔒 {t('legal.cookies.essentialHeading')}</h3>
+                <p className="text-[13px] text-text-secondary mt-1">{t('legal.cookies.essentialSub')}</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left px-4">
                   <thead>
                     <tr className="border-t border-border-light">
-                      <th className="py-2 pl-4 pr-4 text-xs font-bold text-text-tertiary uppercase tracking-wider">
+                      <th className="py-2 pl-4 pr-4 text-[12px] font-bold text-text-secondary uppercase tracking-wider">
                         {t('legal.cookies.tableName')}
                       </th>
-                      <th className="py-2 pr-4 text-xs font-bold text-text-tertiary uppercase tracking-wider">
+                      <th className="py-2 pr-4 text-[12px] font-bold text-text-secondary uppercase tracking-wider">
                         {t('legal.cookies.tablePurpose')}
                       </th>
-                      <th className="py-2 pr-4 text-xs font-bold text-text-tertiary uppercase tracking-wider">
+                      <th className="py-2 pr-4 text-[12px] font-bold text-text-secondary uppercase tracking-wider">
                         {t('legal.cookies.tableDuration')}
                       </th>
-                      <th className="py-2 pr-4 text-xs font-bold text-text-tertiary uppercase tracking-wider">
+                      <th className="py-2 pr-4 text-[12px] font-bold text-text-secondary uppercase tracking-wider">
                         {t('legal.cookies.tableType')}
                       </th>
                     </tr>
@@ -151,23 +138,23 @@ export const CookiePolicyPage = () => {
 
             <div className="mt-4 rounded-xl border border-border-light overflow-hidden">
               <div className="bg-surface-light px-4 py-3 border-b border-border-light">
-                <h3 className="text-sm font-bold text-text-primary">📊 {t('legal.cookies.analyticsHeading')}</h3>
-                <p className="text-xs text-text-tertiary mt-0.5">{t('legal.cookies.analyticsSub')}</p>
+                <h3 className="text-[15px] font-bold text-text-primary">📊 {t('legal.cookies.analyticsHeading')}</h3>
+                <p className="text-[13px] text-text-secondary mt-1">{t('legal.cookies.analyticsSub')}</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-t border-border-light">
-                      <th className="py-2 pl-4 pr-4 text-xs font-bold text-text-tertiary uppercase tracking-wider">
+                      <th className="py-2 pl-4 pr-4 text-[12px] font-bold text-text-secondary uppercase tracking-wider">
                         {t('legal.cookies.tableName')}
                       </th>
-                      <th className="py-2 pr-4 text-xs font-bold text-text-tertiary uppercase tracking-wider">
+                      <th className="py-2 pr-4 text-[12px] font-bold text-text-secondary uppercase tracking-wider">
                         {t('legal.cookies.tablePurpose')}
                       </th>
-                      <th className="py-2 pr-4 text-xs font-bold text-text-tertiary uppercase tracking-wider">
+                      <th className="py-2 pr-4 text-[12px] font-bold text-text-secondary uppercase tracking-wider">
                         {t('legal.cookies.tableDuration')}
                       </th>
-                      <th className="py-2 pr-4 text-xs font-bold text-text-tertiary uppercase tracking-wider">
+                      <th className="py-2 pr-4 text-[12px] font-bold text-text-secondary uppercase tracking-wider">
                         {t('legal.cookies.tableType')}
                       </th>
                     </tr>
@@ -242,12 +229,7 @@ export const CookiePolicyPage = () => {
           </Section>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border-light text-center">
-          <Link to="/" className="text-sm font-medium text-primary-600 hover:text-primary-700">
-            ← {t('legal.common.backToHome')}
-          </Link>
-        </div>
       </article>
-    </div>
+    </>
   );
 };

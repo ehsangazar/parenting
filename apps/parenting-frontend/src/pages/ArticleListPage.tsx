@@ -6,8 +6,6 @@ import { Icon } from '../components/icons/index.js';
 import { uiIcons } from '../lib/iconSemantics.js';
 import { articleApi } from '../lib/articleApi.js';
 import { Article, ArticleCategory } from '../types/Articles.js';
-import { PublicSiteHeader } from '../components/PublicSiteHeader.js';
-import { PublicFooter } from '../components/PublicFooter.js';
 import { SEO } from '../components/SEO.js';
 import { LazyImage } from '../components/ui/LazyImage.js';
 
@@ -96,13 +94,12 @@ export const ArticleListPage = () => {
   const dateLocale = i18n.language === 'fa' ? 'fa-IR' : 'en-GB';
 
   return (
-    <div className="min-h-screen bg-background text-text-primary">
-      <SEO 
+    <>
+      <SEO
         title={pageTitle}
         description={pageDescription}
         canonical={selectedCategoryId ? `/articles?category=${selectedCategoryId}` : '/articles'}
       />
-      <PublicSiteHeader />
 
       {/* Hero Section */}
       <section className="bg-surface border-b border-border-light py-12 md:py-16">
@@ -255,8 +252,6 @@ export const ArticleListPage = () => {
           </div>
         </div>
       </main>
-
-      <PublicFooter />
-    </div>
+    </>
   );
 };

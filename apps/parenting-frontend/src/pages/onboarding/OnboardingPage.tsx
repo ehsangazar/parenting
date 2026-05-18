@@ -47,7 +47,7 @@ export const OnboardingPage = () => {
     setIsSubmitting(true);
     try {
       // 1. Update user profile
-      const profileUpdate = await api.put('/api/auth/me', {
+      const profileUpdate = await api.put('/api/identity/me', {
         name: profileData?.name,
         roleInHousehold: profileData?.role,
         interests: goals,
@@ -58,7 +58,7 @@ export const OnboardingPage = () => {
 
       // 2. Add children to default family if any
       // Assuming user has at least one family created by default on signup
-      await api.get('/api/auth/me'); // Get full user info including families if needed
+      await api.get('/api/identity/me'); // Get full user info including families if needed
       // Actually we need the active family. 
       // For simplicity, let's try to add to the first family we find for this user
       const familiesRes = await familiesApi.list();

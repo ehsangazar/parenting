@@ -1,0 +1,13 @@
+<!-- hero: learning/raised-logic/l10-welcome/hero-title-141f5aab-d450-4298-bc20-a36d37f47442.png -->
+
+The world that used to be a kaleidoscope of shifting impressions and "magical" shortcuts is suddenly beginning to settle into a predictable, mechanical groove. Those years of intense, sometimes chaotic emotional bursts and rapid-fire curiosity have built a scaffolding that can now support something far more structural. There is a deep, quiet exhale in the house as the fog of early childhood intuition begins to lift, replaced by a clarity that feels both more solid and more demanding.
+
+![At the threshold of the logical world — the Systemic Shift activating, Conservation arcs becoming visible for the first time](learning/raised-logic/l10-welcome/body-opening-e6faee52-3df0-4efe-ad7b-dd4c9d01f7f5.png)
+
+The brain is currently undergoing a **Systemic Shift**, pivoting from a reliance on how things *look* to a reliance on how things *work*. It is the birth of the **Logical Pivot**. If early childhood was a land of mystical occurrences where a taller glass automatically meant "more" juice, this new era is governed by a mental "Rule of Law." The architecture of the prefrontal cortex is now bridging with the parietal regions to create an internal physics engine. This allows for **Conservation**, the deep realization that quantity, volume, and mass remain constant even when their physical appearance is manipulated. The world is no longer a series of isolated tricks; it is a nested system of consistent rules and immutable properties.
+
+This internal hard-wiring for logic brings a new kind of friction into the daily rhythm. As the mind becomes obsessed with order, a rigid sense of "fairness" and a paralyzing fear of "getting it wrong" often emerge. The transition from fluid intuition to structured logic can manifest as sudden perfectionism or an intense, almost legalistic attachment to the rules of a game. A brain that is learning to categorize the universe is also a brain that is sensitive to any perceived breach in that new order, leading to a unique kind of systemic exhaustion that looks like stubbornness but is actually a deep, neurological reach for stability.
+
+The new orientation for this window is **The Logic Coach**. It is time to step back from being the external regulator who manages every impulse and instead become the partner who helps them map the invisible systems of the world. By providing steady, predictable guardrails, the environment becomes a safe laboratory where they can test these new laws of reality without the fear of the structure collapsing.
+
+---

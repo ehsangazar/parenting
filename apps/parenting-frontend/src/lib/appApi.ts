@@ -11,7 +11,4 @@ export {
   profileApi,
   leaderboardApi,
   villageApi,
-  modulesApi,
-  insightsApi,
-  aiApi,
 } from './api.js';

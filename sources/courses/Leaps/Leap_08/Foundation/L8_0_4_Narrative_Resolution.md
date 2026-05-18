@@ -1,0 +1,17 @@
+<!-- hero: learning/raised-logic/l8-narrative-resolution/hero-title-e8f19a16-9e17-4265-a417-df9602866efd.png -->
+
+The play area has become a stage for a tiny, high-stakes drama. A plastic dinosaur is stuck on a wooden block "mountain," and a rescue team of mismatched cars is being organized to save him. But something has changed — the story no longer ends with the dinosaur simply being moved. Now, there is a reason he was there, a specific obstacle in the way, and a logical sequence of events that must occur to bring him home. This isn't just "playing house"; it is the construction of a world defined by its own internal logic.
+
+![Dinosaur rescue in sequence, parent as scaffolder — the first Plot, the child becoming author of resolutions](learning/raised-logic/l8-narrative-resolution/body-opening-614bcf2e-6309-4a8f-b2e8-8d0c869a3b3e.png)
+
+This shift marks the emergence of **Narrative Cohesion**. While your child has been recounting sequences of events for some time, they are now beginning to weave those events into a structured "Plot." In developmental science, this is the transition from a simple chronological list ("and then... and then...") to a **Causal Narrative** ("because... therefore..."). Their brain is learning to link cause and effect across time, identifying a problem and seeking a resolution. This is a massive leap in **Logical Processing**. By creating stories where characters have goals and face challenges, your child is practicing the fundamental human skill of meaning-making. They are learning to navigate the invisible architecture of "Why," which allows them to understand not just what happened, but why it matters. This capacity for narrative resolution is the same mental machinery they will later use to solve complex social conflicts and understand the world of literature and history.
+
+**The "How" of Repair**
+When your child encounters a conflict in their play — a broken bridge or a "hungry" doll — resist the urge to provide the solution immediately. Instead, offer **Structural Scaffolding** by asking, "How can the cars fix the bridge?" or "What do we need to do first to get the food?" This encourages them to stay within the narrative arc and seek a logical resolution. By focusing on the "How" of repair, you are helping them strengthen the neural pathways that link a problem to its potential solution, turning their play into a laboratory for **Executive Problem-Solving**.
+
+**Emotional Arc Labels**
+As the story reaches its conclusion, take a moment to label the **Emotional Resolution**. Statements like, "The dinosaur was scared when he was stuck, but now he feels safe because his friends helped him," provide the necessary closure to the narrative arc. This doesn't just build vocabulary; it helps the brain internalize the structure of an experience, teaching them that problems have solutions and that difficult feelings can be resolved through action and connection. You are essentially providing the "punctuation" to their mental story, helping them file away the experience as a cohesive, mastered whole.
+
+The moment a child begins to solve a problem within a story is the moment they begin to understand the power of their own agency. They are learning that they are not just characters in a random sequence of events, but the authors of their own resolutions, capable of turning a "problem" into a "story" with a happy ending.
+
+---

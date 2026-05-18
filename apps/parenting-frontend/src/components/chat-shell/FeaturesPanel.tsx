@@ -1,0 +1,123 @@
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
+import { useAuth } from '../../state/auth.js';
+import { Icon, type IconName } from '../icons/index.js';
+import { appAssetIcons } from '../../lib/appAssetIcons.js';
+import { uiIcons } from '../../lib/iconSemantics.js';
+
+type Feature = {
+  to: string;
+  tKey: string;
+  fallback: string;
+  descriptionKey: string;
+  descriptionFallback: string;
+  iconName: IconName;
+  accent: string;
+};
+
+const FEATURES: Feature[] = [
+  {
+    to: '/settings',
+    tKey: 'nav.settings',
+    fallback: 'Settings',
+    descriptionKey: 'chatShell.settingsBlurb',
+    descriptionFallback: 'Manage your account, family, and notifications.',
+    iconName: appAssetIcons.settings,
+    accent: 'bg-brand-green/15 text-brand-green',
+  },
+];
+
+/**
+ * Right column: shortcuts to the main features (Insights, Academy, Settings).
+ * Logged-out users see the same panel, but clicking any feature routes them
+ * through the login flow first.
+ */
+export const FeaturesPanel = ({ onClose }: { onClose?: () => void }) => {
+  const { t } = useTranslation();
+  const { token } = useAuth();
+  const navigate = useNavigate();
+
+  const handleClick = (e: React.MouseEvent, to: string) => {
+    if (!token) {
+      e.preventDefault();
+      navigate(`/login?next=${encodeURIComponent(to)}`);
+      onClose?.();
+      return;
+    }
+    onClose?.();
+  };
+
+  return (
+    <div className="flex h-full w-full flex-col">
+      <div className="flex items-center justify-between border-b border-border px-4 py-4">
+        <span className="text-[14px] font-extrabold uppercase tracking-wider text-text-primary">
+          {t('chatShell.tools', 'Tools')}
+        </span>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('common.close')}
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-text-secondary hover:bg-surface-light"
+          >
+            <Icon name={uiIcons.close} className="h-4 w-4 object-contain" alt="" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
+        {FEATURES.map((feature) => (
+          <NavLink
+            key={feature.to}
+            to={feature.to}
+            onClick={(e) => handleClick(e, feature.to)}
+            className={({ isActive }) =>
+              clsx(
+                'flex items-start gap-3 rounded-2xl border px-3 py-3 transition-colors',
+                isActive
+                  ? 'border-brand-blue/50 bg-brand-blue/5'
+                  : 'border-border bg-surface hover:border-brand-blue/30 hover:bg-surface-light',
+              )
+            }
+          >
+            <span className={clsx('flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl', feature.accent)}>
+              <Icon name={feature.iconName} className="h-5 w-5 object-contain" alt="" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-bold text-text-primary">
+                {t(feature.tKey, feature.fallback)}
+              </p>
+              <p className="mt-1 text-[13px] text-text-secondary leading-snug">
+                {t(feature.descriptionKey, feature.descriptionFallback)}
+              </p>
+            </div>
+            <Icon
+              name={uiIcons.chevronRight}
+              className="mt-1 h-4 w-4 flex-shrink-0 object-contain opacity-60"
+              alt=""
+            />
+          </NavLink>
+        ))}
+
+        {!token && (
+          <div className="mt-4 rounded-2xl bg-surface-light p-4 text-center">
+            <p className="text-[14px] font-semibold text-text-primary">
+              {t('chatShell.unlockTools', 'Sign in to unlock your tools')}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/login');
+                onClose?.();
+              }}
+              className="mt-3 w-full rounded-xl bg-brand-blue px-3 py-2.5 text-[14px] font-bold text-white hover:brightness-110"
+            >
+              {t('home.nav.signIn', 'Sign in')}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

@@ -1,0 +1,15 @@
+<!-- hero: learning/raised-logic/l3-safety-filter/hero-title-e88a1b0b-2f2d-49e9-bd94-68fdcd5e52f9.png -->
+
+A well-meaning relative leans in for a sudden hug, or a friendly stranger smiles at the grocery store, and instead of the easy, indiscriminate smiles of only a few months ago, your child buries their face in your shoulder or breaks into a sudden, urgent cry. This "clinginess" can often feel like a step backward in social development, but it is actually the arrival of a sophisticated new protection system. The **Safety Filter** has been activated.
+
+![Half-buried in the shoulder, one eye watching — the cling that knows its home](learning/raised-logic/l3-safety-filter/body-opening-617e4bef-e287-4779-83dc-cc54023a14f5.png)
+
+This phase is defined by the developmental peak of **Stranger Wariness** and the onset of intense **Separation Protest**. Rather than a regression, this behavior is evidence of a profound, ongoing **Cognitive Audit** happening in the brain's emotional centers. Your child’s nervous system has finally developed a stable enough mental representation of "familiar" caregivers that any face that does not perfectly match that high-definition template is immediately flagged as a potential threat or an unknown variable. They are no longer just reacting to a face; they are comparing it to an internal model of safety. This **Selective Attachment** is a vital survival mechanism, signaling that the brain is now prioritizing the security of the known over the novelty of the unknown. The distress they feel when you leave the room is a powerful tribute to the **Relational Specificity** you have built; they have finally learned that you are irreplaceable.
+
+**The Safe Gaze-Buffer**
+Respect the biological necessity of the "social warm-up" period. When introducing new people, allow guests to interact with you first while your child observes the interaction from the safety of your arms. By providing this **Social Buffering**, you allow the infant brain to perform its audit from a distance, using your calm, positive reaction as a social cue that the newcomer is authorized. This prevents the amygdala from being overwhelmed by a sudden, intrusive proximity.
+
+**Predictable Departures**
+Establish a short, consistent ritual for departures rather than attempting to sneak away unnoticed. While sneaking away may avoid an immediate cry, it ultimately erodes the **Predictability Grid** that the infant brain requires for long-term security. By using a quick, calm "bye-bye" and a swift exit, you are reinforcing the logic of **Return Expectation**. You are teaching the developing mind that while you are a separate person who can leave, you are also the person who is neurologically bound to return to the base.
+
+The clinginess you experience isn't a sign of weakness; it is the first way a child says, "I know exactly who you are, and you are my world." You aren't witnessing a loss of courage, but the birth of a selective heart that finally understands the profound difference between a stranger and a home.

@@ -6,6 +6,44 @@ Implemented in `tailwind.config.cjs` and `src/index.css` (3D `.btn-duo-*`, `.duo
 
 ---
 
+## Clarity-first interaction rules
+
+These rules apply to every screen in the parenting app. Optimize for "a tired parent on a phone gets it in one second."
+
+1. **Every interactive control has a visible text label.** Aria labels are for assistive tech, not a substitute for legible UI. Icon-only buttons (trash, edit, expand chevron, ellipsis) are off-limits unless the user has already proven they understand the context (e.g. inside an already-open editor).
+2. **Touch targets are 40px minimum, 48px for primary actions.** Use `min-h-[40px]` or `py-2.5+`. Avoid tiny `h-8 w-8` icon buttons for anything destructive or navigational.
+3. **Expand and collapse affordances are explicit.** Either the entire row is the toggle (chevron is decorative), or the trigger reads "Show more" / "Show less". Don't ask the user to spot a small chevron.
+4. **Destructive actions always carry the word.** "Delete", "Remove", "Sign out" — never a lone trash icon. Pair the word with a danger color and require confirmation for irreversible ops.
+5. **Edit affordances are labeled too.** Use a full-width "Edit" button or icon-plus-word. Inline pencil icons alone are too easy to miss.
+6. **Active state is unambiguous.** Use both a background tint *and* a labeled badge ("Active"), not just a color shift.
+7. **Errors and empty states tell the user what to do next**, with a labeled action ("Add a child", "Invite a partner"), not just descriptive text.
+
+When space is tight, drop visual chrome (cards, borders, padding) before dropping labels.
+
+### Worked examples
+
+| Screen | Before (wrong) | After (right) |
+|---|---|---|
+| Chat input dock | 36px icon-only send button with arrow; spinner-icon while streaming; no stop affordance | Rounded "Send" pill with text + arrow at 44px; while streaming, replaced by a red labeled "Stop" pill |
+| Chat empty state (logged-out) | Faint paragraph: "Sign in to start chatting, we'll remember your draft." | Primary "Sign in to send" button + hint line |
+| History sidebar conversation row | Trash icon, opacity-0 until hover (invisible on touch) | Always-visible labeled "Delete conversation" button on a second line, opens a confirm modal |
+| History sidebar selected conversation | Background tint only | Background tint + bordered card + "Selected" pill |
+| Family card header | Tiny chevron-only expand toggle on the right | Whole header is the toggle, with a bordered "Show more" / "Show less" pill carrying the chevron |
+| Family member row | Icon-only trash for remove | Labeled "Remove member" button on a second line |
+| Family child row | Icon-only pencil + trash | Side-by-side labeled "Edit" and "Remove child" buttons |
+| Settings sign out | Direct click signs out | Click opens a "Sign out? You can sign back in any time" confirm modal |
+
+### Confirmation modals
+
+Any irreversible action (delete account, delete conversation, delete family, remove child, remove member, sign out) must route through a confirmation modal with:
+
+- Title that states what's being deleted in plain language.
+- Body that explains the consequence ("This cannot be undone").
+- Two labeled buttons: Cancel (neutral) and the destructive verb (red).
+- 44px minimum height on both buttons.
+
+---
+
 ## Color Palette (Midnight)
 
 ### Backgrounds

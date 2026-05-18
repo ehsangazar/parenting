@@ -5,26 +5,12 @@ import { api } from './lib/api.js';
 import { useAuth } from './state/auth.js';
 import { soundManager } from './lib/soundManager.js';
 import { useLocale } from './hooks/useLocale.js';
-import { useAppBase } from './hooks/useAppBase.js';
 import { SUPPORTED_LOCALES, type AppLocale } from './i18n.js';
 import { Toaster } from 'sonner';
 import { AchievementUnlockModal } from './components/ui/AchievementUnlockModal.js';
 import type { Achievement } from './components/ui/AchievementUnlockModal.js';
 import { StreakCelebrationModal } from './components/ui/StreakCelebrationModal.js';
 import { InstallBanner } from './components/InstallBanner.js';
-import { AdminDashboard } from './admin/AdminDashboard.js';
-import { AdminArticles } from './admin/AdminArticles.js';
-import { AdminUpload } from './admin/AdminUpload.js';
-import { AdminContent } from './admin/AdminContent.js';
-import { AdminUsers } from './admin/AdminUsers.js';
-import { AdminConversations } from './admin/AdminConversations.js';
-import { AdminSurveys } from './admin/AdminSurveys.js';
-import { AdminModules } from './admin/AdminModules.js';
-import { AdminChat } from './admin/AdminChat.js';
-import { LearningAdmin } from './admin/LearningAdmin.js';
-import { AdminLeads } from './admin/AdminLeads.js';
-import { AdminLayout } from './components/admin/AdminLayout.js';
-import { HomePage } from './pages/HomePage.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { SurveyPage } from './pages/SurveyPage.js';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage.js';
@@ -37,22 +23,10 @@ import { FeaturesPage } from './pages/FeaturesPage.js';
 import { ArticleListPage } from './pages/ArticleListPage.js';
 import { ArticleDetailPage } from './pages/ArticleDetailPage.js';
 import { CookieConsentBanner } from './components/CookieConsentBanner.js';
-import { AppLayout } from './components/app/AppLayout.js';
-import { DashboardPage } from './pages/app/DashboardPage.js';
-import { ChatPage } from './pages/app/ChatPage.js';
-import { CalendarPage } from './pages/app/CalendarPage.js';
-import { AppArticleListPage } from './pages/app/AppArticleListPage.js';
-import { MomentsPage } from './pages/app/MomentsPage.js';
-import { FamilyPage } from './pages/app/FamilyPage.js';
-import { ModulesPage } from './pages/app/ModulesPage.js';
-import { LearningPage } from './pages/app/LearningPage.js';
-import { CoursePath } from './pages/app/CoursePath.js';
-import { LessonPlaybackPage } from './pages/app/LessonPlaybackPage.js';
-import { PlaybookLibraryPage } from './pages/app/PlaybookLibraryPage.js';
-import { PlaybookViewerPage } from './pages/app/PlaybookViewerPage.js';
+import { ChatShell } from './components/chat-shell/ChatShell.js';
+import { ChatPanel } from './components/chat-shell/ChatPanel.js';
+import { FeaturePageFrame } from './components/chat-shell/FeaturePageFrame.js';
 import { SettingsPage } from './pages/app/SettingsPage.js';
-import { InsightsPage } from './pages/app/InsightsPage.js';
-import { LeaderboardPage } from './pages/app/LeaderboardPage.js';
 import { OnboardingPage } from './pages/onboarding/OnboardingPage.js';
 import { isPublicMarketingPath } from './lib/publicRoutes.js';
 
@@ -82,17 +56,47 @@ declare global {
 const SplashLoading = () => {
   const { t } = useTranslation();
   return (
-    <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-[9999]">
-      <div className="relative">
-        <div className="w-24 h-24 border-4 border-primary-600/25 border-t-primary-700 rounded-full animate-spin"></div>
-        <img
-          src="/logo.jpg"
-          alt="Raised"
-          className="absolute inset-0 m-auto w-12 h-12 object-contain"
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background">
+      <div className="relative h-28 w-28" aria-hidden="true">
+        {/* Soft outer halo */}
+        <div
+          className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-blue/50 via-primary-400/40 to-primary-600/50 blur-2xl animate-pulse"
+          style={{ animationDuration: '2.4s' }}
         />
+        {/* Slow rotating ring */}
+        <div
+          className="absolute inset-0 rounded-full border border-primary-300/40 animate-spin"
+          style={{ animationDuration: '7s' }}
+        />
+        {/* Counter-rotating dashed ring */}
+        <div
+          className="absolute inset-2 rounded-full border-2 border-dashed border-primary-400/30 animate-spin"
+          style={{ animationDuration: '11s', animationDirection: 'reverse' }}
+        />
+        {/* Core orb */}
+        <div
+          className="absolute inset-5 rounded-full bg-gradient-to-br from-brand-blue via-primary-500 to-primary-700 shadow-[0_0_40px_8px_rgba(99,102,241,0.35)] animate-pulse"
+          style={{ animationDuration: '1.6s' }}
+        />
+        {/* Inner highlight */}
+        <div className="absolute inset-[34%] rounded-full bg-white/70 blur-[2px]" />
       </div>
-      <div className="mt-8 text-primary-700 font-bold tracking-[0.08em] uppercase animate-pulse">
-        {t('splash.preparing')}
+      <div className="mt-8 inline-flex items-center gap-1.5 text-[13px] font-bold uppercase tracking-[0.18em] text-text-secondary">
+        <span>{t('splash.preparing')}</span>
+        <span className="inline-flex gap-1" aria-hidden="true">
+          <span
+            className="inline-block h-1 w-1 rounded-full bg-current animate-bounce"
+            style={{ animationDelay: '0ms', animationDuration: '1.2s' }}
+          />
+          <span
+            className="inline-block h-1 w-1 rounded-full bg-current animate-bounce"
+            style={{ animationDelay: '150ms', animationDuration: '1.2s' }}
+          />
+          <span
+            className="inline-block h-1 w-1 rounded-full bg-current animate-bounce"
+            style={{ animationDelay: '300ms', animationDuration: '1.2s' }}
+          />
+        </span>
       </div>
     </div>
   );
@@ -103,29 +107,22 @@ const RequireAuth = ({ children }: { children: ReactElement }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(!user && !!token);
-  
+
   useEffect(() => {
     if (!token) {
-      navigate('/login');
+      const next = encodeURIComponent(location.pathname + location.search);
+      navigate(`/login?next=${next}`);
       return;
     }
-    
-    // Fetch user info if we have a token but no user data
+
     if (token && !user) {
       setLoading(true);
-      api.get('/api/auth/me')
+      api.get('/api/identity/me')
         .then((res) => {
           setUser({ ...res.data.user, gamification: res.data.gamification });
           setLoading(false);
-          
-          // After re-auth, check if we have a persisted path
-          const lastPath = localStorage.getItem('lastPath');
-          if (lastPath && lastPath !== location.pathname && !['/login', '/register', '/onboarding'].includes(lastPath)) {
-            navigate(lastPath, { replace: true });
-          }
         })
         .catch(() => {
-          // If fetching user info fails, the token might be invalid
           useAuth.getState().setToken(null);
           navigate('/login');
           setLoading(false);
@@ -133,11 +130,11 @@ const RequireAuth = ({ children }: { children: ReactElement }) => {
     } else if (user) {
       setLoading(false);
     }
-  }, [token, navigate, user, setUser, location.pathname]);
-  
+  }, [token, navigate, user, setUser, location.pathname, location.search]);
+
   if (!token) return null;
   if (loading) return <SplashLoading />;
-  
+
   return children;
 };
 
@@ -145,36 +142,16 @@ const RequireOnboarding = ({ children }: { children: ReactElement }) => {
   const { isOnboarded } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toApp } = useAppBase();
 
   useEffect(() => {
     if (!isOnboarded() && !location.pathname.startsWith('/onboarding')) {
       navigate('/onboarding');
     } else if (isOnboarded() && location.pathname.startsWith('/onboarding')) {
-      navigate(toApp('/app'));
+      navigate('/');
     }
   }, [isOnboarded, navigate, location]);
 
   return children;
-};
-
-const RequireAdmin = ({ children }: { children: ReactElement }) => {
-  const { user, isAdmin } = useAuth();
-  const navigate = useNavigate();
-  const { toApp } = useAppBase();
-
-  useEffect(() => {
-    if (user && !isAdmin()) {
-      navigate(toApp('/app'));
-    }
-  }, [user, isAdmin, navigate]);
-  
-  // Don't render until we have user data
-  if (!user) {
-    return null;
-  }
-  
-  return isAdmin() ? children : null;
 };
 
 const ScrollToTop = () => {
@@ -187,12 +164,10 @@ const ScrollToTop = () => {
   return null;
 };
 
-
 /** Sets locale from URL prefix and renders child routes without stripping or redirecting. */
 const LocaleLayout = () => {
   const { lang } = useParams<{ lang: string }>();
   const { i18n } = useTranslation();
-  const { token } = useAuth();
 
   useEffect(() => {
     if (lang && SUPPORTED_LOCALES.includes(lang as AppLocale) && i18n.language !== lang) {
@@ -201,44 +176,16 @@ const LocaleLayout = () => {
   }, [lang, i18n]);
 
   if (!lang || !SUPPORTED_LOCALES.includes(lang as AppLocale)) {
-    return <Navigate to={token ? '/app' : '/login'} replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;
 };
 
-const RootRedirect = () => {
-  const { token, user, isAdmin } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!token) return;
-
-    const lastPath = localStorage.getItem('lastPath');
-    if (
-      lastPath &&
-      !isPublicMarketingPath(lastPath) &&
-      !lastPath.startsWith('/onboarding')
-    ) {
-      navigate(lastPath, { replace: true });
-      return;
-    }
-
-    if (user && isAdmin()) {
-      navigate('/admin', { replace: true });
-    } else {
-      navigate('/app', { replace: true });
-    }
-  }, [token, user, isAdmin, navigate]);
-
-  if (!token) return <HomePage />;
-  return <SplashLoading />;
-};
-
 export default function App() {
-  const { token, user, isAdmin } = useAuth();
+  const { token, user } = useAuth();
   const location = useLocation();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [isInitialLoading, setIsInitialLoading] = useState(() =>
     typeof window !== 'undefined' && !isPublicMarketingPath(window.location.pathname),
   );
@@ -246,9 +193,7 @@ export default function App() {
   // Mount locale sync (sets dir/lang on <html>)
   useLocale();
 
-  // Sync i18next with user's stored locale preference when they log in.
-  // Only apply if the server has an explicit non-default preference (fa, etc.).
-  // This prevents login from reverting a browser-selected language back to 'en'.
+  // Sync i18next with user's stored locale preference after sign-in.
   useEffect(() => {
     const userLocale = (user as any)?.locale as string | undefined;
     if (userLocale && userLocale !== 'en' && userLocale !== i18n.language) {
@@ -256,11 +201,11 @@ export default function App() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.email]);
+
   const [pendingAchievements, setPendingAchievements] = useState<Achievement[]>([]);
   const [streakCelebration, setStreakCelebration] = useState<{ streak: number; coinsBonus: number } | null>(null);
   const hasPlayedLoginSound = useRef(false);
 
-  // Show celebrations when gamification data loads/updates
   useEffect(() => {
     const streak = user?.gamification?.streak ?? 0;
     const milestones = [7, 14, 30, 60, 100];
@@ -268,7 +213,6 @@ export default function App() {
       const coinsBonus = streak >= 100 ? 1_000_000 : streak >= 60 ? 500_000 : streak >= 30 ? 250_000 : streak >= 14 ? 100_000 : 75_000;
       setStreakCelebration({ streak, coinsBonus });
     } else if (streak > 0 && !hasPlayedLoginSound.current) {
-      // Gentle daily login chime — deferred to next user interaction to satisfy autoplay policy
       hasPlayedLoginSound.current = true;
       const playLogin = () => soundManager.play('dailyLogin');
       document.addEventListener('click', playLogin, { once: true });
@@ -277,14 +221,12 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.gamification?.streak]);
 
-  // Branded splash only for first paint on app/admin-style entry (not marketing pages)
   useEffect(() => {
     if (!isInitialLoading) return;
     const timer = setTimeout(() => setIsInitialLoading(false), 1500);
     return () => clearTimeout(timer);
   }, [isInitialLoading]);
 
-  // Persist current path (skip marketing and onboarding)
   useEffect(() => {
     if (
       token &&
@@ -297,7 +239,6 @@ export default function App() {
 
   return (
     <>
-      {/* ── Global gamification modals ── */}
       {streakCelebration && !pendingAchievements.length && (
         <StreakCelebrationModal
           streak={streakCelebration.streak}
@@ -310,8 +251,6 @@ export default function App() {
           achievements={pendingAchievements}
           onDismiss={() => {
             setPendingAchievements([]);
-            // Show streak celebration after achievements if one is pending
-            // (already set, will render on next tick)
           }}
         />
       )}
@@ -340,234 +279,220 @@ export default function App() {
         <SplashLoading />
       )}
       <Routes>
-        <Route path="/" element={<RootRedirect />} />
-        {/* English default public routes (no prefix) */}
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/survey" element={<SurveyPage />} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms" element={<TermsOfServicePage />} />
-        <Route path="/cookies" element={<CookiePolicyPage />} />
-        <Route path="/safeguarding" element={<SafeguardingPage />} />
-        <Route path="/mission" element={<MissionPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/features" element={<FeaturesPage />} />
-        <Route path="/articles" element={<ArticleListPage />} />
-        <Route path="/articles/:slug" element={<ArticleDetailPage variant="public" />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<LoginPage initialMode="signup" />} />
-        <Route path="/profile" element={<Navigate to="/app/settings" replace />} />
-        <Route path="/onboarding" element={<RequireAuth><RequireOnboarding><OnboardingPage /></RequireOnboarding></RequireAuth>} />
-        {/* App routes */}
-        <Route
-          path="/app"
-          element={
-            <RequireAuth>
-              <RequireOnboarding>
-                <AppLayout />
-              </RequireOnboarding>
-            </RequireAuth>
-          }
-        >
-          <Route index element={<DashboardPage />} />
-          <Route path="chat" element={<ChatPage />} />
-          <Route path="calendar" element={<CalendarPage />} />
-          <Route path="moments" element={<MomentsPage />} />
-          <Route path="family" element={<FamilyPage />} />
-          <Route path="modules" element={<ModulesPage />} />
-          <Route path="learning" element={<LearningPage />} />
-          <Route path="learning/course/:courseId" element={<CoursePath />} />
-          <Route path="learning/:moduleId" element={<LessonPlaybackPage />} />
-          <Route path="community" element={<Navigate to=".." relative="path" replace />} />
-          <Route path="insights" element={<InsightsPage />} />
-          <Route path="resources" element={<AppArticleListPage />} />
-          <Route path="resources/:slug" element={<ArticleDetailPage variant="app" />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
-        {/* Locale-prefixed routes: /fa/home, /fa/app/settings, etc. — keeps locale in URL */}
-        <Route path="/:lang" element={<LocaleLayout />}>
-          <Route path="home" element={<HomePage />} />
-          <Route path="survey" element={<SurveyPage />} />
-          <Route path="privacy" element={<PrivacyPolicyPage />} />
-          <Route path="terms" element={<TermsOfServicePage />} />
-          <Route path="cookies" element={<CookiePolicyPage />} />
-          <Route path="safeguarding" element={<SafeguardingPage />} />
-          <Route path="mission" element={<MissionPage />} />
-          <Route path="about" element={<AboutPage />} />
-          <Route path="features" element={<FeaturesPage />} />
-          <Route path="articles" element={<ArticleListPage />} />
-          <Route path="articles/:slug" element={<ArticleDetailPage variant="public" />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="register" element={<LoginPage initialMode="signup" />} />
-          <Route path="onboarding" element={<RequireAuth><RequireOnboarding><OnboardingPage /></RequireOnboarding></RequireAuth>} />
+        {/* Chat-first root layout. Logged-out visitors land here too; the
+            chat panel gates send-actions through /login. */}
+        <Route path="/" element={<ChatShell />}>
+          <Route index element={<ChatPanel />} />
           <Route
-            path="app"
+            path="settings"
             element={
               <RequireAuth>
                 <RequireOnboarding>
-                  <AppLayout />
+                  <FeaturePageFrame title={t('nav.settings', 'Settings')}>
+                    <SettingsPage />
+                  </FeaturePageFrame>
                 </RequireOnboarding>
               </RequireAuth>
             }
-          >
-            <Route index element={<DashboardPage />} />
-            <Route path="chat" element={<ChatPage />} />
-            <Route path="calendar" element={<CalendarPage />} />
-            <Route path="moments" element={<MomentsPage />} />
-            <Route path="family" element={<FamilyPage />} />
-            <Route path="modules" element={<ModulesPage />} />
-            <Route path="learning" element={<LearningPage />} />
-            <Route path="learning/course/:courseId" element={<CoursePath />} />
-            <Route path="learning/:moduleId" element={<LessonPlaybackPage />} />
-            <Route path="community" element={<Navigate to=".." relative="path" replace />} />
-            <Route path="insights" element={<InsightsPage />} />
-            <Route path="resources" element={<AppArticleListPage />} />
-            <Route path="resources/:slug" element={<ArticleDetailPage variant="app" />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
+          />
+
+          {/* Marketing & legal pages — same shell so the user keeps history
+              and feature shortcuts visible while reading. */}
+          <Route
+            path="about"
+            element={
+              <FeaturePageFrame title={t('home.nav.about', 'About')}>
+                <AboutPage />
+              </FeaturePageFrame>
+            }
+          />
+          <Route
+            path="mission"
+            element={
+              <FeaturePageFrame title={t('home.nav.mission', 'Mission')}>
+                <MissionPage />
+              </FeaturePageFrame>
+            }
+          />
+          <Route
+            path="features"
+            element={
+              <FeaturePageFrame title={t('home.nav.features', 'Features')}>
+                <FeaturesPage />
+              </FeaturePageFrame>
+            }
+          />
+          <Route
+            path="privacy"
+            element={
+              <FeaturePageFrame title={t('home.footer.privacyPolicy', 'Privacy policy')}>
+                <PrivacyPolicyPage />
+              </FeaturePageFrame>
+            }
+          />
+          <Route
+            path="terms"
+            element={
+              <FeaturePageFrame title={t('home.footer.termsOfService', 'Terms of service')}>
+                <TermsOfServicePage />
+              </FeaturePageFrame>
+            }
+          />
+          <Route
+            path="cookies"
+            element={
+              <FeaturePageFrame title={t('home.footer.cookiePolicy', 'Cookie policy')}>
+                <CookiePolicyPage />
+              </FeaturePageFrame>
+            }
+          />
+          <Route
+            path="safeguarding"
+            element={
+              <FeaturePageFrame title={t('home.footer.safeguarding', 'Safeguarding')}>
+                <SafeguardingPage />
+              </FeaturePageFrame>
+            }
+          />
+          <Route
+            path="articles"
+            element={
+              <FeaturePageFrame title={t('nav.articles', 'Articles')}>
+                <ArticleListPage />
+              </FeaturePageFrame>
+            }
+          />
+          <Route
+            path="articles/:slug"
+            element={
+              <FeaturePageFrame title={t('nav.articles', 'Articles')}>
+                <ArticleDetailPage variant="public" />
+              </FeaturePageFrame>
+            }
+          />
         </Route>
+
+        {/* Survey is a full-page funnel and shouldn't get the shell. */}
+        <Route path="/survey" element={<SurveyPage />} />
+
+        {/* Auth pages */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<LoginPage initialMode="signup" />} />
         <Route
-          path="/admin"
+          path="/onboarding"
           element={
             <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminDashboard />
-                </AdminLayout>
-              </RequireAdmin>
+              <RequireOnboarding>
+                <OnboardingPage />
+              </RequireOnboarding>
             </RequireAuth>
           }
         />
-        <Route
-          path="/admin/upload"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminUpload />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/content"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminContent />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminUsers />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/conversations"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminConversations />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/modules"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminModules />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/learning"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <LearningAdmin />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/surveys"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminSurveys />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/chat"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminChat />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/articles"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminArticles />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/articles/:slug"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <ArticleDetailPage variant="admin" />
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/leads"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AdminLayout>
-                  <AdminLeads />
-                </AdminLayout>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route path="*" element={<Navigate to={token ? (user && isAdmin() ? '/admin' : '/profile') : '/login'} />} />
+
+        {/* Legacy aliases — keep old links working by redirecting to the new home. */}
+        <Route path="/home" element={<Navigate to="/" replace />} />
+        <Route path="/app" element={<Navigate to="/" replace />} />
+        <Route path="/app/*" element={<Navigate to="/" replace />} />
+        <Route path="/profile" element={<Navigate to="/settings" replace />} />
+
+        {/* Locale-prefixed routes — mirror the English structure. */}
+        <Route path="/:lang" element={<LocaleLayout />}>
+          <Route path="survey" element={<SurveyPage />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<LoginPage initialMode="signup" />} />
+          <Route
+            path="onboarding"
+            element={
+              <RequireAuth>
+                <RequireOnboarding>
+                  <OnboardingPage />
+                </RequireOnboarding>
+              </RequireAuth>
+            }
+          />
+
+          <Route element={<ChatShell />}>
+            <Route index element={<ChatPanel />} />
+            <Route
+              path="about"
+              element={
+                <FeaturePageFrame title={t('home.nav.about', 'About')}>
+                  <AboutPage />
+                </FeaturePageFrame>
+              }
+            />
+            <Route
+              path="mission"
+              element={
+                <FeaturePageFrame title={t('home.nav.mission', 'Mission')}>
+                  <MissionPage />
+                </FeaturePageFrame>
+              }
+            />
+            <Route
+              path="features"
+              element={
+                <FeaturePageFrame title={t('home.nav.features', 'Features')}>
+                  <FeaturesPage />
+                </FeaturePageFrame>
+              }
+            />
+            <Route
+              path="privacy"
+              element={
+                <FeaturePageFrame title={t('home.footer.privacyPolicy', 'Privacy policy')}>
+                  <PrivacyPolicyPage />
+                </FeaturePageFrame>
+              }
+            />
+            <Route
+              path="terms"
+              element={
+                <FeaturePageFrame title={t('home.footer.termsOfService', 'Terms of service')}>
+                  <TermsOfServicePage />
+                </FeaturePageFrame>
+              }
+            />
+            <Route
+              path="cookies"
+              element={
+                <FeaturePageFrame title={t('home.footer.cookiePolicy', 'Cookie policy')}>
+                  <CookiePolicyPage />
+                </FeaturePageFrame>
+              }
+            />
+            <Route
+              path="safeguarding"
+              element={
+                <FeaturePageFrame title={t('home.footer.safeguarding', 'Safeguarding')}>
+                  <SafeguardingPage />
+                </FeaturePageFrame>
+              }
+            />
+            <Route
+              path="articles"
+              element={
+                <FeaturePageFrame title={t('nav.articles', 'Articles')}>
+                  <ArticleListPage />
+                </FeaturePageFrame>
+              }
+            />
+            <Route
+              path="articles/:slug"
+              element={
+                <FeaturePageFrame title={t('nav.articles', 'Articles')}>
+                  <ArticleDetailPage variant="public" />
+                </FeaturePageFrame>
+              }
+            />
+          </Route>
+
+          <Route path="home" element={<Navigate to="/" replace />} />
+          <Route path="app" element={<Navigate to="/" replace />} />
+          <Route path="app/*" element={<Navigate to="/" replace />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

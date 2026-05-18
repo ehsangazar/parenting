@@ -2,8 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/icons/index.js';
 import { uiIcons } from '../lib/iconSemantics.js';
-import { PublicSiteHeader } from '../components/PublicSiteHeader.js';
-import { PublicFooter } from '../components/PublicFooter.js';
 import { SEO } from '../components/SEO.js';
 import { useLocalePath } from '../hooks/useLocalePath.js';
 
@@ -40,31 +38,30 @@ export const MissionPage = () => {
   const { localePath } = useLocalePath();
 
   return (
-    <div className="min-h-screen bg-background text-text-primary">
+    <>
       <SEO
         title={t('missionPage.seoTitle')}
         description={t('missionPage.seoDescription')}
         canonical="/mission"
       />
-      <PublicSiteHeader />
 
-      <main>
+      <div>
         {/* ===== HERO ===== */}
         <section className="relative overflow-hidden bg-background pb-20 pt-16">
           <div className="pointer-events-none absolute -left-40 top-10 h-96 w-96 rounded-full bg-primary-200/30 blur-3xl" />
           <div className="pointer-events-none absolute -right-32 bottom-0 h-80 w-80 rounded-full bg-secondary-200/30 blur-3xl" />
 
-          <div className="relative mx-auto max-w-4xl px-6 text-center animate-fade-up">
+          <div className="relative mx-auto max-w-3xl px-6 text-center animate-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full bg-primary-100 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-primary-700">
               <Icon name={uiIcons.globe} className="h-3.5 w-3.5" alt="" /> {t('missionPage.heroBadge')}
             </span>
 
-            <h1 className="mt-6 font-display text-4xl font-semibold leading-tight text-text-primary md:text-5xl lg:text-6xl">
+            <h1 className="mt-6 font-display text-3xl font-bold leading-tight text-text-primary sm:text-4xl">
               {t('missionPage.heroH1Before')}{' '}
               <span className="text-primary-600">{t('missionPage.heroH1Highlight')}</span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-text-secondary">
+            <p className="mx-auto mt-5 max-w-2xl text-[16px] leading-relaxed text-text-secondary">
               {t('missionPage.heroLead')}
             </p>
 
@@ -98,12 +95,12 @@ export const MissionPage = () => {
 
         {/* ===== THE PROBLEM ===== */}
         <section className="py-20">
-          <div className="mx-auto max-w-4xl px-6">
+          <div className="mx-auto max-w-3xl px-6">
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary-600">
                 {t('missionPage.problemEyebrow')}
               </p>
-              <h2 className="mt-3 font-display text-3xl font-semibold text-text-primary md:text-4xl">
+              <h2 className="mt-3 font-display text-2xl font-bold text-text-primary sm:text-3xl">
                 {t('missionPage.problemHeading')}
               </h2>
             </div>
@@ -119,7 +116,7 @@ export const MissionPage = () => {
                   </div>
                   <p className="text-4xl font-bold text-primary-600">{t(`missionPage.${statKey}Value`)}</p>
                   <p className="mt-2 text-text-primary font-medium leading-snug">{t(`missionPage.${statKey}Label`)}</p>
-                  <p className="mt-2 text-xs text-text-tertiary">
+                  <p className="mt-2 text-xs text-text-secondary">
                     {t('missionPage.statSciencePrefix')} {t(`missionPage.${statKey}Source`)}
                   </p>
                 </div>
@@ -129,13 +126,13 @@ export const MissionPage = () => {
         </section>
 
         {/* ===== HOW IT WORKS ===== */}
-        <section className="bg-surface py-20">
-          <div className="mx-auto max-w-4xl px-6">
+        <section className="bg-surface py-12">
+          <div className="mx-auto max-w-3xl px-6">
             <div className="text-center mb-12">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary-600">
                 {t('missionPage.modelEyebrow')}
               </p>
-              <h2 className="mt-3 font-display text-3xl font-semibold text-text-primary md:text-4xl">
+              <h2 className="mt-3 font-display text-2xl font-bold text-text-primary sm:text-3xl">
                 {t('missionPage.modelHeading')}
               </h2>
               <p className="mx-auto mt-3 max-w-xl text-base text-text-secondary">
@@ -163,11 +160,11 @@ export const MissionPage = () => {
 
         {/* ===== COUNTRIES ===== */}
         <section className="py-20">
-          <div className="mx-auto max-w-4xl px-6 text-center">
+          <div className="mx-auto max-w-3xl px-6 text-center">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary-600">
               {t('missionPage.reachEyebrow')}
             </p>
-            <h2 className="mt-3 font-display text-3xl font-semibold text-text-primary md:text-4xl">
+            <h2 className="mt-3 font-display text-2xl font-bold text-text-primary sm:text-3xl">
               {t('missionPage.reachHeading')}
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-base text-text-secondary">
@@ -186,20 +183,20 @@ export const MissionPage = () => {
               ))}
               <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border-light p-4">
                 <Icon name={uiIcons.mapPin} className="h-7 w-7 opacity-70" alt="" />
-                <span className="text-xs font-medium text-text-tertiary">{t('missionPage.countriesMore')}</span>
+                <span className="text-xs font-medium text-text-secondary">{t('missionPage.countriesMore')}</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* ===== WHAT THEY GET ===== */}
-        <section className="bg-surface py-20">
-          <div className="mx-auto max-w-4xl px-6">
+        <section className="bg-surface py-12">
+          <div className="mx-auto max-w-3xl px-6">
             <div className="text-center mb-12">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary-600">
                 {t('missionPage.freeEyebrow')}
               </p>
-              <h2 className="mt-3 font-display text-3xl font-semibold text-text-primary md:text-4xl">
+              <h2 className="mt-3 font-display text-2xl font-bold text-text-primary sm:text-3xl">
                 {t('missionPage.freeHeading')}
               </h2>
             </div>
@@ -222,7 +219,7 @@ export const MissionPage = () => {
 
         {/* ===== CTA ===== */}
         <section className="py-16">
-          <div className="mx-auto max-w-4xl px-6">
+          <div className="mx-auto max-w-3xl px-6">
             <div className="overflow-hidden rounded-[32px] bg-primary-700 p-10 shadow-xl text-center ring-1 ring-white/10">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/15">
                 <Icon name={uiIcons.heart} className="h-8 w-8 text-white" aria-hidden />
@@ -252,9 +249,7 @@ export const MissionPage = () => {
             </div>
           </div>
         </section>
-      </main>
-
-      <PublicFooter />
-    </div>
+      </div>
+    </>
   );
 };

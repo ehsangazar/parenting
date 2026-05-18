@@ -2,8 +2,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/icons/index.js';
 import { uiIcons } from '../lib/iconSemantics.js';
-import { PublicSiteHeader } from '../components/PublicSiteHeader.js';
-import { PublicFooter } from '../components/PublicFooter.js';
 import { SEO } from '../components/SEO.js';
 import { useLocalePath } from '../hooks/useLocalePath.js';
 
@@ -36,32 +34,31 @@ export const AboutPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-text-primary">
+    <>
       <SEO
         title={t('aboutPage.seoTitle')}
         description={t('aboutPage.seoDescription')}
         canonical="/about"
       />
-      <PublicSiteHeader />
 
-      <main>
+      <div>
         {/* ===== HERO ===== */}
         <section className="relative overflow-hidden bg-background pb-24 pt-16">
           <div className="pointer-events-none absolute -left-40 top-10 h-96 w-96 rounded-full bg-primary-200/30 blur-3xl" />
           <div className="pointer-events-none absolute -right-32 bottom-0 h-80 w-80 rounded-full bg-secondary-200/30 blur-3xl" />
 
-          <div className="relative mx-auto max-w-5xl px-6 text-center animate-fade-up">
+          <div className="relative mx-auto max-w-3xl px-6 text-center animate-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full bg-primary-100 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-primary-700">
               <Icon name={uiIcons.heart} className="h-3.5 w-3.5" alt="" /> {t('aboutPage.heroBadge')}
             </span>
 
-            <h1 className="mt-6 font-display text-4xl font-semibold leading-tight text-text-primary md:text-5xl lg:text-[56px]">
+            <h1 className="mt-6 font-display text-3xl font-bold leading-tight text-text-primary sm:text-4xl">
               {t('aboutPage.heroH1Part1')}{' '}
               <span className="text-primary-600">{t('aboutPage.heroH1Highlight')}</span>{' '}
               {t('aboutPage.heroH1Part2')}
             </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-text-secondary">
+            <p className="mx-auto mt-5 max-w-2xl text-[16px] leading-relaxed text-text-secondary">
               {t('aboutPage.heroDescription')}
             </p>
 
@@ -84,14 +81,14 @@ export const AboutPage = () => {
         </section>
 
         {/* ===== VISION ===== */}
-        <section className="bg-surface py-20">
-          <div className="mx-auto max-w-5xl px-6">
+        <section className="bg-surface py-12">
+          <div className="mx-auto max-w-3xl px-6">
             <div className="grid gap-12 md:grid-cols-2 md:items-center">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary-600">
                   {t('aboutPage.visionEyebrow')}
                 </p>
-                <h2 className="mt-3 font-display text-3xl font-semibold text-text-primary md:text-4xl">
+                <h2 className="mt-3 font-display text-2xl font-bold text-text-primary sm:text-3xl">
                   {t('aboutPage.visionHeading')}
                 </h2>
                 <p className="mt-4 text-base leading-relaxed text-text-secondary">
@@ -110,7 +107,7 @@ export const AboutPage = () => {
                   >
                     <p className="text-3xl font-black text-primary-600">{value}</p>
                     <p className="mt-1.5 text-sm font-medium leading-snug text-text-primary">{label}</p>
-                    <p className="mt-2 text-[11px] text-text-tertiary">{source}</p>
+                    <p className="mt-2 text-[12px] text-text-secondary">{source}</p>
                   </div>
                 ))}
               </div>
@@ -120,12 +117,12 @@ export const AboutPage = () => {
 
         {/* ===== WHAT WE BELIEVE ===== */}
         <section className="py-20">
-          <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-3xl px-6">
             <div className="mb-12 text-center">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary-600">
                 {t('aboutPage.valuesEyebrow')}
               </p>
-              <h2 className="mt-3 font-display text-3xl font-semibold text-text-primary md:text-4xl">
+              <h2 className="mt-3 font-display text-2xl font-bold text-text-primary sm:text-3xl">
                 {t('aboutPage.valuesHeading')}
               </h2>
             </div>
@@ -148,13 +145,13 @@ export const AboutPage = () => {
         </section>
 
         {/* ===== PRODUCT ===== */}
-        <section className="bg-surface py-20">
-          <div className="mx-auto max-w-5xl px-6">
+        <section className="bg-surface py-12">
+          <div className="mx-auto max-w-3xl px-6">
             <div className="mb-12 text-center">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary-600">
                 {t('aboutPage.platformEyebrow')}
               </p>
-              <h2 className="mt-3 font-display text-3xl font-semibold text-text-primary md:text-4xl">
+              <h2 className="mt-3 font-display text-2xl font-bold text-text-primary sm:text-3xl">
                 {t('aboutPage.platformHeading')}
               </h2>
               <p className="mx-auto mt-3 max-w-xl text-base text-text-secondary">
@@ -179,7 +176,7 @@ export const AboutPage = () => {
 
         {/* ===== RAISED FOR ALL ===== */}
         <section className="py-20">
-          <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-3xl px-6">
             <div className="overflow-hidden rounded-3xl border border-primary-200 bg-surface p-8 md:p-12 shadow-sm">
               <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
                 <div>
@@ -218,7 +215,7 @@ export const AboutPage = () => {
                       {c}
                     </span>
                   ))}
-                  <span className="rounded-full border border-dashed border-border-light px-3 py-1.5 text-xs font-medium text-text-tertiary">
+                  <span className="rounded-full border border-dashed border-border-light px-3 py-1.5 text-xs font-medium text-text-secondary">
                     {t('aboutPage.moreRegions')}
                   </span>
                 </div>
@@ -229,7 +226,7 @@ export const AboutPage = () => {
 
         {/* ===== CTA ===== */}
         <section className="py-16">
-          <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-3xl px-6">
             <div className="overflow-hidden rounded-[32px] bg-primary-fg p-10 text-center shadow-xl ring-1 ring-white/10">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/15">
                 <Icon name={uiIcons.sparkles} className="h-8 w-8 text-white" aria-hidden />
@@ -259,9 +256,7 @@ export const AboutPage = () => {
             </div>
           </div>
         </section>
-      </main>
-
-      <PublicFooter />
-    </div>
+      </div>
+    </>
   );
 };

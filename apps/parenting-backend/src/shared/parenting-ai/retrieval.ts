@@ -14,8 +14,8 @@ async function findRelevantChunks(
   const rows = await prisma.$queryRaw<Array<{ content: string }>>`
     SELECT c.content
     FROM "Chunk" c
-    JOIN "Document" d ON d.id = c."documentId"
-    WHERE d."sourceType" = ${opts.sourceType ?? "Expert"}
+    JOIN "Document" d ON d.id = c."docId"
+    WHERE d."docType" = ${opts.sourceType ?? "Expert"}
     ORDER BY c.embedding <=> ${vectorStr}::vector
     LIMIT ${limit}
   `;

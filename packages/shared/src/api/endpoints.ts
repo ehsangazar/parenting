@@ -102,12 +102,12 @@ export function createMomentsApi(api: AxiosInstance) {
 export function createChatApi(api: AxiosInstance) {
   return {
     listConversations: async (limit = 20, offset = 0) =>
-      (await api.get('/api/chat/conversations', { params: { limit, offset } })).data,
-    createConversation: async () => (await api.post('/api/chat/conversations')).data,
+      (await api.get('/api/conversations', { params: { limit, offset } })).data,
+    createConversation: async () => (await api.post('/api/conversations')).data,
     getMessages: async (conversationId: string) =>
-      (await api.get(`/api/chat/conversations/${conversationId}/messages`)).data,
+      (await api.get(`/api/conversations/${conversationId}/messages`)).data,
     deleteConversation: async (conversationId: string) =>
-      (await api.delete(`/api/chat/conversations/${conversationId}`)).data,
+      (await api.delete(`/api/conversations/${conversationId}`)).data,
   };
 }
 
@@ -123,9 +123,10 @@ export function createGamificationApi(api: AxiosInstance) {
 export function createProfileApi(api: AxiosInstance) {
   return {
     update: async (data: { name?: string; avatarUrl?: string; locale?: string }) =>
-      (await api.put('/api/auth/me', data)).data,
+      (await api.put('/api/identity/me', data)).data,
     getAvatarUploadUrl: async (contentType: string, contentLength: number) =>
-      (await api.get('/api/auth/me/avatar-upload-url', { params: { contentType, contentLength } })).data,
+      (await api.get('/api/identity/me/avatar-upload-url', { params: { contentType, contentLength } })).data,
+    deleteAccount: async () => (await api.delete('/api/identity/me')).data,
   };
 }
 
@@ -140,7 +141,8 @@ export function createLeaderboardApi(api: AxiosInstance) {
       const res = await api.get('/api/leaderboard', { params });
       return res.data;
     },
-    updatePrivacy: async (optIn: boolean) => (await api.put('/api/leaderboard/privacy', { optIn })).data,
+    updatePrivacy: async (optIn: boolean) =>
+      (await api.put('/api/leaderboard/me/opt-in', { optIn })).data,
   };
 }
 
@@ -158,36 +160,19 @@ export function createVillageApi(api: AxiosInstance) {
   };
 }
 
-export function createModulesApi(api: AxiosInstance) {
-  return {
-    getConfig: async () => (await api.get('/api/modules/config')).data,
-  };
-}
-
-export function createInsightsApi(api: AxiosInstance) {
-  return {
-    getSummary: async () => (await api.get('/api/insights/summary')).data,
-  };
-}
-
-export function createAiApi(api: AxiosInstance) {
-  return {
-    getDailyPulse: async (locale?: string) =>
-      (await api.get('/api/ai/daily-pulse', { params: locale ? { lang: locale } : undefined })).data,
-  };
-}
-
 export function createAuthApi(api: AxiosInstance) {
   return {
     login: async (email: string, password: string) =>
-      (await api.post('/api/auth/login', { email, password })).data,
+      (await api.post('/api/identity/login', { email, password })).data,
     register: async (email: string, password: string, name?: string) =>
-      (await api.post('/api/auth/register', { email, password, name })).data,
-    me: async () => (await api.get('/api/auth/me')).data,
-    logout: async () => (await api.post('/api/auth/logout')).data,
+      (await api.post('/api/identity/signup', { email, password, name })).data,
+    me: async () => (await api.get('/api/identity/me')).data,
+    // No server-side logout endpoint: JWTs are stateless, so callers
+    // discard the token client-side. Kept for API-shape compatibility.
+    logout: async () => ({ ok: true as const }),
     forgotPassword: async (email: string) =>
-      (await api.post('/api/auth/forgot-password', { email })).data,
+      (await api.post('/api/identity/reset-request', { email })).data,
     resetPassword: async (token: string, password: string) =>
-      (await api.post('/api/auth/reset-password', { token, password })).data,
+      (await api.post('/api/identity/reset', { token, newPassword: password })).data,
   };
 }

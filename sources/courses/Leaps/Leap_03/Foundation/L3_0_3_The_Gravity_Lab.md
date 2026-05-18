@@ -1,0 +1,15 @@
+<!-- hero: learning/raised-logic/l3-gravity-lab/hero-title-5b08aa0c-56e8-46ec-8ecb-dfaa3c45ddfe.png -->
+
+A spoon clatters onto the kitchen floor for the fifth time in ten minutes. You pick it up, and within seconds, it is gone again, followed by a wide-eyed, intense stare from the high chair toward the ground. While this repetitive cycle may feel like a game designed to test your patience, what you are actually witnessing is the opening of a sophisticated **Scientific Inquiry**. Your infant isn't just being clumsy; they are running a series of high-stakes physics simulations.
+
+![Eyes follow the spoon to the floor — the landing zone confirmed, the experiment complete](learning/raised-logic/l3-gravity-lab/body-opening-30216cb0-fb26-4379-9cff-cb877d76ebee.png)
+
+This phase is defined by the emergence of **Intentional Dropping**. The brain is no longer simply letting go of objects; it is actively investigating **Causal Reasoning** and the invisible laws of **Gravity**. By watching the object fall, your child is mastering **Trajectory Tracking**—the ability of the brain to predict exactly where an object will land based on its starting point and velocity. They are testing the complex relationship between their own voluntary muscle release and the external movement of the world. This behavior serves as a critical bridge to understanding **Spatial Relationships** and the fundamental concept of "Down." When they peer over the edge of a table to find the dropped toy, they are demonstrating that their **Object Permanence** has expanded to include moving targets. They are building a mental map of the physical forces that govern their reality.
+
+**The Variations Lab**
+Provide a diverse set of "experimental materials" with different weights, textures, and sounds. A wooden block, a soft silicone ball, and a metal spoon all behave and sound differently when they impact the floor. By offering these variations, you are enriching their **Sensory Integration** and helping them refine their understanding of **Material Properties**. Each different "clink" or "thud" reinforces the internal logic of the fall, teaching the brain that the result of an action is dependent on the object involved.
+
+**Visual Accessibility**
+Ensure their seating or play positioning allows for a clear, unobstructed view of the floor. If the high chair tray or a furniture edge blocks the sightline to the "landing zone," the vital feedback loop of the experiment is broken. By providing consistent **Visual Feedback**, you allow the infant brain to synchronize the proprioceptive feeling of the hand opening with the visual result of the drop. You are acting as the facilitator of their first physics laboratory.
+
+The repeated dropping of objects is not an act of preschool defiance, but a relentless search for the constants of the universe. You are not just a "fetcher" of spoons; you are the lab assistant to a scientist who is discovering that while some things change, the pull of the earth remains the same.
