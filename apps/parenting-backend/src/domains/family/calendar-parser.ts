@@ -108,6 +108,37 @@ const parseSchema = {
   ],
 } as const;
 
+const WEEKDAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+function buildDateAnchors(nowIso: string): string {
+  const now = new Date(nowIso);
+  if (Number.isNaN(now.getTime())) return "";
+  const lines: string[] = [];
+  const today = WEEKDAY_NAMES[now.getUTCDay()];
+  lines.push(`Today is ${today}, ${now.toISOString().slice(0, 10)}.`);
+  // List the date of each upcoming named weekday, so the model never has to
+  // compute day-of-week math (it gets this wrong on smaller models).
+  const upcoming: string[] = [];
+  for (let i = 1; i <= 7; i += 1) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() + i);
+    const name = WEEKDAY_NAMES[d.getUTCDay()];
+    const iso = d.toISOString().slice(0, 10);
+    upcoming.push(`  next ${name} = ${iso}`);
+  }
+  lines.push("Upcoming weekdays (use these as the source of truth):");
+  lines.push(...upcoming);
+  return lines.join("\n");
+}
+
 function buildSystemPrompt(opts: {
   children: Array<{ id: string; name: string }>;
   now: string;
@@ -119,13 +150,14 @@ function buildSystemPrompt(opts: {
     "You convert a parent's short message into a structured calendar event draft.",
     "",
     `Current date/time: ${opts.now}`,
+    buildDateAnchors(opts.now),
     "",
     "Children in this family (resolve childId by best name match; null if unclear):",
     childLines,
     "",
     "Field rules:",
     "- startDate / endDate are ISO 8601 datetimes. If only a date is given, use 09:00 local; if 'all day', set allDay=true and use 00:00.",
-    "- Resolve relative phrases like 'tomorrow', 'next Tuesday', 'in 3 days' against the current date.",
+    "- Resolve relative phrases like 'tomorrow', 'next Tuesday', 'in 3 days' against the current date. Use the 'Upcoming weekdays' list above; do not compute weekdays yourself.",
     "- eventType: best of appointment/milestone/activity/reminder/other.",
     "- repeatRule.type: one of none/daily/weekly/monthly/yearly/weekdays. interval defaults to 1.",
     "- repeatRule.daysOfWeek: 0=Sunday through 6=Saturday, only when type=weekly.",

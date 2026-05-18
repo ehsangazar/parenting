@@ -158,6 +158,7 @@ type EventFormDrawerProps = {
 };
 
 type DrawerTab = 'ai' | 'form';
+type ParsedDraft = Awaited<ReturnType<typeof calendarApi.parseEvent>>['draft'];
 
 const AI_CREATE_EXAMPLES = [
   'Doctor appointment for Eli next Tuesday at 3pm at the clinic',
@@ -196,6 +197,89 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
     return { when, child: childName };
   }, [mode, event, i18n.language, childName]);
 
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  const buildPayloadFrom = (state: FormState) => {
+    const startDate = combineToIso(state.date, state.time, state.allDay);
+    if (!startDate) return { error: t('calendar.form.errInvalidStart', 'Please pick a valid start date.') };
+    if (!state.title.trim()) return { error: t('calendar.form.errTitle', 'Please add a title.') };
+    if (!state.childId) return { error: t('calendar.form.errChild', 'Please select a child.') };
+
+    let endDate: string | undefined;
+    if (state.endDate) {
+      const iso = combineToIso(state.endDate, state.endTime || state.time, state.allDay);
+      if (!iso) return { error: t('calendar.form.errInvalidEnd', 'End date is invalid.') };
+      endDate = iso;
+    }
+
+    const payload: Record<string, unknown> = {
+      childId: state.childId,
+      title: state.title.trim(),
+      eventType: state.eventType,
+      startDate,
+      allDay: state.allDay,
+    };
+    if (endDate) payload.endDate = endDate;
+    if (state.location.trim()) payload.location = state.location.trim();
+    if (state.description.trim()) payload.description = state.description.trim();
+
+    if (state.repeatType !== 'none') {
+      const repeatRule: Record<string, unknown> = { type: state.repeatType, interval: 1 };
+      if (state.repeatEndDate) {
+        const iso = combineToIso(state.repeatEndDate, '23:59', true);
+        if (iso) repeatRule.endDate = iso;
+      }
+      payload.repeatRule = repeatRule;
+    } else if (mode === 'edit') {
+      payload.repeatRule = { type: 'none', interval: 1 };
+    }
+
+    return { payload };
+  };
+
+  const persist = async (state: FormState) => {
+    if (!activeFamily) return false;
+    const built = buildPayloadFrom(state);
+    if ('error' in built) {
+      toast.error(built.error);
+      return false;
+    }
+    if (mode === 'edit' && event) {
+      await calendarApi.updateEvent(activeFamily.id, event.id, built.payload);
+      toast.success(t('calendar.toast.updated', 'Event updated.'));
+    } else {
+      await calendarApi.createEvent(activeFamily.id, built.payload);
+      toast.success(t('calendar.toast.created', 'Event created.'));
+    }
+    return true;
+  };
+
+  const mergeDraftIntoForm = (state: FormState, draft: ParsedDraft): FormState => {
+    const next = { ...state };
+    if (draft.childId) next.childId = draft.childId;
+    if (draft.title) next.title = draft.title;
+    if (draft.eventType) next.eventType = draft.eventType;
+    if (draft.allDay !== null) next.allDay = draft.allDay;
+    if (draft.startDate) {
+      next.date = toDateInput(draft.startDate);
+      next.time = toTimeInput(draft.startDate) || state.time;
+    }
+    if (draft.endDate) {
+      next.endDate = toDateInput(draft.endDate);
+      next.endTime = toTimeInput(draft.endDate);
+    }
+    if (draft.location !== null) next.location = draft.location ?? '';
+    if (draft.description !== null) next.description = draft.description ?? '';
+    if (draft.repeatRule) {
+      next.repeatType = draft.repeatRule.type as RepeatType;
+      next.repeatEndDate = draft.repeatRule.endDate
+        ? toDateInput(draft.repeatRule.endDate)
+        : '';
+    }
+    return next;
+  };
+
   const handleAiApply = async () => {
     if (!activeFamily || !aiText.trim()) return;
     setAiBusy(true);
@@ -221,98 +305,35 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
         existingEvent,
       });
 
-      setForm((prev) => {
-        const next = { ...prev };
-        if (draft.childId) next.childId = draft.childId;
-        if (draft.title) next.title = draft.title;
-        if (draft.eventType) next.eventType = draft.eventType;
-        if (draft.allDay !== null) next.allDay = draft.allDay;
-        if (draft.startDate) {
-          next.date = toDateInput(draft.startDate);
-          next.time = toTimeInput(draft.startDate) || prev.time;
-        }
-        if (draft.endDate) {
-          next.endDate = toDateInput(draft.endDate);
-          next.endTime = toTimeInput(draft.endDate);
-        }
-        if (draft.location !== null) next.location = draft.location ?? '';
-        if (draft.description !== null) next.description = draft.description ?? '';
-        if (draft.repeatRule) {
-          next.repeatType = draft.repeatRule.type as RepeatType;
-          next.repeatEndDate = draft.repeatRule.endDate
-            ? toDateInput(draft.repeatRule.endDate)
-            : '';
-        }
-        return next;
-      });
+      const merged = mergeDraftIntoForm(form, draft);
+      setForm(merged);
       setAiNote(draft.notes);
-      setTab('form');
+
+      const ok = await persist(merged);
+      if (ok) {
+        onSaved();
+        onClose();
+      } else {
+        // Validation failed (e.g. no child resolved). Fall through to the
+        // form so the user can fix it manually.
+        setTab('form');
+      }
     } catch {
-      toast.error(t('calendar.ai.failed', 'Could not parse that. Try the form.'));
+      toast.error(t('calendar.ai.failed', 'Could not apply that. Try the form.'));
     } finally {
       setAiBusy(false);
     }
   };
 
-  const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
-
-  const buildPayload = () => {
-    const startDate = combineToIso(form.date, form.time, form.allDay);
-    if (!startDate) return { error: t('calendar.form.errInvalidStart', 'Please pick a valid start date.') };
-    if (!form.title.trim()) return { error: t('calendar.form.errTitle', 'Please add a title.') };
-    if (!form.childId) return { error: t('calendar.form.errChild', 'Please select a child.') };
-
-    let endDate: string | undefined;
-    if (form.endDate) {
-      const iso = combineToIso(form.endDate, form.endTime || form.time, form.allDay);
-      if (!iso) return { error: t('calendar.form.errInvalidEnd', 'End date is invalid.') };
-      endDate = iso;
-    }
-
-    const payload: Record<string, unknown> = {
-      childId: form.childId,
-      title: form.title.trim(),
-      eventType: form.eventType,
-      startDate,
-      allDay: form.allDay,
-    };
-    if (endDate) payload.endDate = endDate;
-    if (form.location.trim()) payload.location = form.location.trim();
-    if (form.description.trim()) payload.description = form.description.trim();
-
-    if (form.repeatType !== 'none') {
-      const repeatRule: Record<string, unknown> = { type: form.repeatType, interval: 1 };
-      if (form.repeatEndDate) {
-        const iso = combineToIso(form.repeatEndDate, '23:59', true);
-        if (iso) repeatRule.endDate = iso;
-      }
-      payload.repeatRule = repeatRule;
-    } else if (mode === 'edit') {
-      payload.repeatRule = { type: 'none', interval: 1 };
-    }
-
-    return { payload };
-  };
-
   const handleSave = async () => {
     if (!activeFamily) return;
-    const built = buildPayload();
-    if ('error' in built) {
-      toast.error(built.error);
-      return;
-    }
     setSaving(true);
     try {
-      if (mode === 'edit' && event) {
-        await calendarApi.updateEvent(activeFamily.id, event.id, built.payload);
-        toast.success(t('calendar.toast.updated', 'Event updated.'));
-      } else {
-        await calendarApi.createEvent(activeFamily.id, built.payload);
-        toast.success(t('calendar.toast.created', 'Event created.'));
+      const ok = await persist(form);
+      if (ok) {
+        onSaved();
+        onClose();
       }
-      onSaved();
-      onClose();
     } catch {
       toast.error(t('calendar.toast.saveFailed', 'Could not save event.'));
     } finally {
@@ -456,8 +477,10 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
                 className="flex items-center gap-2 rounded-xl bg-brand-blue px-4 py-2 text-[14px] font-bold text-white hover:brightness-110 disabled:opacity-50"
               >
                 {aiBusy
-                  ? t('calendar.form.aiThinking', 'Thinking...')
-                  : t('calendar.form.aiApply', 'Apply')}
+                  ? t('calendar.form.aiApplying', 'Applying...')
+                  : mode === 'edit'
+                    ? t('calendar.form.aiUpdate', 'Update event')
+                    : t('calendar.form.aiCreate', 'Create event')}
               </button>
             </div>
           </div>

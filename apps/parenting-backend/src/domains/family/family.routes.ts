@@ -821,11 +821,19 @@ export default async function familyRoutes(app: FastifyInstance) {
         properties: {
           text: { type: "string", minLength: 1, maxLength: 2000 },
           now: { type: "string" },
-          existingEvent: { type: "object", additionalProperties: true },
+          existingEvent: {
+            type: ["object", "null"],
+            additionalProperties: true,
+          },
         },
       },
       response: {
-        200: { type: "object", properties: { draft: { type: "object" } } },
+        200: {
+          type: "object",
+          properties: {
+            draft: { type: "object", additionalProperties: true },
+          },
+        },
         401: { description: "Unauthorized", type: "object" },
         404: { description: "Family not found", type: "object" },
       },
