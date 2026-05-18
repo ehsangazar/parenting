@@ -98,6 +98,13 @@ export const CourseDetailPage = () => {
   const [lessonsLoading, setLessonsLoading] = useState(false);
   const [lessonsError, setLessonsError] = useState<string | null>(null);
 
+  const allModules = useMemo(
+    () => phases.flatMap((p) => p.modules ?? []),
+    [phases],
+  );
+  const isSingleModule = !loading && phases.length > 0 && allModules.length === 1;
+  const soleModule = isSingleModule ? allModules[0] : null;
+
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [cardIndex, setCardIndex] = useState(0);
   const [completing, setCompleting] = useState(false);
@@ -141,6 +148,13 @@ export const CourseDetailPage = () => {
   useEffect(() => {
     if (token) loadPhases();
   }, [token, loadPhases]);
+
+  useEffect(() => {
+    if (!soleModule) return;
+    if (activeModule?.id === soleModule.id) return;
+    void openModule(soleModule);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [soleModule?.id]);
 
   const openModule = useCallback(
     async (mod: ModuleSummary) => {
@@ -295,33 +309,46 @@ export const CourseDetailPage = () => {
       )}
 
       <div className="mx-auto w-full max-w-md">
-        <div className="space-y-8">
-          {phases.map((phase, phaseIndex) => (
-            <PhaseSection
-              key={phase.id}
-              phase={phase}
-              phaseIndex={phaseIndex}
-              onSelectModule={openModule}
-              activeModuleId={activeModule?.id ?? null}
-            />
-          ))}
-        </div>
+        {isSingleModule && soleModule ? (
+          <SingleModuleLessonList
+            module={soleModule}
+            loading={lessonsLoading}
+            error={lessonsError}
+            lessons={lessons}
+            isLessonComplete={isLessonComplete}
+            onSelect={openLesson}
+          />
+        ) : (
+          <div className="space-y-8">
+            {phases.map((phase, phaseIndex) => (
+              <PhaseSection
+                key={phase.id}
+                phase={phase}
+                phaseIndex={phaseIndex}
+                onSelectModule={openModule}
+                activeModuleId={activeModule?.id ?? null}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      <ModuleLessonsModal
-        open={!!activeModule && !activeLesson}
-        title={activeModule?.title || t('academy.untitledModule', 'Untitled module')}
-        description={activeModule?.description ?? null}
-        loading={lessonsLoading}
-        error={lessonsError}
-        lessons={lessons.map((l) => ({
-          id: l.id,
-          title: l.title,
-          isComplete: isLessonComplete(l),
-        }))}
-        onSelect={handleSelectLessonId}
-        onClose={closeAll}
-      />
+      {!isSingleModule && (
+        <ModuleLessonsModal
+          open={!!activeModule && !activeLesson}
+          title={activeModule?.title || t('academy.untitledModule', 'Untitled module')}
+          description={activeModule?.description ?? null}
+          loading={lessonsLoading}
+          error={lessonsError}
+          lessons={lessons.map((l) => ({
+            id: l.id,
+            title: l.title,
+            isComplete: isLessonComplete(l),
+          }))}
+          onSelect={handleSelectLessonId}
+          onClose={closeAll}
+        />
+      )}
 
       <LessonModal
         open={!!activeLesson}

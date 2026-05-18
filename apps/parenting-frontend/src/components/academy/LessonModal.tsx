@@ -203,7 +203,7 @@ export const LessonModal = ({
                             <img
                               src={src}
                               alt={alt || ''}
-                              className="block h-auto w-full rounded-2xl object-cover"
+                              className="block aspect-video w-full rounded-2xl object-cover"
                             />
                             {alt && (
                               <figcaption className="mt-2 text-center text-[12px] italic leading-snug text-text-secondary">
@@ -227,7 +227,7 @@ export const LessonModal = ({
                               <img
                                 src={href}
                                 alt={caption}
-                                className="block h-auto w-full rounded-2xl object-cover"
+                                className="block aspect-video w-full rounded-2xl object-cover"
                               />
                               {caption && (
                                 <figcaption className="mt-2 text-center text-[12px] italic leading-snug text-text-secondary">

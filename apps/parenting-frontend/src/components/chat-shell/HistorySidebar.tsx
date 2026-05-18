@@ -29,6 +29,28 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
   const isNewConversationActive = location.pathname === '/' && !activeConversationId;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const rtf = useMemo(
+    () => new Intl.RelativeTimeFormat(i18n.language, { numeric: 'auto' }),
+    [i18n.language],
+  );
+
+  const formatRelativeTime = (iso: string): string => {
+    const date = new Date(iso);
+    const diffMs = date.getTime() - Date.now();
+    const diffSec = Math.round(diffMs / 1000);
+    if (Math.abs(diffSec) < 60) return rtf.format(diffSec, 'second');
+    const diffMin = Math.round(diffMs / 60_000);
+    if (Math.abs(diffMin) < 60) return rtf.format(diffMin, 'minute');
+    const diffHr = Math.round(diffMs / 3_600_000);
+    if (Math.abs(diffHr) < 24) return rtf.format(diffHr, 'hour');
+    const diffDay = Math.round(diffMs / 86_400_000);
+    if (Math.abs(diffDay) < 7) return rtf.format(diffDay, 'day');
+    return date.toLocaleDateString(i18n.language);
+  };
 
   const loadConversations = useCallback(async () => {
     if (!token) {
@@ -57,6 +79,24 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
     const id = setInterval(loadConversations, 15000);
     return () => clearInterval(id);
   }, [loadConversations, token]);
+
+  useEffect(() => {
+    if (!userMenuOpen) return undefined;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setUserMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [userMenuOpen]);
 
   const handleNew = () => {
     setActiveConversationId(null);
@@ -206,23 +246,16 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
                 className="flex min-w-0 flex-1 items-start gap-2 rounded-xl px-3 py-2.5 text-start"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <p
-                      className={clsx(
-                        'truncate text-[14px] font-semibold',
-                        isSelected ? 'text-brand-blue' : 'text-text-primary',
-                      )}
-                    >
-                      {conv.preview || t('chatPage.newConversation', 'New conversation')}
-                    </p>
-                    {isSelected && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-brand-blue/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-blue">
-                        {t('chatPage.selected', 'Selected')}
-                      </span>
+                  <p
+                    className={clsx(
+                      'truncate text-[14px] font-semibold',
+                      isSelected ? 'text-brand-blue' : 'text-text-primary',
                     )}
-                  </div>
+                  >
+                    {conv.preview || t('chatPage.newConversation', 'New conversation')}
+                  </p>
                   <p className="mt-0.5 text-[12px] text-text-secondary">
-                    {new Date(conv.createdAt).toLocaleDateString()}
+                    {formatRelativeTime(conv.createdAt)}
                   </p>
                 </div>
               </button>
@@ -241,19 +274,109 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
       </div>
 
       <div className="flex-shrink-0 border-t border-border px-3 py-3">
-        <LanguageSwitcher variant="full" className="w-full" />
-        {token && user && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="mt-2 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
-          >
-            <Icon name={uiIcons.user} className="h-4 w-4 object-contain" alt="" />
-            <span className="flex-1 truncate text-left">{user.email}</span>
-            <span className="text-[12px] text-text-secondary">{t('common.signOut', 'Sign out')}</span>
-          </button>
+        {token && user ? (
+          <div className="relative" ref={userMenuRef}>
+            {userMenuOpen && (
+              <div
+                role="menu"
+                className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-border bg-surface p-1.5 shadow-lg"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    navigate('/settings');
+                    onClose?.();
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
+                >
+                  {t('nav.settings', 'Settings')}
+                </button>
+                <div className="px-3 py-2">
+                  <LanguageSwitcher variant="full" className="w-full" />
+                </div>
+                <div className="my-1 border-t border-border" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    setSignOutConfirmOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
+                >
+                  {t('common.signOut', 'Sign out')}
+                </button>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setUserMenuOpen((v) => !v)}
+              aria-expanded={userMenuOpen}
+              aria-haspopup="menu"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
+            >
+              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-blue/15">
+                <Icon name={uiIcons.user} className="h-3.5 w-3.5 object-contain" alt="" />
+              </span>
+              <span className="flex-1 truncate text-left">{user.email}</span>
+              <Icon
+                name={userMenuOpen ? uiIcons.chevronDown : uiIcons.chevronUp}
+                className="h-3.5 w-3.5 object-contain opacity-70"
+                alt=""
+              />
+            </button>
+          </div>
+        ) : (
+          <LanguageSwitcher variant="full" className="w-full" />
         )}
       </div>
+
+      {signOutConfirmOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sign-out-confirm-title"
+        >
+          <div className="w-full max-w-md rounded-3xl bg-surface p-6 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-blue/10">
+                <Icon name={uiIcons.user} className="h-5 w-5 object-contain" alt="" />
+              </div>
+              <h2 id="sign-out-confirm-title" className="text-[18px] font-bold text-text-primary">
+                {t('chatShell.signOutConfirmTitle', 'Sign out?')}
+              </h2>
+            </div>
+            <p className="mt-4 text-[14px] leading-relaxed text-text-secondary">
+              {t(
+                'chatShell.signOutConfirmBody',
+                "You'll need to sign in again to see your conversation history on this device.",
+              )}
+            </p>
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setSignOutConfirmOpen(false)}
+                className="rounded-xl border border-border bg-surface px-4 py-2.5 text-[14px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
+              >
+                {t('settingsPage.deleteAccountCancel', 'Cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSignOutConfirmOpen(false);
+                  handleLogout();
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 text-[14px] font-bold text-white transition-colors hover:brightness-110 min-h-[44px]"
+              >
+                {t('common.signOut', 'Sign out')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pendingDeleteId && (
         <div

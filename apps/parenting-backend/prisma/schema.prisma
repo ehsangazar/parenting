@@ -230,6 +230,7 @@ model CalendarEvent {
   title       String
   description String?
   eventType   String
+  status      String    @default("confirmed")
   startDate   DateTime
   endDate     DateTime?
   allDay      Boolean   @default(false)
@@ -246,6 +247,7 @@ model CalendarEvent {
   @@index([childId])
   @@index([startDate])
   @@index([assignedTo])
+  @@index([status])
 }
 
 model KickSession {
