@@ -204,7 +204,7 @@ export const LessonModal = ({
               )}
 
               {isComplete ? (
-                <div className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-green/15 px-3 py-3 text-[14px] font-bold text-brand-green">
+                <div className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-100 px-3 py-3 text-[14px] font-bold text-primary-fg">
                   <Icon
                     name={uiIcons.circleCheck}
                     className="h-4 w-4 object-contain"

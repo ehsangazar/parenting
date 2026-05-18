@@ -1,4 +1,5 @@
-// Native entry point — Metro resolves this for iOS/Android
+/// <reference path="./nativewind.native.d.ts" />
+// Native entry point. Metro resolves this for iOS/Android.
 export { Button } from './Button.native';
 export type { ButtonProps } from './Button';
 export { Card } from './Card.native';

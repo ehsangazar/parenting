@@ -446,7 +446,7 @@ type ModuleNodeProps = {
 
 const STATE_BUTTON_CLASS: Record<ModuleState, string> = {
   complete:
-    'bg-brand-green text-white border-brand-green shadow-[0_6px_0_0_rgba(0,0,0,0.18)] hover:brightness-105',
+    'bg-primary-500 text-text-inverse border-primary-700 shadow-[0_6px_0_0_rgba(0,0,0,0.18)] hover:brightness-105',
   current:
     'bg-brand-blue text-white border-brand-blue shadow-[0_6px_0_0_rgba(0,0,0,0.18)] hover:brightness-105',
   available:

@@ -64,10 +64,11 @@ function recommendedLeapNumber(children: Array<{ birthday?: string | Date | null
     .filter((a) => Number.isFinite(a) && a >= 0);
   if (ages.length === 0) return 1;
   const youngest = Math.min(...ages);
-  const match = LEAP_AGE_RANGES.find((r) => youngest >= r.min && youngest <= r.max);
-  if (match) return match.leap;
+  const exact = LEAP_AGE_RANGES.find((r) => youngest >= r.min && youngest <= r.max);
+  if (exact) return exact.leap;
   if (youngest < LEAP_AGE_RANGES[0].min) return 1;
-  return LEAP_AGE_RANGES[LEAP_AGE_RANGES.length - 1].leap;
+  const preceding = [...LEAP_AGE_RANGES].reverse().find((r) => youngest >= r.min);
+  return preceding ? preceding.leap : LEAP_AGE_RANGES[LEAP_AGE_RANGES.length - 1].leap;
 }
 
 export const AcademyPage = () => {

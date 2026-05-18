@@ -36,7 +36,7 @@ const REPEAT_TYPES: RepeatType[] = ['none', 'daily', 'weekdays', 'weekly', 'mont
 const EVENT_TYPE_TONE: Record<EventType, string> = {
   appointment: 'bg-brand-blue/15 text-brand-blue',
   milestone: 'bg-brand-yellow/20 text-brand-yellow-fg',
-  activity: 'bg-brand-green/15 text-brand-green',
+  activity: 'bg-primary-100 text-primary-fg',
   reminder: 'bg-brand-pink/15 text-brand-pink',
   other: 'bg-surface-light text-text-secondary',
 };

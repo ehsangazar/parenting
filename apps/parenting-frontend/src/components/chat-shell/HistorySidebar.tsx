@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { chatApi } from '../../lib/appApi.js';
@@ -19,12 +19,14 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
   const { t } = useTranslation();
   const { token, user, setToken, setUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     activeConversationId,
     setActiveConversationId,
     requestNewConversation,
     newConversationNonce,
   } = useChatShell();
+  const isNewConversationActive = location.pathname === '/' && !activeConversationId;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -59,6 +61,9 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
   const handleNew = () => {
     setActiveConversationId(null);
     requestNewConversation();
+    if (window.location.pathname !== '/') {
+      navigate('/');
+    }
     onClose?.();
   };
 
@@ -135,7 +140,13 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
         <button
           type="button"
           onClick={handleNew}
-          className="flex w-full items-center gap-2 rounded-xl border border-border bg-surface-light px-3 py-3 text-[14px] font-semibold text-text-primary transition-colors hover:bg-surface hover:border-brand-blue/40"
+          aria-pressed={isNewConversationActive}
+          className={clsx(
+            'flex w-full items-center gap-2 rounded-xl border px-3 py-3 text-[14px] font-semibold transition-colors',
+            isNewConversationActive
+              ? 'border-brand-blue/50 bg-brand-blue/10 text-brand-blue'
+              : 'border-border bg-surface-light text-text-primary hover:bg-surface hover:border-brand-blue/40',
+          )}
         >
           <Icon name={uiIcons.plus} className="h-4 w-4 object-contain" alt="" />
           <span>{t('chatPage.newConversation', 'New conversation')}</span>

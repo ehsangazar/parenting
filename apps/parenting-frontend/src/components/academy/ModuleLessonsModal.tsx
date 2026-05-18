@@ -128,7 +128,7 @@ export const ModuleLessonsModal = ({
                           className={clsx(
                             'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-[13px] font-bold',
                             done
-                              ? 'bg-brand-green/20 text-brand-green'
+                              ? 'bg-primary-200 text-primary-fg'
                               : 'bg-surface text-text-secondary',
                           )}
                         >
@@ -147,7 +147,7 @@ export const ModuleLessonsModal = ({
                             {lesson.title || t('academy.untitledLesson', 'Untitled lesson')}
                           </p>
                           {done && (
-                            <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-brand-green">
+                            <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary-fg">
                               {t('academy.lesson.alreadyComplete', 'Completed')}
                             </p>
                           )}

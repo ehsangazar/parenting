@@ -53,7 +53,7 @@ const FEATURES: Feature[] = [
     descriptionKey: 'chatShell.settingsBlurb',
     descriptionFallback: 'Manage your account, family, and notifications.',
     iconName: appAssetIcons.settings,
-    accent: 'bg-brand-green/15 text-brand-green',
+    accent: 'bg-primary-100 text-primary-fg',
   },
 ];
 
