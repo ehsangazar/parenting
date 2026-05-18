@@ -212,6 +212,12 @@ export const findUpcomingEvents = (familyId: string, limit = 10) =>
 export const findCalendarEvent = (eventId: string) =>
   prisma.calendarEvent.findUnique({ where: { id: eventId } });
 
+export const findCalendarEventWithChild = (eventId: string) =>
+  prisma.calendarEvent.findUnique({
+    where: { id: eventId },
+    include: eventWithChildInclude,
+  });
+
 export const createCalendarEvent = (data: {
   familyId: string;
   childId: string;

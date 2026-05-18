@@ -1,20 +1,17 @@
 import type { ToolDefinition } from "./types.js";
 
 const KNOWN_PAGES: Record<string, { label: string; path: string }> = {
-  family: { label: "Family", path: "/app/family" },
-  children: { label: "Children", path: "/app/family" },
-  calendar: { label: "Calendar", path: "/app/calendar" },
-  moments: { label: "Moments", path: "/app/moments" },
-  milestones: { label: "Moments", path: "/app/moments" },
-  village: { label: "Village (community)", path: "/app/village" },
-  community: { label: "Village (community)", path: "/app/village" },
-  learning: { label: "Learning", path: "/app/learn" },
-  courses: { label: "Learning", path: "/app/learn" },
-  articles: { label: "Resources", path: "/app/resources" },
-  resources: { label: "Resources", path: "/app/resources" },
-  settings: { label: "Settings", path: "/app/settings" },
-  profile: { label: "Settings", path: "/app/settings" },
-  billing: { label: "Settings", path: "/app/settings" },
+  family: { label: "Family settings", path: "/settings" },
+  children: { label: "Children", path: "/settings" },
+  calendar: { label: "Calendar", path: "/calendar" },
+  academy: { label: "Academy", path: "/academy" },
+  learning: { label: "Academy", path: "/academy" },
+  courses: { label: "Academy", path: "/academy" },
+  articles: { label: "Articles", path: "/articles" },
+  resources: { label: "Articles", path: "/articles" },
+  settings: { label: "Settings", path: "/settings" },
+  profile: { label: "Settings", path: "/settings" },
+  billing: { label: "Settings", path: "/settings" },
 };
 
 const suggestPage: ToolDefinition = {
@@ -27,7 +24,7 @@ const suggestPage: ToolDefinition = {
       page: {
         type: "string",
         description:
-          "Page slug. One of: family, children, calendar, moments, milestones, village, community, learning, courses, articles, resources, settings, profile, billing.",
+          "Page slug. One of: family, children, calendar, academy, learning, courses, articles, resources, settings, profile, billing.",
       },
       label: {
         type: "string",

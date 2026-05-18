@@ -13,7 +13,7 @@
     "build:all": "eas build --platform all",
     "submit:ios": "eas submit --platform ios",
     "submit:android": "eas submit --platform android",
-    "lint": "oxlint app components hooks lib && expo lint",
+    "lint": "oxlint app hooks lib && eslint .",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -40,6 +40,8 @@
   "devDependencies": {
     "@babel/core": "^7.25.0",
     "@types/react": "~19.1.0",
+    "eslint": "^9.39.4",
+    "eslint-config-expo": "~55.0.1",
     "oxlint": "^1.64.0",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.9.2"

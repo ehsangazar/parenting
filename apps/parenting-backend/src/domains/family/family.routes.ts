@@ -821,6 +821,7 @@ export default async function familyRoutes(app: FastifyInstance) {
         properties: {
           text: { type: "string", minLength: 1, maxLength: 2000 },
           now: { type: "string" },
+          tzOffsetMinutes: { type: ["number", "null"] },
           existingEvent: {
             type: ["object", "null"],
             additionalProperties: true,
@@ -844,6 +845,7 @@ export default async function familyRoutes(app: FastifyInstance) {
     const body = req.body as {
       text: string;
       now?: string;
+      tzOffsetMinutes?: number | null;
       existingEvent?: Record<string, unknown> | null;
     };
     const result = await parseCalendarEvent({
@@ -852,11 +854,56 @@ export default async function familyRoutes(app: FastifyInstance) {
       input: {
         text: body.text,
         now: body.now ?? null,
+        tzOffsetMinutes: body.tzOffsetMinutes ?? null,
         existingEvent: body.existingEvent ?? null,
       },
     });
     if ("error" in result) return reply.notFound("Family not found");
     return reply.send({ draft: result });
+  });
+
+  // GET /families/:familyId/events/:eventId.ics
+  // Single-event ICS download for "Add to Apple/Outlook calendar". Returns
+  // text/calendar as an attachment so the user's browser hands it off to
+  // their default calendar app instead of trying to render it.
+  app.get("/families/:familyId/events/:eventId.ics", {
+    schema: {
+      tags: ["Family"],
+      summary: "Download a single calendar event as ICS",
+      security: bearerSecurity,
+      params: {
+        type: "object",
+        required: ["familyId", "eventId"],
+        properties: {
+          familyId: { type: "string" },
+          eventId: { type: "string" },
+        },
+      },
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const { familyId, eventId } = req.params as { familyId: string; eventId: string };
+    const event = await svc.getCalendarEventForExport(familyId, eventId, req.user.sub);
+    if (!event) return reply.notFound("Event not found");
+
+    const host = (req.headers["x-forwarded-host"] as string) || req.headers.host || "parenting.app";
+    const ics = buildIcsCalendar({
+      calendarName: event.title ?? "Parenting Event",
+      events: [event as unknown as IcsEventInput],
+      productHost: host,
+    });
+
+    const safeTitle = (event.title || "event")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "event";
+
+    reply
+      .header("Content-Type", "text/calendar; charset=utf-8")
+      .header("Content-Disposition", `attachment; filename="${safeTitle}.ics"`)
+      .header("Cache-Control", "private, no-store");
+    return ics;
   });
 
   // POST /families/:familyId/calendar/feed-token

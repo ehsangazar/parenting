@@ -86,11 +86,17 @@ export function createCalendarApi(api: AxiosInstance) {
         webcalUrl: string;
         token: string;
       },
+    getEventIcs: async (familyId: string, eventId: string) =>
+      (await api.get(`/api/families/${familyId}/events/${eventId}.ics`, {
+        responseType: 'text',
+        transformResponse: [(d) => d],
+      })).data as string,
     parseEvent: async (
       familyId: string,
       payload: {
         text: string;
         now?: string;
+        tzOffsetMinutes?: number | null;
         existingEvent?: Record<string, unknown> | null;
       },
     ) =>

@@ -647,6 +647,19 @@ export const listCalendarEvents = async (familyId: string, userId: string) => {
   return enrichEventsWithMembers(events, familyId);
 };
 
+export const getCalendarEventForExport = async (
+  familyId: string,
+  eventId: string,
+  userId: string,
+) => {
+  const family = await repo.findFamilyById(familyId, userId);
+  if (!family) return null;
+
+  const event = await repo.findCalendarEventWithChild(eventId);
+  if (!event || event.familyId !== familyId) return null;
+  return event;
+};
+
 export const listUpcomingEvents = async (familyId: string, userId: string) => {
   const family = await repo.findFamilyById(familyId, userId);
   if (!family) return null;

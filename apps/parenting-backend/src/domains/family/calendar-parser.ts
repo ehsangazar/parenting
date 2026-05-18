@@ -59,6 +59,10 @@ export type ParseEventInput = {
   // Client-provided "now" in ISO so we can resolve "tomorrow", "next Tuesday"
   // in the user's timezone instead of the server's.
   now?: string | null;
+  // Client's getTimezoneOffset() value (minutes; negative means east of UTC).
+  // Used to translate stored UTC ISO into the user's wall-clock view so the
+  // model edits dates the user actually sees, not the underlying UTC date.
+  tzOffsetMinutes?: number | null;
 };
 
 const parseSchema = {
@@ -118,8 +122,29 @@ const WEEKDAY_NAMES = [
   "Saturday",
 ] as const;
 
-function buildDateAnchors(nowIso: string): string {
-  const now = new Date(nowIso);
+// Convert a UTC ISO string to the user's local wall-clock as a naive ISO
+// (no Z, no offset). The user thinks in this timezone, so the model should
+// edit dates that look like what the user sees on their screen.
+function utcToLocalNaive(iso: string | null | undefined, offsetMin: number): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const shifted = new Date(d.getTime() - offsetMin * 60000);
+  return shifted.toISOString().replace(/Z$/, "");
+}
+
+// Reverse of utcToLocalNaive. Accepts a naive ISO string the model produced
+// (or one with Z/offset, which we strip) and returns the actual UTC instant.
+function localNaiveToUtc(value: string | null | undefined, offsetMin: number): string | null {
+  if (!value) return null;
+  const stripped = String(value).replace(/(Z|[+-]\d{2}:?\d{2})$/, "");
+  const asIfUtc = new Date(`${stripped}Z`);
+  if (Number.isNaN(asIfUtc.getTime())) return null;
+  return new Date(asIfUtc.getTime() + offsetMin * 60000).toISOString();
+}
+
+function buildDateAnchors(nowLocalNaive: string): string {
+  const now = new Date(`${nowLocalNaive}Z`);
   if (Number.isNaN(now.getTime())) return "";
   const lines: string[] = [];
   const today = WEEKDAY_NAMES[now.getUTCDay()];
@@ -141,7 +166,7 @@ function buildDateAnchors(nowIso: string): string {
 
 function buildSystemPrompt(opts: {
   children: Array<{ id: string; name: string }>;
-  now: string;
+  nowLocalNaive: string;
 }): string {
   const childLines = opts.children.length
     ? opts.children.map((c) => `- id=${c.id} name="${c.name}"`).join("\n")
@@ -149,30 +174,32 @@ function buildSystemPrompt(opts: {
   return [
     "You convert a parent's short message into a structured calendar event draft.",
     "",
-    `Current date/time: ${opts.now}`,
-    buildDateAnchors(opts.now),
+    "All datetimes in this conversation are in the user's LOCAL wall-clock time, formatted as naive ISO (e.g. 2026-05-23T15:00:00, with no Z and no offset).",
+    `Current local date/time: ${opts.nowLocalNaive}`,
+    buildDateAnchors(opts.nowLocalNaive),
     "",
     "Children in this family (resolve childId by best name match; null if unclear):",
     childLines,
     "",
     "Field rules:",
-    "- startDate / endDate are ISO 8601 datetimes. If only a date is given, use 09:00 local; if 'all day', set allDay=true and use 00:00.",
-    "- Resolve relative phrases like 'tomorrow', 'next Tuesday', 'in 3 days' against the current date. Use the 'Upcoming weekdays' list above; do not compute weekdays yourself.",
+    "- startDate / endDate are LOCAL naive ISO 8601 datetimes (no Z, no offset). If only a date is given, use 09:00; if 'all day', set allDay=true and use 00:00.",
+    "- Resolve relative phrases like 'tomorrow', 'next Tuesday', 'in 3 days' against the current local date. Use the 'Upcoming weekdays' list above; do not compute weekdays yourself.",
     "- eventType: best of appointment/milestone/activity/reminder/other.",
     "- repeatRule.type: one of none/daily/weekly/monthly/yearly/weekdays. interval defaults to 1.",
     "- repeatRule.daysOfWeek: 0=Sunday through 6=Saturday, only when type=weekly.",
     "- If a field is not mentioned, return null (or 'none' repeat).",
     "- When given an existing event, return the FULL updated event (existing values + the user's changes), not just the diff.",
+    "- When editing dates: the date numbers shown in the existing event are exactly what the user sees. Do not adjust them for any timezone.",
     "- notes: optionally explain any assumption you had to make. Keep under 120 chars. null if obvious.",
   ].join("\n");
 }
 
-function buildUserPrompt(input: ParseEventInput): string {
+function buildUserPrompt(input: ParseEventInput, existingForModel: unknown): string {
   const lines: string[] = [];
-  if (input.existingEvent) {
+  if (existingForModel) {
     lines.push(
       "Existing event (the user wants to edit this):",
-      JSON.stringify(input.existingEvent, null, 2),
+      JSON.stringify(existingForModel, null, 2),
       "",
     );
   }
@@ -191,14 +218,28 @@ export async function parseCalendarEvent(opts: {
 
   const children = (family.children ?? []).map((c) => ({ id: c.id, name: c.name }));
   const now = opts.input.now || new Date().toISOString();
+  const offsetMin = typeof opts.input.tzOffsetMinutes === "number"
+    ? opts.input.tzOffsetMinutes
+    : 0;
+
+  // Naive local-time view used to talk to the model and convert back later.
+  const nowLocalNaive = utcToLocalNaive(now, offsetMin) ?? now.replace(/Z$/, "");
+
+  const existingForModel = opts.input.existingEvent
+    ? {
+        ...opts.input.existingEvent,
+        startDate: utcToLocalNaive(opts.input.existingEvent.startDate, offsetMin),
+        endDate: utcToLocalNaive(opts.input.existingEvent.endDate, offsetMin),
+      }
+    : null;
 
   const oai = getOpenAI();
   const completion = await oai.chat.completions.create({
     model: MODEL,
     temperature: 0.1,
     messages: [
-      { role: "system", content: buildSystemPrompt({ children, now }) },
-      { role: "user", content: buildUserPrompt(opts.input) },
+      { role: "system", content: buildSystemPrompt({ children, nowLocalNaive }) },
+      { role: "user", content: buildUserPrompt(opts.input, existingForModel) },
     ],
     response_format: {
       type: "json_schema",
@@ -232,6 +273,14 @@ export async function parseCalendarEvent(opts: {
   // invented an id, drop it so the form doesn't silently reference garbage.
   if (parsed.childId && !children.some((c) => c.id === parsed.childId)) {
     parsed.childId = null;
+  }
+
+  // The model speaks naive local-time; turn its output back into the UTC ISO
+  // the rest of the app stores.
+  parsed.startDate = localNaiveToUtc(parsed.startDate, offsetMin);
+  parsed.endDate = localNaiveToUtc(parsed.endDate, offsetMin);
+  if (parsed.repeatRule?.endDate) {
+    parsed.repeatRule.endDate = localNaiveToUtc(parsed.repeatRule.endDate, offsetMin);
   }
 
   return parsed;

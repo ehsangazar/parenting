@@ -31,35 +31,57 @@ function getAge(birthday?: string | null): number | null {
   return Math.floor((Date.now() - new Date(birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25));
 }
 
-function getSuggestedQuestions(t: TFunction, childName: string | null, age: number | null, isLoggedOut: boolean): { iconName: IconName; text: string }[] {
+type Suggestion = { iconName: IconName; text: string };
+
+function getSuggestedPool(t: TFunction, childName: string | null, age: number | null, isLoggedOut: boolean): Suggestion[] {
+  // Action-style prompts mixed in with questions so the hero hints that
+  // Raised can also take actions (add events, log moments, etc), not just
+  // answer questions. Each branch has a larger pool than we render; the
+  // caller shuffles and slices so chips vary on each visit.
   if (childName) {
     if (age !== null && age <= 2) return [
       { iconName: 'cell_phone', text: t('chatPage.screenTimeChild', { name: childName }) },
       { iconName: 'biotech', text: t('chatPage.pickyEatingToddler') },
       { iconName: 'clock', text: t('chatPage.sleepRegressionAge', { name: childName }) },
       { iconName: 'voice_presentation', text: t('chatPage.speechDelay') },
+      { iconName: 'calendar', text: t('chatPage.actionAddCheckup', { name: childName, defaultValue: "Add {{name}}'s next check-up to the calendar" }) },
+      { iconName: 'checkmark', text: t('chatPage.actionLogFirstSmile', { name: childName, defaultValue: "Log {{name}}'s first smile today" }) },
+      { iconName: 'serial_tasks', text: t('chatPage.actionBedtimeChecklist', { name: childName, defaultValue: "Build a bedtime routine for {{name}}" }) },
+      { iconName: 'calendar', text: t('chatPage.actionReminderBottles', { defaultValue: 'Remind me to sterilise bottles every evening' }) },
     ];
     if (age !== null && age <= 6) return [
       { iconName: 'reading_ebook', text: t('chatPage.learningAtHome', { name: childName }) },
       { iconName: 'disclaimer', text: t('chatPage.managingTantrums') },
       { iconName: 'biotech', text: t('chatPage.pickyEating') },
       { iconName: 'night_landscape', text: t('chatPage.bedtimeRoutine', { name: childName }) },
+      { iconName: 'calendar', text: t('chatPage.actionAddDentist', { name: childName, defaultValue: "Schedule {{name}}'s dentist visit for next Tuesday at 4pm" }) },
+      { iconName: 'checkmark', text: t('chatPage.actionLogMilestone', { name: childName, defaultValue: 'Log that {{name}} started riding a bike today' }) },
+      { iconName: 'serial_tasks', text: t('chatPage.actionPackingList', { defaultValue: 'Build a packing list for a weekend trip with toddlers' }) },
+      { iconName: 'calendar', text: t('chatPage.actionScreenTimeRules', { defaultValue: 'Help me set screen-time rules at home' }) },
     ];
     return [
       { iconName: 'cell_phone', text: t('chatPage.screenTimeChild', { name: childName }) },
       { iconName: 'collaboration', text: t('chatPage.socialSkills') },
       { iconName: 'reading', text: t('chatPage.lovingReading') },
       { iconName: 'clock', text: t('chatPage.sleepHabits') },
+      { iconName: 'calendar', text: t('chatPage.actionAddParentTeacher', { name: childName, defaultValue: "Add {{name}}'s parent-teacher meeting to the calendar" }) },
+      { iconName: 'checkmark', text: t('chatPage.actionLogReport', { name: childName, defaultValue: "Log {{name}}'s school report" }) },
+      { iconName: 'serial_tasks', text: t('chatPage.actionHomeworkRoutine', { defaultValue: 'Build a homework routine that actually sticks' }) },
+      { iconName: 'calendar', text: t('chatPage.actionWeeklyChores', { defaultValue: 'Plan weekly chores I can share with my partner' }) },
     ];
   }
-  // Logged-out visitors: showcase a question per major life stage so they
-  // see the product spans pregnancy through teens.
+  // Logged-out visitors: showcase a question per major life stage AND a
+  // couple of action examples so they understand the product can also act,
+  // not just chat.
   if (isLoggedOut) {
     return [
       { iconName: 'biotech', text: t('chatPage.qPregnancy', 'Is it normal to feel Braxton Hicks at 34 weeks?') },
       { iconName: 'night_landscape', text: t('chatPage.qBaby', "Why won't my 4-month-old sleep through the night?") },
       { iconName: 'disclaimer', text: t('chatPage.qToddler', 'How do I handle tantrums without losing it?') },
       { iconName: 'cell_phone', text: t('chatPage.qTeen', 'How should I talk to my teen about social media?') },
+      { iconName: 'calendar', text: t('chatPage.actionAddVaccination', { defaultValue: "Add my baby's vaccination to the calendar" }) },
+      { iconName: 'checkmark', text: t('chatPage.actionLogFirstStep', { defaultValue: 'Log my toddler’s first step' }) },
+      { iconName: 'serial_tasks', text: t('chatPage.actionWeaningPlan', { defaultValue: 'Build a 4-week weaning plan' }) },
     ];
   }
   return [
@@ -67,7 +89,21 @@ function getSuggestedQuestions(t: TFunction, childName: string | null, age: numb
     { iconName: 'biotech', text: t('chatPage.pickyEating') },
     { iconName: 'clock', text: t('chatPage.sleepRegressionGeneral') },
     { iconName: 'voice_presentation', text: t('chatPage.speechDelay') },
+    { iconName: 'calendar', text: t('chatPage.actionAddAppointment', { defaultValue: 'Add a doctor appointment for next Tuesday at 4pm' }) },
+    { iconName: 'checkmark', text: t('chatPage.actionLogMoment', { defaultValue: 'Log a new milestone for my child' }) },
+    { iconName: 'serial_tasks', text: t('chatPage.actionBedtimePlan', { defaultValue: 'Build a calmer bedtime routine' }) },
+    { iconName: 'calendar', text: t('chatPage.actionRemindVitamins', { defaultValue: 'Remind me to give vitamins every morning' }) },
   ];
+}
+
+function pickRandom<T>(items: T[], n: number): T[] {
+  if (items.length <= n) return items;
+  const copy = items.slice();
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, n);
 }
 
 function preprocessMarkdown(raw: string): string {
@@ -673,7 +709,14 @@ export const ChatPanel = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  const suggested = getSuggestedQuestions(t, activeChild?.name ?? null, activeChild?.age ?? null, !token);
+  const suggested = useMemo(
+    () => pickRandom(getSuggestedPool(t, activeChild?.name ?? null, activeChild?.age ?? null, !token), 4),
+    // Re-shuffle when the relevant inputs change OR when the user lands on
+    // the empty-state hero again. `messages.length === 0` keeps the chips
+    // varied across new conversations without reshuffling mid-typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeChild?.id, !token, messages.length === 0, i18n.language],
+  );
   const isEmpty = messages.length === 0;
   const placeholder = activeChild
     ? t('chatPage.askAboutChild', { name: activeChild.name })

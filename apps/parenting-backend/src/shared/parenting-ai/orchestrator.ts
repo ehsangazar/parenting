@@ -20,6 +20,31 @@ type OrchestratorOptions = {
   onCard: (card: Card) => void;
 };
 
+const WEEKDAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+function buildDateAnchors(now: Date): string {
+  const lines: string[] = [];
+  const today = WEEKDAY_NAMES[now.getUTCDay()];
+  lines.push(`TODAY is ${today}, ${now.toISOString().slice(0, 10)} (full ISO: ${now.toISOString()}).`);
+  const upcoming: string[] = [];
+  for (let i = 1; i <= 7; i += 1) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() + i);
+    upcoming.push(`  next ${WEEKDAY_NAMES[d.getUTCDay()]} = ${d.toISOString().slice(0, 10)}`);
+  }
+  lines.push("Upcoming weekdays (use these dates verbatim; do NOT compute weekdays yourself):");
+  lines.push(...upcoming);
+  return lines.join("\n");
+}
+
 function buildSystemPrompt(
   language: string,
   longTermFacts: string[],
@@ -31,6 +56,10 @@ function buildSystemPrompt(
     : "none on file";
 
   return `You are Raised, a calm, evidence-based parenting assistant. Respond in language code "${language}".
+
+${buildDateAnchors(new Date())}
+
+When the user says relative time ("tomorrow", "next Tuesday", "in two weeks", "this Friday"), resolve it against the dates above. Do NOT fall back to any internally-remembered date.
 
 You have access to tools that let you act on the user's account (search knowledge, manage children, schedule events, log moments, update profile, recall/save memory, suggest pages). Use tools whenever they help. Do not invent data: if you need to know something about the user's family, call the appropriate tool.
 

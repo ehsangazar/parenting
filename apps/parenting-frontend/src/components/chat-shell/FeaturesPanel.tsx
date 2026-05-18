@@ -1,4 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { useAuth } from '../../state/auth.js';
@@ -15,6 +16,16 @@ type Feature = {
   iconName: IconName;
   accent: string;
 };
+
+const ABOUT_LINKS: Array<{ to: string; tKey: string; fallback: string }> = [
+  { to: '/about', tKey: 'home.nav.about', fallback: 'About' },
+  { to: '/mission', tKey: 'home.nav.mission', fallback: 'Mission' },
+  { to: '/features', tKey: 'home.nav.features', fallback: 'Features' },
+  { to: '/privacy', tKey: 'home.footer.privacyPolicy', fallback: 'Privacy policy' },
+  { to: '/terms', tKey: 'home.footer.termsOfService', fallback: 'Terms of service' },
+  { to: '/cookies', tKey: 'home.footer.cookiePolicy', fallback: 'Cookie policy' },
+  { to: '/safeguarding', tKey: 'home.footer.safeguarding', fallback: 'Safeguarding' },
+];
 
 const FEATURES: Feature[] = [
   {
@@ -55,6 +66,7 @@ export const FeaturesPanel = ({ onClose }: { onClose?: () => void }) => {
   const { t } = useTranslation();
   const { token } = useAuth();
   const navigate = useNavigate();
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   const handleClick = (e: React.MouseEvent, to: string) => {
     if (!token) {
@@ -133,6 +145,37 @@ export const FeaturesPanel = ({ onClose }: { onClose?: () => void }) => {
             >
               {t('home.nav.signIn', 'Sign in')}
             </button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-shrink-0 border-t border-border px-3 py-3">
+        <button
+          type="button"
+          onClick={() => setAboutOpen((v) => !v)}
+          className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[12px] font-bold uppercase tracking-wider text-text-secondary hover:bg-surface-light"
+          aria-expanded={aboutOpen}
+        >
+          <span>{t('chatShell.aboutAndLegal', 'About & legal')}</span>
+          <Icon
+            name={aboutOpen ? uiIcons.chevronUp : uiIcons.chevronDown}
+            className="h-3.5 w-3.5 object-contain opacity-70"
+            alt=""
+          />
+        </button>
+
+        {aboutOpen && (
+          <div className="mt-2 flex flex-col gap-0.5 rounded-xl bg-surface-light px-2 py-2">
+            {ABOUT_LINKS.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => onClose?.()}
+                className="rounded-lg px-2 py-2 text-[13px] text-text-secondary transition-colors hover:bg-surface hover:text-text-primary"
+              >
+                {t(link.tKey, link.fallback)}
+              </Link>
+            ))}
           </div>
         )}
       </div>

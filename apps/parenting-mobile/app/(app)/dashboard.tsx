@@ -3,22 +3,20 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Screen, ScreenHeader, StatCard, Card, Button } from '@parenting/ui';
 import { useAuth } from '@/lib/store';
-import { learningApi, gamificationApi } from '@/lib/api';
+import { gamificationApi } from '@/lib/api';
 
 export default function DashboardScreen() {
   const user = useAuth((s) => s.user);
-  const [nextLesson, setNextLesson] = useState<any>(null);
+  const [nextLesson] = useState<any>(null);
   const [gamification, setGamification] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      learningApi.getNextLesson().catch(() => null),
-      gamificationApi.getProfile().catch(() => null),
-    ]).then(([lesson, gam]) => {
-      setNextLesson(lesson);
-      setGamification(gam);
-    }).finally(() => setLoading(false));
+    gamificationApi
+      .getProfile()
+      .then((gam) => setGamification(gam))
+      .catch(() => setGamification(null))
+      .finally(() => setLoading(false));
   }, []);
 
   const name = user?.profile?.name ?? user?.email?.split('@')[0] ?? 'there';

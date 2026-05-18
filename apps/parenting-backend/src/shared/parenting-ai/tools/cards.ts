@@ -14,7 +14,7 @@ export function childCard(data: ChildCardData, opts?: { extraActions?: CardActio
     type: "child",
     data,
     actions: [
-      { kind: "navigate", label: `Open ${data.name}`, to: `/app/family`, tone: "primary" },
+      { kind: "navigate", label: `Open ${data.name}`, to: `/settings`, tone: "primary" },
       ...(opts?.extraActions ?? []),
     ],
   };
@@ -26,7 +26,7 @@ export function eventCard(data: EventCardData, opts?: { extraActions?: CardActio
     type: "event",
     data,
     actions: [
-      { kind: "navigate", label: "Open calendar", to: "/app/calendar", tone: "primary" },
+      { kind: "navigate", label: "Open calendar", to: "/calendar", tone: "primary" },
       ...(opts?.extraActions ?? []),
     ],
   };
@@ -46,7 +46,7 @@ export function articleCard(data: ArticleCardData): Card {
     type: "article",
     data,
     actions: [
-      { kind: "navigate", label: "Read article", to: `/app/resources/${data.slug}`, tone: "primary" },
+      { kind: "navigate", label: "Read article", to: `/articles/${data.slug}`, tone: "primary" },
     ],
   };
 }

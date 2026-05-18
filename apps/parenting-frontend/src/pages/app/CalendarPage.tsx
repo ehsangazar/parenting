@@ -52,6 +52,7 @@ function formatStart(iso: string, locale: string, allDay?: boolean): string {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
+    year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
   });
@@ -60,6 +61,64 @@ function formatStart(iso: string, locale: string, allDay?: boolean): string {
 function isPast(iso: string): boolean {
   const d = new Date(iso);
   return !Number.isNaN(d.getTime()) && d.getTime() < Date.now();
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
+function addMonths(d: Date, n: number): Date {
+  const r = new Date(d);
+  r.setMonth(r.getMonth() + n);
+  return r;
+}
+
+// Given an event's anchor startDate and its repeat rule, returns the ISO of
+// the next occurrence on or after now. Falls back to the original startDate
+// when there is no recurrence or the series has ended.
+function nextOccurrence(
+  startIso: string,
+  repeatRule?: { type?: string | null; interval?: number | null; endDate?: string | null } | null,
+): string {
+  const start = new Date(startIso);
+  if (Number.isNaN(start.getTime())) return startIso;
+  const type = repeatRule?.type ?? 'none';
+  if (!type || type === 'none') return startIso;
+  const now = Date.now();
+  if (start.getTime() >= now) return startIso;
+
+  const interval = Math.max(1, repeatRule?.interval ?? 1);
+  const limit = repeatRule?.endDate ? new Date(repeatRule.endDate).getTime() : null;
+  let next = new Date(start);
+  let safety = 5000;
+  while (next.getTime() < now && safety > 0) {
+    switch (type) {
+      case 'daily':
+        next = addDays(next, interval);
+        break;
+      case 'weekly':
+        next = addDays(next, 7 * interval);
+        break;
+      case 'weekdays':
+        do {
+          next = addDays(next, 1);
+        } while (next.getDay() === 0 || next.getDay() === 6);
+        break;
+      case 'monthly':
+        next = addMonths(next, interval);
+        break;
+      case 'yearly':
+        next = addMonths(next, 12 * interval);
+        break;
+      default:
+        return startIso;
+    }
+    if (limit && next.getTime() > limit) return startIso;
+    safety -= 1;
+  }
+  return next.toISOString();
 }
 
 function toDateInput(iso?: string | null): string {
@@ -144,6 +203,145 @@ const Label = ({ children, htmlFor }: { children: React.ReactNode; htmlFor?: str
     {children}
   </label>
 );
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+function fmtUtcCompact(d: Date): string {
+  return `${d.getUTCFullYear()}${pad2(d.getUTCMonth() + 1)}${pad2(d.getUTCDate())}T${pad2(d.getUTCHours())}${pad2(d.getUTCMinutes())}${pad2(d.getUTCSeconds())}Z`;
+}
+
+function fmtLocalDateCompact(d: Date): string {
+  return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`;
+}
+
+function buildGoogleCalendarUrl(event: CalendarEvent): string {
+  const start = new Date(event.startDate);
+  let dates: string;
+  if (event.allDay) {
+    const endLocal = event.endDate ? new Date(event.endDate) : start;
+    const endExclusive = new Date(endLocal);
+    endExclusive.setDate(endExclusive.getDate() + 1);
+    dates = `${fmtLocalDateCompact(start)}/${fmtLocalDateCompact(endExclusive)}`;
+  } else {
+    const end = event.endDate
+      ? new Date(event.endDate)
+      : new Date(start.getTime() + 60 * 60 * 1000);
+    dates = `${fmtUtcCompact(start)}/${fmtUtcCompact(end)}`;
+  }
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: event.title || 'Event',
+    dates,
+  });
+  if (event.description) params.set('details', event.description);
+  if (event.location) params.set('location', event.location);
+  return `https://www.google.com/calendar/render?${params.toString()}`;
+}
+
+function safeIcsFilename(title: string | null | undefined): string {
+  const base = (title || 'event')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+  return `${base || 'event'}.ics`;
+}
+
+function triggerDownload(filename: string, text: string): void {
+  const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+type AddToCalendarMenuProps = {
+  event: CalendarEvent;
+  familyId: string;
+};
+
+const AddToCalendarMenu = ({ event, familyId }: AddToCalendarMenuProps) => {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [open]);
+
+  const openGoogle = () => {
+    const url = buildGoogleCalendarUrl(event);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setOpen(false);
+  };
+
+  const downloadIcs = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const ics = await calendarApi.getEventIcs(familyId, event.id);
+      triggerDownload(safeIcsFilename(event.title), ics);
+    } catch {
+      toast.error(t('calendar.export.failed', 'Could not export this event.'));
+    } finally {
+      setBusy(false);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-[13px] font-bold text-text-primary hover:bg-surface-light"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <Icon name={uiIcons.share} className="h-4 w-4 object-contain" alt="" />
+        {t('calendar.export.button', 'Add to calendar')}
+        <Icon name={uiIcons.chevronDown} className="h-3 w-3 object-contain opacity-60" alt="" />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-20 mt-1 w-56 overflow-hidden rounded-xl border border-border bg-surface shadow-lg"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={openGoogle}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-text-primary hover:bg-surface-light"
+          >
+            <Icon name={uiIcons.calendar} className="h-4 w-4 object-contain" alt="" />
+            {t('calendar.export.google', 'Google Calendar')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={downloadIcs}
+            disabled={busy}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-text-primary hover:bg-surface-light disabled:opacity-50"
+          >
+            <Icon name={uiIcons.download} className="h-4 w-4 object-contain" alt="" />
+            {busy
+              ? t('calendar.export.preparing', 'Preparing...')
+              : t('calendar.export.ics', 'Apple / Outlook (.ics)')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const baseField =
   'w-full rounded-xl border border-border bg-surface px-3 py-2 text-[14px] text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-blue/40';
@@ -302,6 +500,7 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
       const { draft } = await calendarApi.parseEvent(activeFamily.id, {
         text: aiText.trim(),
         now: new Date().toISOString(),
+        tzOffsetMinutes: new Date().getTimezoneOffset(),
         existingEvent,
       });
 
@@ -401,17 +600,24 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
           <div className="space-y-3">
             {mode === 'edit' && eventSummary && event && (
               <div className="rounded-2xl border border-border bg-surface-light px-4 py-3">
-                <p className="text-[12px] font-bold uppercase tracking-wider text-text-secondary">
-                  {t('calendar.form.currentEvent', 'Editing')}
-                </p>
-                <p className="mt-1 text-[14px] font-bold text-text-primary">{event.title}</p>
-                <p className="text-[12px] text-text-secondary">
-                  {eventSummary.when}
-                  {eventSummary.child ? ` • ${eventSummary.child}` : ''}
-                </p>
-                {event.location && (
-                  <p className="text-[12px] text-text-secondary">{event.location}</p>
-                )}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-bold uppercase tracking-wider text-text-secondary">
+                      {t('calendar.form.currentEvent', 'Editing')}
+                    </p>
+                    <p className="mt-1 text-[14px] font-bold text-text-primary">{event.title}</p>
+                    <p className="text-[12px] text-text-secondary">
+                      {eventSummary.when}
+                      {eventSummary.child ? ` • ${eventSummary.child}` : ''}
+                    </p>
+                    {event.location && (
+                      <p className="text-[12px] text-text-secondary">{event.location}</p>
+                    )}
+                  </div>
+                  {activeFamily && (
+                    <AddToCalendarMenu event={event} familyId={activeFamily.id} />
+                  )}
+                </div>
               </div>
             )}
 
@@ -448,7 +654,7 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
                         onClick={() => setAiText(ex)}
                         className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-left text-[13px] text-text-secondary hover:bg-surface-light"
                       >
-                        "{ex}"
+                        &ldquo;{ex}&rdquo;
                       </button>
                     </li>
                   ))}
@@ -652,14 +858,19 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
 
         <div className="flex items-center justify-between gap-3 pt-2">
           {mode === 'edit' ? (
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleting || saving}
-              className="rounded-xl border border-red-500/40 px-3 py-2 text-[14px] font-bold text-red-500 hover:bg-red-500/10 disabled:opacity-50"
-            >
-              {deleting ? t('common.deleting', 'Deleting...') : t('common.delete', 'Delete')}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting || saving}
+                className="rounded-xl border border-red-500/40 px-3 py-2 text-[14px] font-bold text-red-500 hover:bg-red-500/10 disabled:opacity-50"
+              >
+                {deleting ? t('common.deleting', 'Deleting...') : t('common.delete', 'Delete')}
+              </button>
+              {event && activeFamily && (
+                <AddToCalendarMenu event={event} familyId={activeFamily.id} />
+              )}
+            </div>
           ) : (
             <span />
           )}
@@ -701,6 +912,9 @@ type EventRowProps = {
 
 const EventRow = ({ event, locale, onSelect }: EventRowProps) => {
   const { t } = useTranslation();
+  const displayIso = nextOccurrence(event.startDate, event.repeatRule);
+  const isRecurring = (event.repeatRule?.type ?? 'none') !== 'none';
+  const shifted = isRecurring && displayIso !== event.startDate;
   return (
     <li>
       <button
@@ -708,7 +922,7 @@ const EventRow = ({ event, locale, onSelect }: EventRowProps) => {
         onClick={() => onSelect(event)}
         className={clsx(
           'flex w-full items-start gap-3 rounded-2xl border border-border bg-surface px-3 py-3 text-left transition-colors hover:border-brand-blue/30 hover:bg-surface-light',
-          isPast(event.startDate) && 'opacity-70',
+          isPast(displayIso) && 'opacity-70',
         )}
       >
         <span
@@ -727,10 +941,20 @@ const EventRow = ({ event, locale, onSelect }: EventRowProps) => {
             </span>
           </div>
           <p className="mt-1 text-[13px] text-text-secondary">
-            {formatStart(event.startDate, locale, event.allDay)}
+            {formatStart(displayIso, locale, event.allDay)}
+            {isRecurring
+              ? ` · ${t(`calendar.repeat.${event.repeatRule?.type}`, event.repeatRule?.type ?? '')}`
+              : ''}
             {event.child?.name ? ` · ${event.child.name}` : ''}
             {event.location ? ` · ${event.location}` : ''}
           </p>
+          {shifted && (
+            <p className="mt-0.5 text-[11px] text-text-secondary/80">
+              {t('calendar.startedOn', 'Started {{date}}', {
+                date: formatStart(event.startDate, locale, event.allDay),
+              })}
+            </p>
+          )}
           {event.description && (
             <p className="mt-1 text-[13px] text-text-secondary leading-snug">{event.description}</p>
           )}
@@ -825,12 +1049,16 @@ export const CalendarPage = () => {
   }, [loadEvents, loadChildren]);
 
   const { upcoming, past } = useMemo(() => {
-    const sorted = [...events].sort(
-      (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    const withNext = events.map((e) => ({ event: e, next: nextOccurrence(e.startDate, e.repeatRule) }));
+    const sorted = [...withNext].sort(
+      (a, b) => new Date(a.next).getTime() - new Date(b.next).getTime(),
     );
     return {
-      upcoming: sorted.filter((e) => !isPast(e.startDate)),
-      past: sorted.filter((e) => isPast(e.startDate)).reverse(),
+      upcoming: sorted.filter((x) => !isPast(x.next)).map((x) => x.event),
+      past: sorted
+        .filter((x) => isPast(x.next))
+        .map((x) => x.event)
+        .reverse(),
     };
   }, [events]);
 
