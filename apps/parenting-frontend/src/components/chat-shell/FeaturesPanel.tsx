@@ -11,8 +11,6 @@ type Feature = {
   to: string;
   tKey: string;
   fallback: string;
-  descriptionKey: string;
-  descriptionFallback: string;
   iconName: IconName;
   accent: string;
 };
@@ -32,8 +30,6 @@ const FEATURES: Feature[] = [
     to: '/calendar',
     tKey: 'nav.calendar',
     fallback: 'Calendar',
-    descriptionKey: 'chatShell.calendarBlurb',
-    descriptionFallback: 'See appointments, milestones, and reminders.',
     iconName: appAssetIcons.calendar,
     accent: 'bg-brand-blue/15 text-brand-blue',
   },
@@ -41,19 +37,8 @@ const FEATURES: Feature[] = [
     to: '/academy',
     tKey: 'nav.academy',
     fallback: 'Academy',
-    descriptionKey: 'chatShell.academyBlurb',
-    descriptionFallback: 'Courses and lessons for your parenting journey.',
     iconName: appAssetIcons.academy,
     accent: 'bg-brand-pink/15 text-brand-pink',
-  },
-  {
-    to: '/settings',
-    tKey: 'nav.settings',
-    fallback: 'Settings',
-    descriptionKey: 'chatShell.settingsBlurb',
-    descriptionFallback: 'Manage your account, family, and notifications.',
-    iconName: appAssetIcons.settings,
-    accent: 'bg-primary-100 text-primary-fg',
   },
 ];
 
@@ -104,27 +89,22 @@ export const FeaturesPanel = ({ onClose }: { onClose?: () => void }) => {
             onClick={(e) => handleClick(e, feature.to)}
             className={({ isActive }) =>
               clsx(
-                'flex items-start gap-3 rounded-2xl border px-3 py-3 transition-colors',
+                'flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors',
                 isActive
-                  ? 'border-brand-blue/50 bg-brand-blue/5'
+                  ? 'border-brand-blue/50 bg-brand-blue/10'
                   : 'border-border bg-surface hover:border-brand-blue/30 hover:bg-surface-light',
               )
             }
           >
-            <span className={clsx('flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl', feature.accent)}>
+            <span className={clsx('flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg', feature.accent)}>
               <Icon name={feature.iconName} className="h-5 w-5 object-contain" alt="" />
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-bold text-text-primary">
-                {t(feature.tKey, feature.fallback)}
-              </p>
-              <p className="mt-1 text-[13px] text-text-secondary leading-snug">
-                {t(feature.descriptionKey, feature.descriptionFallback)}
-              </p>
-            </div>
+            <p className="min-w-0 flex-1 truncate text-[14px] font-semibold text-text-primary">
+              {t(feature.tKey, feature.fallback)}
+            </p>
             <Icon
               name={uiIcons.chevronRight}
-              className="mt-1 h-4 w-4 flex-shrink-0 object-contain opacity-60"
+              className="h-4 w-4 flex-shrink-0 object-contain opacity-50"
               alt=""
             />
           </NavLink>

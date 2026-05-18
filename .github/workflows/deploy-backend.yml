@@ -13,7 +13,7 @@ jobs:
     name: Trigger Coolify deploy
     runs-on: ubuntu-latest
     env:
-      COOLIFY_HOST: http://178.105.103.56:8000
+      COOLIFY_HOST: https://coolify.gazar.dev
       COOLIFY_APP_UUID: qlo0g5nv2ncxm4yfhdri5hsa
       HEALTH_URL: https://parenting-backend.gazar.dev/health
 

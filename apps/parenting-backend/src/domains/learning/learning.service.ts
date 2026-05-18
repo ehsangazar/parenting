@@ -51,9 +51,50 @@ async function signOptionalMediaUrl(url: string | null): Promise<string | null> 
   }
 }
 
-async function signLessonMedia<T extends { mediaUrl?: string | null }>(lesson: T): Promise<T> {
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|avif)(\?|#|$)/i;
+const MD_IMAGE_OR_LINK_RE = /(!?)\[([^\]]*)\]\(([^)\s]+)\)/g;
+
+async function signInlineMarkdownAssets(content: string): Promise<string> {
+  if (!content) return content;
+
+  const matches = Array.from(content.matchAll(MD_IMAGE_OR_LINK_RE));
+  if (matches.length === 0) return content;
+
+  const uniqueUrls = new Set<string>();
+  for (const m of matches) {
+    const [, bang, , url] = m;
+    if (!url || url.startsWith("http")) continue;
+    if (bang !== "!" && !IMAGE_EXT_RE.test(url)) continue;
+    uniqueUrls.add(url);
+  }
+  if (uniqueUrls.size === 0) return content;
+
+  const signed = new Map<string, string>();
+  await Promise.all(
+    Array.from(uniqueUrls).map(async (url) => {
+      try {
+        signed.set(url, await getSignedViewUrl(url));
+      } catch {
+        signed.set(url, url);
+      }
+    }),
+  );
+
+  return content.replace(MD_IMAGE_OR_LINK_RE, (full, bang: string, alt: string, url: string) => {
+    if (url.startsWith("http")) return full;
+    const isImage = bang === "!" || IMAGE_EXT_RE.test(url);
+    if (!isImage) return full;
+    const target = signed.get(url) ?? url;
+    return `![${alt}](${target})`;
+  });
+}
+
+async function signLessonMedia<T extends { mediaUrl?: string | null; content?: string | null }>(
+  lesson: T,
+): Promise<T> {
   const mediaUrl = await signOptionalMediaUrl(lesson.mediaUrl ?? null);
-  return { ...lesson, mediaUrl };
+  const content = lesson.content ? await signInlineMarkdownAssets(lesson.content) : lesson.content;
+  return { ...lesson, mediaUrl, content };
 }
 
 // ── Module access guard ───────────────────────────────────────────────────────

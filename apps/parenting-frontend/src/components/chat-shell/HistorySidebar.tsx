@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -16,7 +16,7 @@ type Conversation = { id: string; createdAt: string; preview?: string | null };
  * when the user isn't authenticated, since we can't list private history.
  */
 export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { token, user, setToken, setUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

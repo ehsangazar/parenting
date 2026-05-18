@@ -3,8 +3,11 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import ReactMarkdown from 'react-markdown';
 import { Icon } from '../icons/index.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
+
+const IMAGE_HREF_RE = /\.(png|jpe?g|gif|webp|svg|avif)(\?|#|$)/i;
 
 export type LessonCard =
   | { kind: 'media'; mediaUrl: string; mediaType?: string | null }
@@ -152,8 +155,104 @@ export const LessonModal = ({
               )}
 
               {currentCard?.kind === 'text' && (
-                <div className="my-auto whitespace-pre-wrap text-[15px] leading-relaxed text-text-primary sm:text-[16px]">
-                  {currentCard.text}
+                <div className="my-auto w-full">
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => (
+                        <p className="my-3 text-[15px] leading-relaxed text-text-primary first:mt-0 last:mb-0 sm:text-[16px]">
+                          {children}
+                        </p>
+                      ),
+                      h1: ({ children }) => (
+                        <h3 className="mb-3 mt-4 text-[20px] font-extrabold leading-tight text-text-primary first:mt-0">
+                          {children}
+                        </h3>
+                      ),
+                      h2: ({ children }) => (
+                        <h3 className="mb-3 mt-4 text-[18px] font-extrabold leading-tight text-text-primary first:mt-0">
+                          {children}
+                        </h3>
+                      ),
+                      h3: ({ children }) => (
+                        <h4 className="mb-2 mt-3 text-[16px] font-extrabold leading-tight text-text-primary first:mt-0">
+                          {children}
+                        </h4>
+                      ),
+                      ul: ({ children }) => (
+                        <ul className="my-3 list-disc space-y-1 pl-5 text-[15px] leading-relaxed text-text-primary sm:text-[16px]">
+                          {children}
+                        </ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol className="my-3 list-decimal space-y-1 pl-5 text-[15px] leading-relaxed text-text-primary sm:text-[16px]">
+                          {children}
+                        </ol>
+                      ),
+                      strong: ({ children }) => (
+                        <strong className="font-bold text-text-primary">{children}</strong>
+                      ),
+                      em: ({ children }) => <em className="italic">{children}</em>,
+                      blockquote: ({ children }) => (
+                        <blockquote className="my-3 border-l-4 border-brand-blue/40 bg-brand-blue/5 px-3 py-2 text-[14px] italic leading-relaxed text-text-secondary sm:text-[15px]">
+                          {children}
+                        </blockquote>
+                      ),
+                      img: ({ src, alt }) =>
+                        src ? (
+                          <figure className="my-3 first:mt-0 last:mb-0">
+                            <img
+                              src={src}
+                              alt={alt || ''}
+                              className="block h-auto w-full rounded-2xl object-cover"
+                            />
+                            {alt && (
+                              <figcaption className="mt-2 text-center text-[12px] italic leading-snug text-text-secondary">
+                                {alt}
+                              </figcaption>
+                            )}
+                          </figure>
+                        ) : null,
+                      a: ({ href, children, ...rest }) => {
+                        if (href && IMAGE_HREF_RE.test(href)) {
+                          const caption =
+                            typeof children === 'string'
+                              ? children
+                              : Array.isArray(children)
+                                ? children
+                                    .map((c) => (typeof c === 'string' ? c : ''))
+                                    .join('')
+                                : '';
+                          return (
+                            <figure className="my-3 first:mt-0 last:mb-0">
+                              <img
+                                src={href}
+                                alt={caption}
+                                className="block h-auto w-full rounded-2xl object-cover"
+                              />
+                              {caption && (
+                                <figcaption className="mt-2 text-center text-[12px] italic leading-snug text-text-secondary">
+                                  {caption}
+                                </figcaption>
+                              )}
+                            </figure>
+                          );
+                        }
+                        return (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-semibold text-brand-blue underline-offset-2 hover:underline"
+                            {...rest}
+                          >
+                            {children}
+                          </a>
+                        );
+                      },
+                    }}
+                  >
+                    {currentCard.text}
+                  </ReactMarkdown>
                 </div>
               )}
             </div>

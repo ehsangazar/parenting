@@ -507,16 +507,7 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
       const merged = mergeDraftIntoForm(form, draft);
       setForm(merged);
       setAiNote(draft.notes);
-
-      const ok = await persist(merged);
-      if (ok) {
-        onSaved();
-        onClose();
-      } else {
-        // Validation failed (e.g. no child resolved). Fall through to the
-        // form so the user can fix it manually.
-        setTab('form');
-      }
+      setTab('form');
     } catch {
       toast.error(t('calendar.ai.failed', 'Could not apply that. Try the form.'));
     } finally {
@@ -596,6 +587,12 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
           </button>
         </div>
 
+        {aiNote && (
+          <p className="rounded-xl bg-brand-blue/10 px-3 py-2 text-[12px] text-text-primary">
+            {aiNote}
+          </p>
+        )}
+
         {tab === 'ai' && (
           <div className="space-y-3">
             {mode === 'edit' && eventSummary && event && (
@@ -662,12 +659,6 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
               </div>
             )}
 
-            {aiNote && (
-              <p className="rounded-xl bg-brand-blue/10 px-3 py-2 text-[12px] text-text-primary">
-                {aiNote}
-              </p>
-            )}
-
             <div className="flex items-center justify-between gap-3 pt-1">
               <button
                 type="button"
@@ -683,10 +674,8 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
                 className="flex items-center gap-2 rounded-xl bg-brand-blue px-4 py-2 text-[14px] font-bold text-white hover:brightness-110 disabled:opacity-50"
               >
                 {aiBusy
-                  ? t('calendar.form.aiApplying', 'Applying...')
-                  : mode === 'edit'
-                    ? t('calendar.form.aiUpdate', 'Update event')
-                    : t('calendar.form.aiCreate', 'Create event')}
+                  ? t('calendar.form.aiApplying', 'Reading...')
+                  : t('calendar.form.aiPreview', 'Preview in form')}
               </button>
             </div>
           </div>
