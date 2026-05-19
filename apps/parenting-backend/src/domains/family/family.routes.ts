@@ -712,6 +712,10 @@ export default async function familyRoutes(app: FastifyInstance) {
             type: "string",
             enum: ["appointment", "milestone", "activity", "reminder", "other"],
           },
+          status: {
+            type: "string",
+            enum: ["suggested", "confirmed"],
+          },
           startDate: { type: "string", format: "date-time" },
           endDate: { type: "string", format: "date-time" },
           allDay: { type: "boolean" },

@@ -15,11 +15,14 @@ import { uiIcons } from '../../lib/iconSemantics.js';
 type EventType = 'appointment' | 'milestone' | 'activity' | 'reminder' | 'other';
 type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'weekdays';
 
+type EventStatus = 'suggested' | 'confirmed';
+
 type CalendarEvent = {
   id: string;
   title: string;
   description?: string | null;
   eventType: EventType;
+  status?: EventStatus;
   startDate: string;
   endDate?: string | null;
   allDay?: boolean;
@@ -444,7 +447,11 @@ const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, o
       return false;
     }
     if (mode === 'edit' && event) {
-      await calendarApi.updateEvent(activeFamily.id, event.id, built.payload);
+      const payload = { ...built.payload };
+      if (event.status === 'suggested') {
+        payload.status = 'confirmed';
+      }
+      await calendarApi.updateEvent(activeFamily.id, event.id, payload);
       toast.success(t('calendar.toast.updated', 'Event updated.'));
     } else {
       await calendarApi.createEvent(activeFamily.id, built.payload);
@@ -897,63 +904,107 @@ type EventRowProps = {
   event: CalendarEvent;
   locale: string;
   onSelect: (event: CalendarEvent) => void;
+  onConfirm?: (event: CalendarEvent) => void;
+  onDismiss?: (event: CalendarEvent) => void;
+  busy?: boolean;
 };
 
-const EventRow = ({ event, locale, onSelect }: EventRowProps) => {
+const EventRow = ({ event, locale, onSelect, onConfirm, onDismiss, busy }: EventRowProps) => {
   const { t } = useTranslation();
   const displayIso = nextOccurrence(event.startDate, event.repeatRule);
   const isRecurring = (event.repeatRule?.type ?? 'none') !== 'none';
   const shifted = isRecurring && displayIso !== event.startDate;
+  const isSuggested = event.status === 'suggested';
   return (
     <li>
-      <button
-        type="button"
-        onClick={() => onSelect(event)}
+      <div
         className={clsx(
-          'flex w-full items-start gap-3 rounded-2xl border border-border bg-surface px-3 py-3 text-left transition-colors hover:border-brand-blue/30 hover:bg-surface-light',
-          isPast(displayIso) && 'opacity-70',
+          'rounded-2xl border bg-surface transition-colors',
+          isSuggested
+            ? 'border-dashed border-brand-yellow/60 hover:border-brand-yellow'
+            : 'border-border hover:border-brand-blue/30 hover:bg-surface-light',
+          isPast(displayIso) && (isSuggested ? 'opacity-60' : 'opacity-70'),
         )}
       >
-        <span
-          className={clsx(
-            'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
-            EVENT_TYPE_TONE[event.eventType] ?? EVENT_TYPE_TONE.other,
-          )}
+        <button
+          type="button"
+          onClick={() => onSelect(event)}
+          className="flex w-full items-start gap-3 px-3 py-3 text-left"
         >
-          <Icon name={appAssetIcons.calendar as IconName} className="h-5 w-5 object-contain" alt="" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="truncate text-[15px] font-bold text-text-primary">{event.title}</p>
-            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
-              {t(`calendar.type.${event.eventType}`, event.eventType)}
-            </span>
-          </div>
-          <p className="mt-1 text-[13px] text-text-secondary">
-            {formatStart(displayIso, locale, event.allDay)}
-            {isRecurring
-              ? ` · ${t(`calendar.repeat.${event.repeatRule?.type}`, event.repeatRule?.type ?? '')}`
-              : ''}
-            {event.child?.name ? ` · ${event.child.name}` : ''}
-            {event.location ? ` · ${event.location}` : ''}
-          </p>
-          {shifted && (
-            <p className="mt-0.5 text-[11px] text-text-secondary/80">
-              {t('calendar.startedOn', 'Started {{date}}', {
-                date: formatStart(event.startDate, locale, event.allDay),
-              })}
+          <span
+            className={clsx(
+              'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
+              EVENT_TYPE_TONE[event.eventType] ?? EVENT_TYPE_TONE.other,
+            )}
+          >
+            <Icon name={appAssetIcons.calendar as IconName} className="h-5 w-5 object-contain" alt="" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="truncate text-[15px] font-bold text-text-primary">{event.title}</p>
+              {isSuggested ? (
+                <span className="shrink-0 rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand-yellow-fg">
+                  {t('calendar.status.suggested', 'Suggested')}
+                </span>
+              ) : (
+                <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
+                  {t(`calendar.type.${event.eventType}`, event.eventType)}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-[13px] text-text-secondary">
+              {formatStart(displayIso, locale, event.allDay)}
+              {isRecurring
+                ? ` · ${t(`calendar.repeat.${event.repeatRule?.type}`, event.repeatRule?.type ?? '')}`
+                : ''}
+              {event.child?.name ? ` · ${event.child.name}` : ''}
+              {event.location ? ` · ${event.location}` : ''}
             </p>
-          )}
-          {event.description && (
-            <p className="mt-1 text-[13px] text-text-secondary leading-snug">{event.description}</p>
-          )}
-        </div>
-        <Icon
-          name={uiIcons.chevronRight}
-          className="mt-1 h-4 w-4 flex-shrink-0 object-contain opacity-50"
-          alt=""
-        />
-      </button>
+            {shifted && (
+              <p className="mt-0.5 text-[11px] text-text-secondary/80">
+                {t('calendar.startedOn', 'Started {{date}}', {
+                  date: formatStart(event.startDate, locale, event.allDay),
+                })}
+              </p>
+            )}
+            {event.description && (
+              <p className="mt-1 text-[13px] text-text-secondary leading-snug">{event.description}</p>
+            )}
+          </div>
+          <Icon
+            name={uiIcons.chevronRight}
+            className="mt-1 h-4 w-4 flex-shrink-0 object-contain opacity-50"
+            alt=""
+          />
+        </button>
+        {isSuggested && (onConfirm || onDismiss) && (
+          <div className="flex items-center gap-2 border-t border-dashed border-brand-yellow/40 px-3 py-2">
+            {onConfirm && (
+              <button
+                type="button"
+                onClick={() => onConfirm(event)}
+                disabled={busy}
+                className="rounded-xl bg-brand-blue px-3 py-1.5 text-[13px] font-bold text-white hover:brightness-110 disabled:opacity-50"
+              >
+                {t('calendar.suggested.confirm', 'Confirm')}
+              </button>
+            )}
+            {onDismiss && (
+              <button
+                type="button"
+                onClick={() => onDismiss(event)}
+                disabled={busy}
+                className="rounded-xl border border-border px-3 py-1.5 text-[13px] font-bold text-text-secondary hover:bg-surface-light disabled:opacity-50"
+              >
+                {t('calendar.suggested.dismiss', 'Dismiss')}
+              </button>
+            )}
+            <p className="ml-auto text-[12px] text-text-secondary">
+              {t('calendar.suggested.hint', 'Pre-filled from age. Tap to edit.')}
+            </p>
+          </div>
+        )}
+      </div>
     </li>
   );
 };
@@ -1051,6 +1102,8 @@ export const CalendarPage = () => {
     };
   }, [events]);
 
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+
   const openCreate = () => {
     setEditing(null);
     setDrawerOpen(true);
@@ -1060,6 +1113,42 @@ export const CalendarPage = () => {
     setEditing(event);
     setDrawerOpen(true);
   };
+
+  const handleConfirm = useCallback(
+    async (event: CalendarEvent) => {
+      if (!activeFamily) return;
+      setPendingActionId(event.id);
+      try {
+        await calendarApi.updateEvent(activeFamily.id, event.id, {
+          status: 'confirmed',
+        });
+        toast.success(t('calendar.suggested.confirmed', 'Added to your calendar.'));
+        await loadEvents();
+      } catch {
+        toast.error(t('calendar.suggested.confirmFailed', 'Could not confirm.'));
+      } finally {
+        setPendingActionId(null);
+      }
+    },
+    [activeFamily, loadEvents, t],
+  );
+
+  const handleDismiss = useCallback(
+    async (event: CalendarEvent) => {
+      if (!activeFamily) return;
+      setPendingActionId(event.id);
+      try {
+        await calendarApi.deleteEvent(activeFamily.id, event.id);
+        toast.success(t('calendar.suggested.dismissed', 'Suggestion dismissed.'));
+        await loadEvents();
+      } catch {
+        toast.error(t('calendar.suggested.dismissFailed', 'Could not dismiss.'));
+      } finally {
+        setPendingActionId(null);
+      }
+    },
+    [activeFamily, loadEvents, t],
+  );
 
   if (!token) {
     return (
@@ -1082,38 +1171,28 @@ export const CalendarPage = () => {
 
   return (
     <PageContainer>
-      <header className="mb-2 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[20px] font-extrabold text-text-primary">
-            {t('calendar.title', 'Calendar')}
-          </h1>
-          <p className="mt-1 text-[13px] text-text-secondary">
-            {t('calendar.subtitle', 'Tap an event to edit. Or ask the assistant.')}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={openSubscribe}
-            disabled={!activeFamily}
-            aria-label={t('calendar.subscribe.button', 'Subscribe')}
-            className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-[13px] font-bold text-text-primary hover:bg-surface-light disabled:opacity-50"
-          >
-            <Icon name={uiIcons.share} className="h-4 w-4 object-contain" alt="" />
-            {t('calendar.subscribe.button', 'Subscribe')}
-          </button>
-          <button
-            type="button"
-            onClick={openCreate}
-            disabled={childOptions.length === 0}
-            aria-label={t('calendar.addEvent', 'Add event')}
-            className="flex items-center gap-2 rounded-xl bg-brand-blue px-3 py-2 text-[13px] font-bold text-white hover:brightness-110 disabled:opacity-50"
-          >
-            <Icon name={uiIcons.plus} className="h-4 w-4 object-contain" alt="" />
-            {t('calendar.addEvent', 'Add event')}
-          </button>
-        </div>
-      </header>
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={openSubscribe}
+          disabled={!activeFamily}
+          aria-label={t('calendar.subscribe.button', 'Subscribe')}
+          className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-[13px] font-bold text-text-primary hover:bg-surface-light disabled:opacity-50"
+        >
+          <Icon name={uiIcons.share} className="h-4 w-4 object-contain" alt="" />
+          {t('calendar.subscribe.button', 'Subscribe')}
+        </button>
+        <button
+          type="button"
+          onClick={openCreate}
+          disabled={childOptions.length === 0}
+          aria-label={t('calendar.addEvent', 'Add event')}
+          className="flex items-center gap-2 rounded-xl bg-brand-blue px-3 py-2 text-[13px] font-bold text-white hover:brightness-110 disabled:opacity-50"
+        >
+          <Icon name={uiIcons.plus} className="h-4 w-4 object-contain" alt="" />
+          {t('calendar.addEvent', 'Add event')}
+        </button>
+      </div>
 
       {loading && (
         <p className="rounded-2xl bg-surface-light px-4 py-3 text-[13px] text-text-secondary">
@@ -1149,7 +1228,15 @@ export const CalendarPage = () => {
           </h2>
           <ul className="space-y-2">
             {upcoming.map((e) => (
-              <EventRow key={e.id} event={e} locale={i18n.language} onSelect={openEdit} />
+              <EventRow
+                key={e.id}
+                event={e}
+                locale={i18n.language}
+                onSelect={openEdit}
+                onConfirm={handleConfirm}
+                onDismiss={handleDismiss}
+                busy={pendingActionId === e.id}
+              />
             ))}
           </ul>
         </section>
@@ -1162,7 +1249,15 @@ export const CalendarPage = () => {
           </h2>
           <ul className="space-y-2">
             {past.map((e) => (
-              <EventRow key={e.id} event={e} locale={i18n.language} onSelect={openEdit} />
+              <EventRow
+                key={e.id}
+                event={e}
+                locale={i18n.language}
+                onSelect={openEdit}
+                onConfirm={handleConfirm}
+                onDismiss={handleDismiss}
+                busy={pendingActionId === e.id}
+              />
             ))}
           </ul>
         </section>

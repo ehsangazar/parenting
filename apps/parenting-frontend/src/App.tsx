@@ -303,7 +303,10 @@ export default function App() {
             element={
               <RequireAuth>
                 <RequireOnboarding>
-                  <FeaturePageFrame title={t('nav.calendar', 'Calendar')}>
+                  <FeaturePageFrame
+                    title={t('nav.calendar', 'Calendar')}
+                    description={t('calendar.subtitle', 'Tap an event to edit, or ask the assistant.')}
+                  >
                     <CalendarPage />
                   </FeaturePageFrame>
                 </RequireOnboarding>
@@ -315,7 +318,10 @@ export default function App() {
             element={
               <RequireAuth>
                 <RequireOnboarding>
-                  <FeaturePageFrame title={t('nav.academy', 'Academy')}>
+                  <FeaturePageFrame
+                    title={t('nav.academy', 'Academy')}
+                    description={t('academy.subtitle', 'Courses and lessons curated for your parenting journey.')}
+                  >
                     <AcademyPage />
                   </FeaturePageFrame>
                 </RequireOnboarding>

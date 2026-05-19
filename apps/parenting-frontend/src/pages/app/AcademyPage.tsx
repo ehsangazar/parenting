@@ -158,18 +158,6 @@ export const AcademyPage = () => {
 
   return (
     <PageContainer>
-      <header className="mb-2">
-        <h1 className="text-[20px] font-extrabold text-text-primary">
-          {t('academy.title', 'Academy')}
-        </h1>
-        <p className="mt-1 text-[13px] text-text-secondary">
-          {t(
-            'academy.subtitle',
-            'Courses and lessons curated for your parenting journey.',
-          )}
-        </p>
-      </header>
-
       {loading && (
         <p className="rounded-2xl bg-surface-light px-4 py-3 text-[13px] text-text-secondary">
           {t('common.loading', 'Loading...')}

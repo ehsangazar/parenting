@@ -310,11 +310,12 @@ export const CourseDetailPage = () => {
 
       <div className="mx-auto w-full max-w-md">
         {isSingleModule && soleModule ? (
-          <SingleModuleLessonList
+          <SingleModuleLessonPath
             module={soleModule}
             loading={lessonsLoading}
             error={lessonsError}
             lessons={lessons}
+            activeLessonId={activeLesson?.id ?? null}
             isLessonComplete={isLessonComplete}
             onSelect={openLesson}
           />
@@ -377,6 +378,174 @@ export const CourseDetailPage = () => {
         }
       />
     </PageContainer>
+  );
+};
+
+type SingleModuleLessonPathProps = {
+  module: ModuleSummary;
+  loading: boolean;
+  error: string | null;
+  lessons: Lesson[];
+  activeLessonId: string | null;
+  isLessonComplete: (lesson: Lesson) => boolean;
+  onSelect: (lesson: Lesson) => void;
+};
+
+const SingleModuleLessonPath = ({
+  module: mod,
+  loading,
+  error,
+  lessons,
+  activeLessonId,
+  isLessonComplete,
+  onSelect,
+}: SingleModuleLessonPathProps) => {
+  const { t } = useTranslation();
+
+  let prevComplete = true;
+  const lessonStates: ModuleState[] = lessons.map((lesson) => {
+    if (isLessonComplete(lesson)) {
+      prevComplete = true;
+      return 'complete';
+    }
+    if (!prevComplete) return 'locked';
+    const state: ModuleState = 'available';
+    prevComplete = false;
+    return state;
+  });
+  const firstCurrentIdx = lessonStates.findIndex(
+    (s) => s === 'current' || s === 'available',
+  );
+
+  return (
+    <section>
+      <header className="mb-4 flex items-start gap-3 rounded-2xl bg-brand-blue/5 px-4 py-3">
+        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-blue/20 text-brand-blue">
+          <Icon
+            name={appAssetIcons.phaseProgress}
+            className="h-5 w-5 object-contain"
+            alt=""
+          />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-brand-blue">
+            {t('academy.chapter', 'Chapter {{n}}', { n: 1 })}
+          </p>
+          <h2 className="text-[16px] font-extrabold leading-tight text-text-primary">
+            {mod.title || t('academy.untitledModule', 'Untitled module')}
+          </h2>
+          {mod.description && (
+            <p className="mt-1 text-[12px] leading-snug text-text-secondary">
+              {mod.description}
+            </p>
+          )}
+        </div>
+      </header>
+
+      {loading && (
+        <p className="rounded-xl bg-surface-light px-3 py-2 text-[13px] text-text-secondary">
+          {t('common.loading', 'Loading...')}
+        </p>
+      )}
+      {error && (
+        <p className="rounded-xl bg-red-500/10 px-3 py-2 text-[13px] font-semibold text-red-500">
+          {error}
+        </p>
+      )}
+      {!loading && !error && lessons.length === 0 && (
+        <p className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-[13px] text-text-secondary">
+          {t('academy.module.noLessons', 'No lessons yet.')}
+        </p>
+      )}
+
+      <ol className="flex flex-col items-center gap-5 py-2">
+        {lessons.map((lesson, i) => {
+          const state = lessonStates[i];
+          const isNext = i === firstCurrentIdx;
+          const offset = NODE_OFFSETS[i % NODE_OFFSETS.length];
+          return (
+            <li
+              key={lesson.id}
+              className="flex w-full justify-center"
+              style={{ transform: `translateX(${offset}px)` }}
+            >
+              <LessonNode
+                lesson={lesson}
+                index={i}
+                state={state}
+                isNext={isNext}
+                isActive={activeLessonId === lesson.id}
+                onClick={() => onSelect(lesson)}
+              />
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+};
+
+type LessonNodeProps = {
+  lesson: Lesson;
+  index: number;
+  state: ModuleState;
+  isNext: boolean;
+  isActive: boolean;
+  onClick: () => void;
+};
+
+const LessonNode = ({ lesson, index, state, isNext, isActive, onClick }: LessonNodeProps) => {
+  const { t } = useTranslation();
+  const isLocked = state === 'locked';
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      {isNext && !isLocked && (
+        <span className="inline-flex animate-bounce items-center rounded-full bg-brand-blue px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
+          {t('academy.start', 'Start')}
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={isLocked}
+        aria-label={lesson.title || t('academy.untitledLesson', 'Untitled lesson')}
+        aria-current={isActive ? 'true' : undefined}
+        className={clsx(
+          'group relative flex h-20 w-20 items-center justify-center rounded-full border-4 transition-all active:translate-y-0.5 active:shadow-none',
+          STATE_BUTTON_CLASS[state],
+          isActive && 'ring-4 ring-brand-blue/30',
+        )}
+      >
+        {state === 'complete' ? (
+          <Icon
+            name={uiIcons.circleCheck}
+            className="h-9 w-9 object-contain"
+            alt=""
+          />
+        ) : isLocked ? (
+          <Icon
+            name={uiIcons.lock}
+            className="h-7 w-7 object-contain opacity-70"
+            alt=""
+          />
+        ) : (
+          <Icon
+            name={appAssetIcons.academy}
+            className="h-9 w-9 object-contain"
+            alt=""
+          />
+        )}
+        <span className="absolute -bottom-1 -right-1 flex h-6 min-w-[24px] items-center justify-center rounded-full border-2 border-surface bg-surface px-1 text-[10px] font-extrabold text-text-primary shadow-sm">
+          {index + 1}
+        </span>
+      </button>
+      <div className="max-w-[180px] text-center">
+        <p className="text-[12px] font-bold leading-tight text-text-primary line-clamp-2">
+          {lesson.title || t('academy.untitledLesson', 'Untitled lesson')}
+        </p>
+      </div>
+    </div>
   );
 };
 

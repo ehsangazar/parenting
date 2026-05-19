@@ -133,6 +133,7 @@ export const updateEventSchema = z.object({
   eventType: z
     .enum(["appointment", "milestone", "activity", "reminder", "other"])
     .optional(),
+  status: z.enum(["suggested", "confirmed"]).optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   allDay: z.boolean().optional(),

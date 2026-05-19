@@ -224,6 +224,7 @@ export const createCalendarEvent = (data: {
   title: string;
   description?: string;
   eventType: string;
+  status?: string;
   startDate: Date;
   endDate?: Date | null;
   allDay: boolean;
@@ -239,6 +240,10 @@ export const createCalendarEvent = (data: {
     },
     include: eventWithChildInclude,
   });
+
+export const createCalendarEventsBulk = (
+  data: Array<Prisma.CalendarEventUncheckedCreateInput>,
+) => prisma.calendarEvent.createMany({ data });
 
 export const updateCalendarEvent = (
   eventId: string,

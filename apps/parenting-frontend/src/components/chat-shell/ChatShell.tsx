@@ -130,7 +130,7 @@ export const ChatShell = () => {
                 aria-label={t('chatShell.openTools', 'Open tools')}
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary hover:bg-surface-light"
               >
-                <Icon name={uiIcons.chartColumn} className="h-5 w-5 object-contain" alt="" />
+                <Icon name={uiIcons.grid} className="h-5 w-5 object-contain" alt="" />
               </button>
             </div>
 

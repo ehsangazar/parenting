@@ -11,6 +11,7 @@ import {
 } from "../../shared/adminModuleDefaults/index.js";
 import { POINTS } from "../../config/points.js";
 import * as repo from "./family.repository.js";
+import { generateVaccinationSuggestions } from "./vaccination-schedule.js";
 import type { z } from "zod";
 import type {
   createFamilySchema,
@@ -449,6 +450,31 @@ export const addChild = async (
     metadata: { childId: child.id },
   });
 
+  if (body.birthday && !body.isUnborn) {
+    try {
+      const suggestions = generateVaccinationSuggestions(
+        new Date(body.birthday),
+      );
+      if (suggestions.length > 0) {
+        await repo.createCalendarEventsBulk(
+          suggestions.map((s) => ({
+            familyId,
+            childId: child.id,
+            title: s.title,
+            description: s.description,
+            eventType: "appointment",
+            status: "suggested",
+            startDate: s.startDate,
+            allDay: true,
+            createdBy: userId,
+          })),
+        );
+      }
+    } catch {
+      // non-fatal: a failed seed should not block child creation
+    }
+  }
+
   try {
     await awardCoins(userId, POINTS.COINS_ADD_CHILD);
   } catch {
@@ -760,6 +786,7 @@ export const updateCalendarEvent = async (
   if (body.allDay !== undefined) updateData.allDay = body.allDay;
   if (body.location !== undefined) updateData.location = body.location;
   if (body.assignedTo !== undefined) updateData.assignedTo = body.assignedTo;
+  if (body.status !== undefined) updateData.status = body.status;
   if (body.childId !== undefined) {
     updateData.child = { connect: { id: body.childId } };
   }
