@@ -49,11 +49,6 @@ export function LessonCard({ data }: Props) {
               {data.courseTitle}
               {data.moduleTitle ? ` · ${data.moduleTitle}` : ''}
             </div>
-            {data.excerpt && (
-              <p className="mt-1.5 line-clamp-2 text-[13px] leading-snug text-text-secondary">
-                {data.excerpt}
-              </p>
-            )}
             <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-brand-pink/15 px-2.5 py-1 text-[11px] font-extrabold text-brand-pink">
               <Icon name={uiIcons.bookOpen} className="h-3 w-3 object-contain" alt="" />
               {t('chat.lessonCard.start', 'Start lesson')}
