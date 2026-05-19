@@ -92,7 +92,7 @@ export const LessonModal = ({
           aria-labelledby="lesson-modal-title"
         >
           <motion.div
-            className="relative flex h-full w-full flex-col bg-surface shadow-2xl sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-2xl sm:rounded-3xl"
+            className="relative flex h-full w-full flex-col bg-surface shadow-2xl sm:h-[85vh] sm:w-full sm:max-w-2xl sm:rounded-3xl"
             initial={{ y: 24, opacity: 0, scale: 0.98 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 24, opacity: 0, scale: 0.98 }}
