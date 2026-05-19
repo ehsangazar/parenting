@@ -76,6 +76,7 @@ model User {
   dailyQuests          DailyQuest[]
   xpTransactions       XpTransaction[]
   pushSubscriptions    PushSubscription[]
+  dailyTipSent         DailyTipSent[]
 }
 
 model Consent {
@@ -116,6 +117,18 @@ model PushSubscription {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model DailyTipSent {
+  id        String   @id @default(cuid())
+  userId    String
+  localDate String
+  tipKey    String
+  sentAt    DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, localDate])
+  @@index([localDate])
 }
 
 // ─── Billing ─────────────────────────────────────────────────────────────────

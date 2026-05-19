@@ -58,7 +58,10 @@ export const CookieConsentBanner = () => {
 
   const save = (consent: ConsentState) => {
     localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
-    if (consent.analytics) (window as Window & { __initGTM__?: () => void }).__initGTM__?.();
+    if (consent.analytics) {
+      (window as Window & { __initGTM__?: () => void }).__initGTM__?.();
+      (window as Window & { __initPostHog__?: () => void }).__initPostHog__?.();
+    }
     setVisible(false);
   };
 

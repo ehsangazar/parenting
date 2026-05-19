@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
+import { usePostHog } from '@posthog/react';
 import { api } from '../../lib/api.js';
 import { familiesApi } from '../../lib/appApi.js';
 import { useAuth } from '../../state/auth.js';
@@ -21,6 +22,11 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    posthog.capture('onboarding_started');
+  }, [posthog]);
 
   const ROLES = useMemo(
     () => [
@@ -82,7 +88,13 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
 
   const isPast = (s: Step) => STEP_ORDER.indexOf(step) > STEP_ORDER.indexOf(s);
 
-  const advance = (next: Step) => setStep(next);
+  const advance = (next: Step) => {
+    posthog.capture('onboarding_step_completed', {
+      from_step: step,
+      to_step: next,
+    });
+    setStep(next);
+  };
 
   const addKid = () => {
     const trimmed = newKidName.trim();
@@ -141,6 +153,22 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
           );
         }
       }
+
+      // Person-level properties so funnels and cohorts can filter on these.
+      // Never send names; only counts and age buckets.
+      posthog.setPersonProperties({
+        role_in_household: role?.id ?? null,
+        kids_count: kids.length,
+        kids_age_buckets: kids.map((k) => ageBucket(k.ageYears)),
+        top_concerns: concerns,
+        partner_invited: !!partnerEmail.trim(),
+      });
+      posthog.capture('onboarding_completed', {
+        kids_count: kids.length,
+        concerns_count: concerns.length,
+        partner_invited: !!partnerEmail.trim(),
+        with_first_question: !!firstQuestion,
+      });
 
       onComplete(firstQuestion);
     } catch {
@@ -421,12 +449,18 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
                   })}
             </AssistantBubble>
             <div className="flex flex-col gap-2">
-              {suggestions.map((s) => (
+              {suggestions.map((s, idx) => (
                 <button
                   key={s}
                   type="button"
                   disabled={saving}
-                  onClick={() => persistAndComplete(s)}
+                  onClick={() => {
+                    posthog.capture('onboarding_suggestion_clicked', {
+                      suggestion_index: idx,
+                      kids_age_bucket: kids[0] ? ageBucket(kids[0].ageYears) : 'none',
+                    });
+                    persistAndComplete(s);
+                  }}
                   className="rounded-2xl border border-brand-blue/40 bg-brand-blue/5 px-4 py-3 text-left text-[15px] font-semibold text-text-primary transition-colors hover:bg-brand-blue/10 disabled:opacity-50"
                 >
                   {s}
@@ -435,7 +469,10 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
               <button
                 type="button"
                 disabled={saving}
-                onClick={() => persistAndComplete()}
+                onClick={() => {
+                  posthog.capture('onboarding_no_suggestion_picked');
+                  persistAndComplete();
+                }}
                 className="rounded-2xl px-4 py-3 text-center text-[14px] font-semibold text-text-secondary hover:text-text-primary disabled:opacity-50"
               >
                 {saving
@@ -449,7 +486,10 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
         <div className="pt-6 text-center">
           <button
             type="button"
-            onClick={() => navigate('/onboarding')}
+            onClick={() => {
+              posthog.capture('onboarding_form_fallback_clicked', { from_step: step });
+              navigate('/onboarding');
+            }}
             className="text-[12px] text-text-tertiary underline hover:text-text-primary"
           >
             {t('onboardingChat.preferForm', 'Prefer a form? Fill it out instead.')}
@@ -507,6 +547,15 @@ const ChipGroup = ({
     ))}
   </div>
 );
+
+function ageBucket(years: number): string {
+  if (years < 0) return 'expecting';
+  if (years < 1) return 'baby';
+  if (years < 3) return 'toddler';
+  if (years < 6) return 'preschool';
+  if (years < 12) return 'school';
+  return 'teen';
+}
 
 function ageYearsToBirthdayIso(years: number): string | null {
   if (years < 0) return null;

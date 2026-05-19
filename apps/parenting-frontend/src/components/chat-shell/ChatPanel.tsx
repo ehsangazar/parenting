@@ -481,10 +481,16 @@ export const ChatPanel = () => {
         } catch {
           // localStorage unavailable; non-fatal.
         }
+        posthog.capture('guest_send_after_wall', { message_length: message.length });
         sendingRef.current = false;
         navigate('/login?next=/');
         return;
       }
+
+      posthog.capture('guest_send_clicked', {
+        message_length: message.length,
+        locale: i18n.language,
+      });
 
       setInput('');
       if (inputRef.current) inputRef.current.style.height = 'auto';
@@ -511,6 +517,7 @@ export const ChatPanel = () => {
         });
 
         if (response.status === 429) {
+          posthog.capture('guest_answer_rate_limited');
           throw new Error(t('chatPage.guestRateLimited', 'Too many free questions, sign in to keep going.'));
         }
         if (!response.ok) throw new Error(`Server ${response.status}`);
@@ -576,6 +583,7 @@ export const ChatPanel = () => {
         if (hasContent) {
           sessionStorage.setItem('guestTurnUsed', '1');
           setGuestUsedTurn(true);
+          posthog.capture('guest_answer_completed');
         }
       } catch (err: unknown) {
         if ((err as Error)?.name !== 'AbortError' && !hasContent) {
@@ -838,11 +846,21 @@ export const ChatPanel = () => {
       if (guestMessages.length > 0) {
         localStorage.setItem('guestConversation', JSON.stringify(guestMessages));
       }
+      posthog.capture('guest_signin_from_wall_clicked', {
+        messages_count: guestMessages.length,
+      });
     } catch {
       // localStorage unavailable; non-fatal.
     }
     navigate('/login?next=/');
-  }, [messages, navigate]);
+  }, [messages, navigate, posthog]);
+
+  // Fire once when the conversion wall first appears for this session.
+  useEffect(() => {
+    if (!token && guestUsedTurn) {
+      posthog.capture('guest_wall_seen');
+    }
+  }, [token, guestUsedTurn, posthog]);
 
   // After login, replay any pending draft saved before the login redirect AND
   // rehydrate the local guest conversation so the visitor sees Q1/A1 above
