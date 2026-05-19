@@ -27,6 +27,11 @@ export const POINTS = {
   INSIGHT_ADD_CHILD: 20,
   INSIGHT_PLAYBOOK_FIRST_TRY: 15,
   INSIGHT_PLAYBOOK_GROUP_COMPLETE: 50,
+  // Practice Loop: pledging a technique is cheap, reflecting on it is where
+  // real behaviour change happens, so it's worth more.
+  INSIGHT_PRACTICE_PLEDGE: 5,
+  INSIGHT_PRACTICE_REFLECT: 40,
+  COINS_PRACTICE_REFLECT: 25_000,
   INSIGHT_STREAK_MILESTONE_7: 40,
   INSIGHT_STREAK_MILESTONE_14: 60,
   INSIGHT_STREAK_MILESTONE_30: 150,

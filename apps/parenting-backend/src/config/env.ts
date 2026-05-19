@@ -49,6 +49,8 @@ const envSchema = z.object({
 
   // Monitoring
   SENTRY_DSN: z.string().optional(),
+  POSTHOG_API_KEY: z.string().optional(),
+  POSTHOG_HOST: z.string().optional(),
 
   // Reminders
   REMINDER_HOUR: z.coerce.number().int().min(0).max(23).default(9),

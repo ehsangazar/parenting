@@ -77,6 +77,8 @@ model User {
   xpTransactions       XpTransaction[]
   pushSubscriptions    PushSubscription[]
   dailyTipSent         DailyTipSent[]
+  aiUsageDaily         AiUsageDaily[]
+  lessonPractices      LessonPractice[]
 }
 
 model Consent {
@@ -226,9 +228,10 @@ model Child {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   family        Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  widgetLayouts WidgetLayout[]
-  events        CalendarEvent[]
-  kickSessions  KickSession[]
+  widgetLayouts   WidgetLayout[]
+  events          CalendarEvent[]
+  kickSessions    KickSession[]
+  lessonPractices LessonPractice[]
 
   @@index([familyId])
 }
@@ -669,6 +672,7 @@ model LearningLesson {
   updatedAt    DateTime                   @updatedAt
   module       LearningModule             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   progress     LearningProgress[]
+  practices    LessonPractice[]
   translations LearningLessonTranslation[]
 
   @@index([moduleId])
@@ -687,6 +691,30 @@ model LearningProgress {
   @@unique([userId, lessonId])
   @@index([userId])
   @@index([lessonId])
+}
+
+// One pledge to try a lesson's technique with a real child. Becomes a
+// reflection once the parent reports back. The reflection is what feeds the
+// AI orchestrator and earns the bigger Insight bonus.
+model LessonPractice {
+  id                String         @id @default(cuid())
+  userId            String
+  lessonId          String
+  childId           String?
+  technique         String
+  pledgedAt         DateTime       @default(now())
+  dueAt             DateTime
+  nudgedAt          DateTime?
+  reflectionOutcome String?
+  reflectionNote    String?
+  reflectedAt       DateTime?
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson            LearningLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  child             Child?         @relation(fields: [childId], references: [id], onDelete: SetNull)
+
+  @@index([userId, reflectedAt])
+  @@index([lessonId])
+  @@index([dueAt])
 }
 
 model Playbook {
@@ -891,6 +919,7 @@ model AiUsageDaily {
   topupCount Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
   @@index([userId])

@@ -11,6 +11,7 @@ import { Drawer } from '../../components/Drawer.js';
 import { Icon, type IconName } from '../../components/icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
+import { PushPromoCard } from '../../components/PushPromoCard.js';
 
 type EventType = 'appointment' | 'milestone' | 'activity' | 'reminder' | 'other';
 type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'weekdays';
@@ -1220,6 +1221,8 @@ export const CalendarPage = () => {
           </p>
         </div>
       )}
+
+      {upcoming.length > 0 && <PushPromoCard context="calendar" className="mb-3" />}
 
       {upcoming.length > 0 && (
         <section>

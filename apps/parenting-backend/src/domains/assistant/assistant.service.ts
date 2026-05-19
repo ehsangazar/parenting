@@ -6,6 +6,7 @@ import { getOpenAI } from "../../shared/parenting-ai/openai.js";
 import { awardCoins, awardInsight } from "../../shared/gamification/index.js";
 import { POINTS } from "../../config/points.js";
 import { redactPII, applyBlocklist } from "../../shared/security/index.js";
+import { capture as capturePosthog } from "../../shared/analytics/posthog.js";
 import {
   canSendAiMessage,
   incrementAiUsage,
@@ -172,17 +173,38 @@ export async function runQuery(
     throw error;
   }
 
-  await orchestrateFlow({
-    userId,
-    conversationId: conversationId!,
-    message: sanitizedMessage,
-    locale: input.locale,
-    onStream: callbacks.onStream,
-    onStatus: callbacks.onStatus,
-    onToolStart: callbacks.onToolStart,
-    onToolFinish: callbacks.onToolFinish,
-    onNavCard: callbacks.onNavCard,
-    onCard: callbacks.onCard,
+  const orchestrationStartedAt = Date.now();
+  let orchestrationOk = true;
+  try {
+    await orchestrateFlow({
+      userId,
+      conversationId: conversationId!,
+      message: sanitizedMessage,
+      locale: input.locale,
+      onStream: callbacks.onStream,
+      onStatus: callbacks.onStatus,
+      onToolStart: callbacks.onToolStart,
+      onToolFinish: callbacks.onToolFinish,
+      onNavCard: callbacks.onNavCard,
+      onCard: callbacks.onCard,
+    });
+  } catch (err) {
+    orchestrationOk = false;
+    capturePosthog(userId, "openai_request", {
+      route: "user_query",
+      success: false,
+      latency_ms: Date.now() - orchestrationStartedAt,
+      locale: input.locale ?? null,
+      error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+    });
+    throw err;
+  }
+  capturePosthog(userId, "openai_request", {
+    route: "user_query",
+    success: orchestrationOk,
+    latency_ms: Date.now() - orchestrationStartedAt,
+    locale: input.locale ?? null,
+    message_length: sanitizedMessage.length,
   });
 
   // Consume one message from the daily cap. We do this after orchestrateFlow
@@ -209,26 +231,65 @@ export async function runGuestQuery(
   message: string,
   locale: string | null,
   onStream: (chunk: string) => void,
+  ipAddress: string | null,
 ): Promise<void> {
   const sanitized = applyBlocklist(redactPII(message), BLOCKLIST).slice(0, 1200);
   const oai = getOpenAI();
   const systemPrompt = locale
     ? `${GUEST_SYSTEM_PROMPT}\n\nRespond in language code "${locale}".`
     : GUEST_SYSTEM_PROMPT;
+  const model = "gpt-4o";
+  const startedAt = Date.now();
+  // PostHog distinctId for anonymous visitors: hashed IP is overkill for v0,
+  // so we tag with a stable "guest" bucket plus the IP as a property. This
+  // ties guest events back to per-IP rate-limit cohorts without minting fake
+  // user identities.
+  const distinctId = ipAddress ? `guest:${ipAddress}` : "guest:unknown";
 
-  const stream = await oai.chat.completions.create({
-    model: "gpt-4o",
-    stream: true,
-    temperature: 0.6,
-    max_tokens: 600,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: sanitized },
-    ],
-  });
+  try {
+    const stream = await oai.chat.completions.create({
+      model,
+      stream: true,
+      stream_options: { include_usage: true },
+      temperature: 0.6,
+      max_tokens: 600,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: sanitized },
+      ],
+    });
 
-  for await (const event of stream) {
-    const delta = event.choices?.[0]?.delta?.content;
-    if (delta) onStream(delta);
+    let promptTokens = 0;
+    let completionTokens = 0;
+    for await (const event of stream) {
+      const delta = event.choices?.[0]?.delta?.content;
+      if (delta) onStream(delta);
+      if (event.usage) {
+        promptTokens = event.usage.prompt_tokens ?? 0;
+        completionTokens = event.usage.completion_tokens ?? 0;
+      }
+    }
+
+    capturePosthog(distinctId, "openai_request", {
+      route: "guest_query",
+      model,
+      success: true,
+      prompt_tokens: promptTokens,
+      completion_tokens: completionTokens,
+      total_tokens: promptTokens + completionTokens,
+      latency_ms: Date.now() - startedAt,
+      locale: locale ?? null,
+      message_length: sanitized.length,
+    });
+  } catch (err) {
+    capturePosthog(distinctId, "openai_request", {
+      route: "guest_query",
+      model,
+      success: false,
+      latency_ms: Date.now() - startedAt,
+      locale: locale ?? null,
+      error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+    });
+    throw err;
   }
 }

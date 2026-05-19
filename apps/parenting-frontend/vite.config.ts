@@ -96,8 +96,12 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
       },
       devOptions: {
-        // Enable in dev to test install prompt
-        enabled: false,
+        // Serve the service worker in dev so push registration works.
+        // `type: 'module'` is required by injectManifest because src/sw.ts
+        // uses ES imports (workbox-*).
+        enabled: true,
+        type: 'module',
+        navigateFallback: 'index.html',
       },
     }),
   ],

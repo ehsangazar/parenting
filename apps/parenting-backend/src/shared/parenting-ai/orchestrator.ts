@@ -6,6 +6,7 @@ import { getSessionMemory, getLongTermMemory, saveLongTermMemory } from "./memor
 import { SYSTEM_PROMPTS } from "./constants.js";
 import { runToolLoop } from "./tool-loop.js";
 import type { NavCard, Card, ToolContext } from "./tools/types.js";
+import { listRecentReflections, listPendingPractices } from "../../domains/learning/learning.service.js";
 
 type OrchestratorOptions = {
   userId: string;
@@ -45,11 +46,63 @@ function buildDateAnchors(now: Date): string {
   return lines.join("\n");
 }
 
+function formatOutcome(outcome: string): string {
+  switch (outcome) {
+    case "worked":
+      return "worked";
+    case "mixed":
+      return "had mixed results";
+    case "didnt_work":
+      return "didn't work";
+    default:
+      return outcome;
+  }
+}
+
+function buildPracticeSection(
+  reflections: Array<{
+    lessonTitle: string;
+    technique: string;
+    outcome: string;
+    note: string | null;
+    childName: string | null;
+  }>,
+  pending: Array<{
+    lessonTitle: string;
+    technique: string;
+    childName: string | null;
+    overdueHours: number;
+  }>,
+): string {
+  const lines: string[] = [];
+  if (reflections.length) {
+    lines.push("RECENT PRACTICE (what the parent has actually tried):");
+    for (const r of reflections) {
+      const child = r.childName ? ` with ${r.childName}` : "";
+      const note = r.note ? ` Their note: "${r.note}"` : "";
+      lines.push(
+        `- From lesson "${r.lessonTitle}"${child}: tried "${r.technique}" — ${formatOutcome(r.outcome)}.${note}`,
+      );
+    }
+  }
+  if (pending.length) {
+    if (lines.length) lines.push("");
+    lines.push("PENDING PRACTICE (parent pledged to try, hasn't reflected yet):");
+    for (const p of pending) {
+      const child = p.childName ? ` with ${p.childName}` : "";
+      const overdue = p.overdueHours > 0 ? ` (${p.overdueHours}h overdue)` : "";
+      lines.push(`- "${p.technique}"${child}${overdue}`);
+    }
+  }
+  return lines.join("\n");
+}
+
 function buildSystemPrompt(
   language: string,
   longTermFacts: string[],
   childInfo: Array<{ name: string; age?: number }>,
   hasFamily: boolean,
+  practiceSection: string,
 ): string {
   const childSummary = childInfo.length
     ? childInfo.map((c) => `${c.name}${c.age != null ? ` (age ${c.age})` : ""}`).join(", ")
@@ -74,6 +127,10 @@ CRITICAL TOOL POLICY:
 FAMILY CONTEXT: ${hasFamily ? "User has a family on file." : "User does NOT have a family yet. They must create one in Settings before you can add children or events."}
 KNOWN CHILDREN: ${childSummary}.
 LONG-TERM FACTS: ${longTermFacts.slice(0, 8).join(" | ") || "none"}
+
+${practiceSection || "RECENT PRACTICE: none yet."}
+
+When recent practice is shown above, reference it naturally if the user's question is related ("Last week you tried X — how did that go after the first night?"). Don't recite the list; weave it in.
 
 FORMATTING:
 - Use clear Markdown with short paragraphs and bullet points.
@@ -139,15 +196,18 @@ export async function orchestrateFlow(opts: OrchestratorOptions) {
 
   onStatus("loading_context");
 
-  const [sessionMem, longTermMem, family] = await Promise.all([
-    getSessionMemory(conversationId),
-    getLongTermMemory(userId),
-    prisma.family.findFirst({
-      where: { OR: [{ ownerId: userId }, { members: { some: { userId } } }] },
-      select: { id: true },
-      orderBy: { createdAt: "asc" },
-    }),
-  ]);
+  const [sessionMem, longTermMem, family, recentReflections, pendingPractices] =
+    await Promise.all([
+      getSessionMemory(conversationId),
+      getLongTermMemory(userId),
+      prisma.family.findFirst({
+        where: { OR: [{ ownerId: userId }, { members: { some: { userId } } }] },
+        select: { id: true },
+        orderBy: { createdAt: "asc" },
+      }),
+      listRecentReflections(userId, 5).catch(() => []),
+      listPendingPractices(userId).catch(() => []),
+    ]);
 
   const ctx: ToolContext = {
     userId,
@@ -161,6 +221,15 @@ export async function orchestrateFlow(opts: OrchestratorOptions) {
     longTermMem.relevantFacts,
     longTermMem.childInfo.map((c) => ({ name: c.name, age: c.age })),
     !!family?.id,
+    buildPracticeSection(
+      recentReflections,
+      pendingPractices.slice(0, 3).map((p) => ({
+        lessonTitle: p.lessonTitle,
+        technique: p.technique,
+        childName: p.childName,
+        overdueHours: p.overdueHours,
+      })),
+    ),
   );
 
   onStatus("generating_response");

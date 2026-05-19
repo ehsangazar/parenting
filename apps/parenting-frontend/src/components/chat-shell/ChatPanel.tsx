@@ -880,7 +880,12 @@ export const ChatPanel = () => {
     } catch {
       // ignore malformed payload
     }
-    if (restored.length > 0) setMessages(restored);
+    if (restored.length > 0) {
+      setMessages(restored);
+      posthog.capture('guest_conversation_rehydrated_after_signin', {
+        messages_count: restored.length,
+      });
+    }
     try {
       sessionStorage.removeItem('guestTurnUsed');
     } catch {
@@ -891,6 +896,9 @@ export const ChatPanel = () => {
     const pending = localStorage.getItem('pendingChatMessage');
     if (pending) {
       localStorage.removeItem('pendingChatMessage');
+      posthog.capture('pending_message_replayed_after_signin', {
+        message_length: pending.length,
+      });
       void handleSend(pending);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

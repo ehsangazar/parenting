@@ -250,3 +250,112 @@ export async function countTriedInGroup(userId: string, groupIds: string[]) {
     where: { userId, playbookId: { in: groupIds } },
   });
 }
+
+// ── Practice Loop ─────────────────────────────────────────────────────────────
+
+export async function createPractice(data: {
+  userId: string;
+  lessonId: string;
+  childId: string | null;
+  technique: string;
+  dueAt: Date;
+}) {
+  return prisma.lessonPractice.create({
+    data: {
+      userId: data.userId,
+      lessonId: data.lessonId,
+      childId: data.childId,
+      technique: data.technique,
+      dueAt: data.dueAt,
+    },
+  });
+}
+
+export async function findPracticeById(id: string) {
+  return prisma.lessonPractice.findUnique({ where: { id } });
+}
+
+export async function reflectOnPractice(
+  id: string,
+  data: { outcome: string; note: string | null },
+) {
+  return prisma.lessonPractice.update({
+    where: { id },
+    data: {
+      reflectionOutcome: data.outcome,
+      reflectionNote: data.note,
+      reflectedAt: new Date(),
+    },
+  });
+}
+
+export async function deletePractice(id: string) {
+  return prisma.lessonPractice.delete({ where: { id } });
+}
+
+export async function findPendingPractices(userId: string, limit = 10) {
+  return prisma.lessonPractice.findMany({
+    where: { userId, reflectedAt: null },
+    orderBy: { dueAt: "asc" },
+    take: limit,
+    include: {
+      lesson: {
+        select: {
+          id: true,
+          title: true,
+          module: {
+            select: {
+              id: true,
+              title: true,
+              phase: { select: { course: { select: { id: true, title: true } } } },
+            },
+          },
+        },
+      },
+      child: { select: { id: true, name: true } },
+    },
+  });
+}
+
+export async function findRecentReflectedPractices(userId: string, limit = 5) {
+  return prisma.lessonPractice.findMany({
+    where: { userId, reflectedAt: { not: null } },
+    orderBy: { reflectedAt: "desc" },
+    take: limit,
+    include: {
+      lesson: { select: { id: true, title: true } },
+      child: { select: { id: true, name: true } },
+    },
+  });
+}
+
+export async function findPracticesReadyForNudge(now: Date, limit = 50) {
+  return prisma.lessonPractice.findMany({
+    where: {
+      reflectedAt: null,
+      nudgedAt: null,
+      dueAt: { lte: now },
+    },
+    orderBy: { dueAt: "asc" },
+    take: limit,
+    include: {
+      lesson: { select: { id: true, title: true } },
+      child: { select: { id: true, name: true } },
+    },
+  });
+}
+
+export async function markPracticeNudged(id: string) {
+  return prisma.lessonPractice.update({
+    where: { id },
+    data: { nudgedAt: new Date() },
+  });
+}
+
+export async function userOwnsChild(userId: string, childId: string): Promise<boolean> {
+  const found = await prisma.child.findFirst({
+    where: { id: childId, family: { members: { some: { userId } } } },
+    select: { id: true },
+  });
+  return !!found;
+}

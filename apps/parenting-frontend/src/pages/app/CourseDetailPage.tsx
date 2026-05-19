@@ -16,6 +16,7 @@ import {
   type LessonCard,
 } from '../../components/academy/LessonModal.js';
 import { ModuleLessonsModal } from '../../components/academy/ModuleLessonsModal.js';
+import { PracticePledgeModal } from '../../components/academy/PracticePledgeModal.js';
 import { notifyGamificationChange } from '../../components/app/BalancePills.js';
 
 type ModuleSummary = {
@@ -117,6 +118,7 @@ export const CourseDetailPage = () => {
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [cardIndex, setCardIndex] = useState(0);
   const [completing, setCompleting] = useState(false);
+  const [pledgeFor, setPledgeFor] = useState<{ id: string; title: string } | null>(null);
 
   const cards = useMemo<LessonCard[]>(
     () => (activeLesson ? buildLessonCards(activeLesson) : []),
@@ -324,6 +326,13 @@ export const CourseDetailPage = () => {
           ),
         })),
       );
+      // Bridge from "I read this" to "I tried this": prompt for a one-line
+      // pledge to put the technique into practice with the child. This is
+      // what turns Academy from edutainment into actual behaviour change.
+      setPledgeFor({
+        id: activeLesson.id,
+        title: activeLesson.title || t('academy.untitledLesson', 'Untitled lesson'),
+      });
     } catch (err) {
       toast.error(
         err instanceof Error
@@ -435,6 +444,15 @@ export const CourseDetailPage = () => {
           }))}
           onSelect={handleSelectLessonId}
           onClose={closeAll}
+        />
+      )}
+
+      {pledgeFor && (
+        <PracticePledgeModal
+          open={!!pledgeFor}
+          lessonId={pledgeFor.id}
+          lessonTitle={pledgeFor.title}
+          onClose={() => setPledgeFor(null)}
         />
       )}
 

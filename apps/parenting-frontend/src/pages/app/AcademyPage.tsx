@@ -12,6 +12,7 @@ import { Icon } from '../../components/icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
 import { ResumeCard } from '../../components/academy/ResumeCard.js';
+import { PendingPracticeCard } from '../../components/academy/PendingPracticeCard.js';
 
 type Phase = {
   id: string;
@@ -203,7 +204,12 @@ export const AcademyPage = () => {
         </div>
       )}
 
-      {!loading && !error && courses.length > 0 && <ResumeCard />}
+      {!loading && !error && courses.length > 0 && (
+        <>
+          <PendingPracticeCard />
+          <ResumeCard />
+        </>
+      )}
 
       {(generalCourse || recommendedLeap) && (
         <section className="mb-6">

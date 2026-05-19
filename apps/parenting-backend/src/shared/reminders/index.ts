@@ -5,6 +5,7 @@ import { env } from "../../config/env.js";
 import { occursOnDate, projectInstanceStart, type RepeatRule } from "./recurrence.js";
 import { sendPushToUser } from "../../domains/notifications/notifications.service.js";
 import { dispatchDailyTips } from "./dailyTips.js";
+import { dispatchPracticeNudges } from "./practiceNudges.js";
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -176,6 +177,10 @@ export const startReminderScheduler = (logger: Logger) => {
       const tipsResult = await dispatchDailyTips(logger);
       if (tipsResult.sent > 0) {
         logger.info(tipsResult, "reminders: daily-tip tick complete");
+      }
+      const practiceResult = await dispatchPracticeNudges(logger);
+      if (practiceResult.sent > 0) {
+        logger.info(practiceResult, "reminders: practice-nudge tick complete");
       }
     } catch (err) {
       logger.error({ err }, "reminders: tick failed");

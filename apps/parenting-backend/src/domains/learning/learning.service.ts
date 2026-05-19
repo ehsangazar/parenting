@@ -104,8 +104,12 @@ async function signLessonMedia<T extends { mediaUrl?: string | null; content?: s
 
 // ── Module access guard ───────────────────────────────────────────────────────
 
+// Soft access: confirms the module exists. Earlier modules in the course are
+// recommended but not enforced; a panicked parent should be able to jump to
+// the leap that matches their child's behaviour right now without grinding
+// through earlier material first.
 export async function assertModuleAccessible(
-  userId: string,
+  _userId: string,
   moduleId: string,
   reply: FastifyReply,
 ): Promise<boolean> {
@@ -114,27 +118,6 @@ export async function assertModuleAccessible(
     reply.notFound("Module not found");
     return false;
   }
-
-  const phases = await repo.findPhasesForCourse(mod.phase.courseId);
-  const orderedIds = phases.flatMap((p) => p.modules.map((m) => m.id));
-  const idx = orderedIds.indexOf(moduleId);
-
-  if (idx < 0) {
-    reply.notFound("Module not found");
-    return false;
-  }
-  if (idx === 0) return true;
-
-  for (const priorId of orderedIds.slice(0, idx)) {
-    const total = await repo.countLessonsInModule(priorId);
-    if (total === 0) continue;
-    const done = await repo.countCompletedLessonsInModule(userId, priorId);
-    if (done < total) {
-      reply.forbidden("Complete previous modules first");
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -243,15 +226,9 @@ export async function completeLesson(
   const moduleOk = await assertModuleAccessible(userId, lesson.moduleId, reply);
   if (!moduleOk) return null;
 
-  const previousLessons = await repo.findPreviousLessons(lesson.moduleId, lesson.order);
-  if (previousLessons.length > 0) {
-    const completedPrev = await repo.countCompletedAmong(userId, previousLessons.map((l) => l.id));
-    if (completedPrev < previousLessons.length) {
-      reply.badRequest("Complete the previous lessons first");
-      return null;
-    }
-  }
-
+  // Lessons within a module can be completed in any order. Parents often skim
+  // a module and only mark the cards that actually applied to their situation,
+  // and forcing a strict sequence punishes that.
   const progress = await repo.upsertLessonProgress(userId, lessonId, POINTS.COINS_COMPLETE_LESSON);
 
   try {
@@ -391,6 +368,159 @@ export async function getPlaybook(id: string, leapNumber: number, userId: string
     lastTriedAt: pbRest.progress[0]?.lastTriedAt ?? null,
     progress: undefined,
   };
+}
+
+// ── Practice Loop ─────────────────────────────────────────────────────────────
+
+const PRACTICE_DUE_AFTER_MS = 24 * 60 * 60 * 1000;
+const PRACTICE_TECHNIQUE_MAX = 280;
+const PRACTICE_NOTE_MAX = 500;
+const VALID_PRACTICE_OUTCOMES = new Set(["worked", "mixed", "didnt_work"]);
+
+export type PendingPractice = {
+  id: string;
+  lessonId: string;
+  lessonTitle: string;
+  courseId: string | null;
+  courseTitle: string | null;
+  technique: string;
+  childId: string | null;
+  childName: string | null;
+  pledgedAt: string;
+  dueAt: string;
+  overdueHours: number;
+};
+
+export type RecentReflection = {
+  lessonId: string;
+  lessonTitle: string;
+  technique: string;
+  outcome: string;
+  note: string | null;
+  childName: string | null;
+  reflectedAt: string;
+};
+
+export async function pledgePractice(
+  userId: string,
+  input: { lessonId: string; technique: string; childId?: string | null },
+) {
+  const technique = input.technique.trim();
+  if (!technique) throw new Error("Technique is required");
+  if (technique.length > PRACTICE_TECHNIQUE_MAX) {
+    throw new Error(`Technique must be ${PRACTICE_TECHNIQUE_MAX} characters or fewer`);
+  }
+
+  const lesson = await repo.findLessonById(input.lessonId);
+  if (!lesson) throw new Error("Lesson not found");
+
+  let childId: string | null = null;
+  if (input.childId) {
+    const owned = await repo.userOwnsChild(userId, input.childId);
+    if (!owned) throw new Error("Child not in your family");
+    childId = input.childId;
+  }
+
+  const dueAt = new Date(Date.now() + PRACTICE_DUE_AFTER_MS);
+  const practice = await repo.createPractice({
+    userId,
+    lessonId: input.lessonId,
+    childId,
+    technique,
+    dueAt,
+  });
+
+  awardInsight(userId, POINTS.INSIGHT_PRACTICE_PLEDGE, "practice_pledge").catch(() => {});
+
+  return {
+    practice: {
+      id: practice.id,
+      lessonId: practice.lessonId,
+      childId: practice.childId,
+      technique: practice.technique,
+      pledgedAt: practice.pledgedAt.toISOString(),
+      dueAt: practice.dueAt.toISOString(),
+    },
+    insightAwarded: POINTS.INSIGHT_PRACTICE_PLEDGE,
+  };
+}
+
+export async function reflectPractice(
+  userId: string,
+  practiceId: string,
+  input: { outcome: string; note?: string | null },
+) {
+  if (!VALID_PRACTICE_OUTCOMES.has(input.outcome)) {
+    throw new Error("Outcome must be worked, mixed, or didnt_work");
+  }
+  const note = (input.note ?? "").trim().slice(0, PRACTICE_NOTE_MAX) || null;
+
+  const existing = await repo.findPracticeById(practiceId);
+  if (!existing) throw new Error("Practice not found");
+  if (existing.userId !== userId) throw new Error("Not your practice");
+  if (existing.reflectedAt) throw new Error("Already reflected");
+
+  const updated = await repo.reflectOnPractice(practiceId, {
+    outcome: input.outcome,
+    note,
+  });
+
+  await Promise.all([
+    awardCoins(userId, POINTS.COINS_PRACTICE_REFLECT),
+    awardInsight(userId, POINTS.INSIGHT_PRACTICE_REFLECT, "practice_reflect"),
+  ]).catch(() => {});
+
+  return {
+    practice: {
+      id: updated.id,
+      reflectionOutcome: updated.reflectionOutcome,
+      reflectionNote: updated.reflectionNote,
+      reflectedAt: updated.reflectedAt?.toISOString() ?? null,
+    },
+    coinsAwarded: POINTS.COINS_PRACTICE_REFLECT,
+    insightAwarded: POINTS.INSIGHT_PRACTICE_REFLECT,
+  };
+}
+
+export async function dismissPractice(userId: string, practiceId: string) {
+  const existing = await repo.findPracticeById(practiceId);
+  if (!existing) throw new Error("Practice not found");
+  if (existing.userId !== userId) throw new Error("Not your practice");
+  await repo.deletePractice(practiceId);
+}
+
+export async function listPendingPractices(userId: string): Promise<PendingPractice[]> {
+  const rows = await repo.findPendingPractices(userId);
+  const now = Date.now();
+  return rows.map((p) => ({
+    id: p.id,
+    lessonId: p.lessonId,
+    lessonTitle: p.lesson.title ?? "",
+    courseId: p.lesson.module.phase.course.id ?? null,
+    courseTitle: p.lesson.module.phase.course.title ?? null,
+    technique: p.technique,
+    childId: p.child?.id ?? null,
+    childName: p.child?.name ?? null,
+    pledgedAt: p.pledgedAt.toISOString(),
+    dueAt: p.dueAt.toISOString(),
+    overdueHours: Math.max(0, Math.floor((now - p.dueAt.getTime()) / (60 * 60 * 1000))),
+  }));
+}
+
+export async function listRecentReflections(
+  userId: string,
+  limit = 5,
+): Promise<RecentReflection[]> {
+  const rows = await repo.findRecentReflectedPractices(userId, limit);
+  return rows.map((p) => ({
+    lessonId: p.lessonId,
+    lessonTitle: p.lesson.title ?? "",
+    technique: p.technique,
+    outcome: p.reflectionOutcome ?? "unknown",
+    note: p.reflectionNote,
+    childName: p.child?.name ?? null,
+    reflectedAt: (p.reflectedAt ?? p.pledgedAt).toISOString(),
+  }));
 }
 
 export async function tryPlaybookWithGroup(

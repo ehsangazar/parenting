@@ -228,6 +228,103 @@ export default async function learningRoutes(app: FastifyInstance) {
     return reply.send(result);
   });
 
+  // ── Practice Loop ──────────────────────────────────────────────────────────
+
+  // POST /lessons/:lessonId/practice — pledge to try a technique
+  app.post("/lessons/:lessonId/practice", {
+    schema: {
+      tags: ["Learning"],
+      summary: "Pledge to try a lesson technique with your child",
+      security: bearerSecurity,
+      body: {
+        type: "object",
+        required: ["technique"],
+        properties: {
+          technique: { type: "string", minLength: 1, maxLength: 280 },
+          childId: { type: "string" },
+        },
+      },
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const { lessonId } = req.params as { lessonId: string };
+    const body = req.body as { technique: string; childId?: string };
+    try {
+      const result = await svc.pledgePractice(req.user.sub, {
+        lessonId,
+        technique: body.technique,
+        childId: body.childId ?? null,
+      });
+      return reply.send(result);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return reply.badRequest(message);
+    }
+  });
+
+  // GET /practice/pending — practices waiting on a reflection
+  app.get("/practice/pending", {
+    schema: {
+      tags: ["Learning"],
+      summary: "List pending practice reflections for the current user",
+      security: bearerSecurity,
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const practices = await svc.listPendingPractices(req.user.sub);
+    return reply.send({ practices });
+  });
+
+  // POST /practice/:id/reflect — submit outcome
+  app.post("/practice/:id/reflect", {
+    schema: {
+      tags: ["Learning"],
+      summary: "Reflect on a practice (worked / mixed / didnt_work)",
+      security: bearerSecurity,
+      body: {
+        type: "object",
+        required: ["outcome"],
+        properties: {
+          outcome: { type: "string", enum: ["worked", "mixed", "didnt_work"] },
+          note: { type: "string", maxLength: 500 },
+        },
+      },
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const body = req.body as { outcome: string; note?: string };
+    try {
+      const result = await svc.reflectPractice(req.user.sub, id, {
+        outcome: body.outcome,
+        note: body.note ?? null,
+      });
+      return reply.send(result);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return reply.badRequest(message);
+    }
+  });
+
+  // DELETE /practice/:id — dismiss a pending practice
+  app.delete("/practice/:id", {
+    schema: {
+      tags: ["Learning"],
+      summary: "Dismiss a pending practice",
+      security: bearerSecurity,
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    try {
+      await svc.dismissPractice(req.user.sub, id);
+      return reply.send({ success: true });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return reply.badRequest(message);
+    }
+  });
+
   // POST /leaps/:leapNumber/playbooks/:id/complete-group
   app.post("/leaps/:leapNumber/playbooks/:id/complete-group", {
     schema: {

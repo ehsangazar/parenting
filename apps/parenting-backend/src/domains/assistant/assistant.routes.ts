@@ -320,8 +320,11 @@ export default async function assistantRoutes(app: FastifyInstance) {
         }
         reply.raw.writeHead(200, headers);
 
-        await svc.runGuestQuery(body.message, body.locale ?? null, (chunk) =>
-          writeSSE(reply, null, chunk),
+        await svc.runGuestQuery(
+          body.message,
+          body.locale ?? null,
+          (chunk) => writeSSE(reply, null, chunk),
+          req.ip ?? null,
         );
         writeSSE(reply, "done", "");
 

@@ -1092,6 +1092,23 @@
     "essentialOnly": "Essential only",
     "acceptAll": "Accept all"
   },
+  "pushPrompt": {
+    "ariaLabel": "Enable push notifications",
+    "dismissAriaLabel": "Dismiss",
+    "title": "Stay in the loop",
+    "body": "Get gentle daily tips and tomorrow's calendar reminders, even when this tab is closed. You can fine-tune everything in Settings.",
+    "calendarTitle": "Want a reminder the day before?",
+    "calendarBody": "Turn on notifications and we'll ping you about tomorrow's events.",
+    "enable": "Enable notifications",
+    "enabling": "Enabling...",
+    "notNow": "Not now",
+    "dontShowAgain": "Don't show again",
+    "success": "Notifications are on. You can fine-tune them in Settings.",
+    "permissionDenied": "Notifications are blocked. Allow them in your browser settings, then try again.",
+    "notConfigured": "Notifications aren't available yet.",
+    "unsupported": "This browser doesn't support push notifications.",
+    "genericError": "Something went wrong. Please try again."
+  },
   "installBanner": {
     "title": "Add Raised to your home screen",
     "androidDescription": "You're on Android in {{browser}}. Install for a faster, app-like experience.",

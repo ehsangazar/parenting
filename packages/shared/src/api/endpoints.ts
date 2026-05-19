@@ -81,6 +81,53 @@ export function createLearningApi(api: AxiosInstance) {
         isFreshStart: boolean;
       } | null;
     },
+    pledgePractice: async (
+      lessonId: string,
+      payload: { technique: string; childId?: string | null },
+    ) =>
+      (await api.post(`/api/lessons/${lessonId}/practice`, payload)).data as {
+        practice: {
+          id: string;
+          lessonId: string;
+          childId: string | null;
+          technique: string;
+          pledgedAt: string;
+          dueAt: string;
+        };
+        insightAwarded: number;
+      },
+    getPendingPractices: async () =>
+      (await api.get('/api/practice/pending')).data as {
+        practices: Array<{
+          id: string;
+          lessonId: string;
+          lessonTitle: string;
+          courseId: string | null;
+          courseTitle: string | null;
+          technique: string;
+          childId: string | null;
+          childName: string | null;
+          pledgedAt: string;
+          dueAt: string;
+          overdueHours: number;
+        }>;
+      },
+    reflectPractice: async (
+      practiceId: string,
+      payload: { outcome: 'worked' | 'mixed' | 'didnt_work'; note?: string },
+    ) =>
+      (await api.post(`/api/practice/${practiceId}/reflect`, payload)).data as {
+        practice: {
+          id: string;
+          reflectionOutcome: string | null;
+          reflectionNote: string | null;
+          reflectedAt: string | null;
+        };
+        coinsAwarded: number;
+        insightAwarded: number;
+      },
+    dismissPractice: async (practiceId: string) =>
+      (await api.delete(`/api/practice/${practiceId}`)).data as { success: boolean },
   };
 }
 

@@ -11,6 +11,7 @@ import { AchievementUnlockModal } from './components/ui/AchievementUnlockModal.j
 import type { Achievement } from './components/ui/AchievementUnlockModal.js';
 import { StreakCelebrationModal } from './components/ui/StreakCelebrationModal.js';
 import { InstallBanner } from './components/InstallBanner.js';
+import { PushOptInBanner } from './components/PushOptInBanner.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { SurveyPage } from './pages/SurveyPage.js';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage.js';
@@ -303,6 +304,7 @@ export default function App() {
       />
       <CookieConsentBanner />
       <InstallBanner />
+      <PushOptInBanner />
       <ScrollToTop />
       {isInitialLoading && !isPublicMarketingPath(location.pathname) && (
         <SplashLoading />
