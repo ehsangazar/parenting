@@ -60,3 +60,66 @@ export const sendSurveyNotification = (responseId: string) =>
     subject: "New survey submitted",
     html: `<p>A new survey response was submitted. ID: ${responseId}</p>`,
   });
+
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const formatEventTime = (start: Date, allDay: boolean) => {
+  if (allDay) {
+    return new Intl.DateTimeFormat("en-AU", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(start);
+  }
+  return new Intl.DateTimeFormat("en-AU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(start);
+};
+
+export const sendEventReminderEmail = (opts: {
+  to: string;
+  childName: string;
+  title: string;
+  startDate: Date;
+  allDay: boolean;
+  location?: string | null;
+  appUrl?: string;
+}) => {
+  const when = formatEventTime(opts.startDate, opts.allDay);
+  const safeChild = escapeHtml(opts.childName);
+  const safeTitle = escapeHtml(opts.title);
+  const safeWhen = escapeHtml(when);
+  const safeLocation = opts.location ? escapeHtml(opts.location) : null;
+  const calendarUrl = opts.appUrl
+    ? `${opts.appUrl.replace(/\/$/, "")}/app/calendar`
+    : null;
+  const cta = calendarUrl
+    ? `<div style="margin:24px 0;">
+        <a href="${calendarUrl}" style="background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Open calendar</a>
+      </div>`
+    : "";
+  return sendMail({
+    to: opts.to,
+    subject: `Tomorrow: ${opts.title} for ${opts.childName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#111;">
+        <h1 style="margin:0 0 16px;">Reminder</h1>
+        <p style="margin:0 0 8px;font-size:16px;"><strong>${safeChild}</strong> has <strong>${safeTitle}</strong>.</p>
+        <p style="margin:0 0 8px;color:#444;">${safeWhen}</p>
+        ${safeLocation ? `<p style="margin:0 0 8px;color:#444;">📍 ${safeLocation}</p>` : ""}
+        ${cta}
+        <p style="font-size:12px;color:#888;margin-top:32px;">You're getting this because the event is on your family calendar.</p>
+      </div>
+    `,
+  });
+};

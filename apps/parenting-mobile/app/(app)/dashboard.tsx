@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
-import { Screen, ScreenHeader, StatCard, Card, Button } from '@parenting/ui';
+import { Screen, StatCard, Card, Button } from '@parenting/ui';
 import { useAuth } from '@/lib/store';
 import { gamificationApi } from '@/lib/api';
 

@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 
 import type { IconName } from '../icons/index.js';
 import { Icon } from '../icons/index.js';

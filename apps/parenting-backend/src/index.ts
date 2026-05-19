@@ -20,6 +20,8 @@ import gamificationRoutes from "./domains/gamification/gamification.routes.js";
 import assistantRoutes from "./domains/assistant/assistant.routes.js";
 import billingRoutes from "./domains/billing/billing.routes.js";
 import adminRoutes from "./domains/admin/admin.routes.js";
+import notificationsRoutes from "./domains/notifications/notifications.routes.js";
+import { startReminderScheduler } from "./shared/reminders/index.js";
 
 const app = fastify({
   logger: {
@@ -97,6 +99,7 @@ await app.register(gamificationRoutes, { prefix: "/api" });
 await app.register(assistantRoutes, { prefix: "/api" });
 await app.register(billingRoutes, { prefix: "/api" });
 await app.register(adminRoutes, { prefix: "/api/admin" });
+await app.register(notificationsRoutes, { prefix: "/api/notifications" });
 
 app.get("/health", async () => ({ ok: true }));
 
@@ -131,6 +134,7 @@ const start = async () => {
   try {
     await app.listen({ port: env.PORT, host: "0.0.0.0" });
     app.log.info({ port: env.PORT }, "server started");
+    startReminderScheduler(app.log);
   } catch (err) {
     app.log.error({ err }, "failed to start server");
     process.exit(1);

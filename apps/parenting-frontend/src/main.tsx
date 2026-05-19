@@ -3,6 +3,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import posthog from 'posthog-js';
+import { PostHogErrorBoundary, PostHogProvider } from '@posthog/react';
 import App from './App.js';
 import './i18n.js';
 import './index.css';
@@ -37,7 +39,12 @@ function initGTM() {
 }
 
 // Expose so the consent banner can call it post-acceptance without a module import
-(window as any).__initGTM__ = initGTM;
+(window as Window & { __initGTM__?: () => void }).__initGTM__ = initGTM;
+
+posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN, {
+  api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+  defaults: '2026-01-30',
+});
 
 // Only fire on load if the user has already given analytics consent
 try {
@@ -52,11 +59,15 @@ try {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <HelmetProvider>
-      <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
-        <App />
-      </BrowserRouter>
-    </HelmetProvider>
+    <PostHogProvider client={posthog}>
+      <PostHogErrorBoundary>
+        <HelmetProvider>
+          <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+            <App />
+          </BrowserRouter>
+        </HelmetProvider>
+      </PostHogErrorBoundary>
+    </PostHogProvider>
   </React.StrictMode>
 );
 

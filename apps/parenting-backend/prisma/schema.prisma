@@ -75,6 +75,7 @@ model User {
   userAchievements     UserAchievement[]
   dailyQuests          DailyQuest[]
   xpTransactions       XpTransaction[]
+  pushSubscriptions    PushSubscription[]
 }
 
 model Consent {
@@ -101,6 +102,20 @@ model AuditLog {
   createdAt    DateTime @default(now())
   user         User?    @relation(fields: [userId], references: [id])
   tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // ─── Billing ─────────────────────────────────────────────────────────────────
@@ -224,30 +239,44 @@ model FamilyInvite {
 }
 
 model CalendarEvent {
-  id          String    @id @default(cuid())
-  familyId    String
-  childId     String
-  title       String
-  description String?
-  eventType   String
-  status      String    @default("confirmed")
-  startDate   DateTime
-  endDate     DateTime?
-  allDay      Boolean   @default(false)
-  location    String?
-  assignedTo  String?
-  createdBy   String
-  repeatRule  Json?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  child       Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  id             String              @id @default(cuid())
+  familyId       String
+  childId        String
+  title          String
+  description    String?
+  eventType      String
+  status         String              @default("confirmed")
+  startDate      DateTime
+  endDate        DateTime?
+  allDay         Boolean             @default(false)
+  location       String?
+  assignedTo     String?
+  createdBy      String
+  repeatRule     Json?
+  reminderSentAt DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  family         Family              @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child          Child               @relation(fields: [childId], references: [id], onDelete: Cascade)
+  reminderSends  EventReminderSent[]
 
   @@index([familyId])
   @@index([childId])
   @@index([startDate])
   @@index([assignedTo])
   @@index([status])
+  @@index([reminderSentAt])
+}
+
+model EventReminderSent {
+  id             String        @id @default(cuid())
+  eventId        String
+  occurrenceDate DateTime
+  sentAt         DateTime      @default(now())
+  event          CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, occurrenceDate])
+  @@index([occurrenceDate])
 }
 
 model KickSession {
@@ -789,6 +818,9 @@ model UserStreak {
   longestStreak    Int       @default(0)
   lastActiveDate   DateTime?
   freezesAvailable Int       @default(0)
+  // Tracks the last time a freeze was auto-granted to forgive a missed day.
+  // Rate-limited to one per calendar month per user.
+  lastAutoFreezeAt DateTime?
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -829,6 +861,23 @@ model DailyQuest {
   bonusClaimed Boolean  @default(false)
   createdAt    DateTime @default(now())
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+// Tracks daily AI message usage per user. One row per user per day (YYYY-MM-DD
+// in UTC). Used to enforce the free-tier daily cap so a parent never feels
+// they're "running out" mid-crisis; once the cap hits, the UI offers a coin
+// top-up before blocking.
+model AiUsageDaily {
+  id         String   @id @default(cuid())
+  userId     String
+  date       String
+  count      Int      @default(0)
+  topupCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([userId, date])
   @@index([userId])

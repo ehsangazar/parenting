@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { Prisma } from "@prisma/client";
 import { recordAudit } from "../../shared/audit/index.js";
-import { awardCoins } from "../../shared/gamification/index.js";
+import { awardCoins, awardInsight } from "../../shared/gamification/index.js";
 import { sendFamilyInviteEmail } from "../../shared/mailer/index.js";
 import { getDefaultModulesForAge } from "../../shared/childModules/index.js";
 import {
@@ -232,7 +232,10 @@ export const addMember = async (
     });
 
     try {
-      await awardCoins(userId, POINTS.COINS_INVITE_MEMBER);
+      await Promise.all([
+        awardCoins(userId, POINTS.COINS_INVITE_MEMBER),
+        awardInsight(userId, POINTS.INSIGHT_INVITE_MEMBER, "invite_member"),
+      ]);
     } catch {
       // non-fatal
     }
@@ -476,7 +479,10 @@ export const addChild = async (
   }
 
   try {
-    await awardCoins(userId, POINTS.COINS_ADD_CHILD);
+    await Promise.all([
+      awardCoins(userId, POINTS.COINS_ADD_CHILD),
+      awardInsight(userId, POINTS.INSIGHT_ADD_CHILD, "add_child"),
+    ]);
   } catch {
     // non-fatal
   }

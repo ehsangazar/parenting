@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import clsx from 'clsx';
+import { usePostHog } from '@posthog/react';
+import { clsx } from 'clsx';
 import { useAuth } from '../../state/auth.js';
 import { learningApi } from '../../lib/appApi.js';
 import { PageContainer } from '../../components/app/PageContainer.js';
+import { PageHeader } from '../../components/app/PageHeader.js';
 import { useAppContext } from '../../components/app/AppContext.js';
 import { Icon } from '../../components/icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
+import { ResumeCard } from '../../components/academy/ResumeCard.js';
 
 type Phase = {
   id: string;
@@ -140,6 +143,14 @@ export const AcademyPage = () => {
   if (!token) {
     return (
       <PageContainer>
+        <PageHeader
+          title={t('nav.academy', 'Academy')}
+          subtitle={t(
+            'academy.heroSubtitle',
+            'Courses and lessons for your parenting journey.',
+          )}
+          iconName={appAssetIcons.academy}
+        />
         <div className="rounded-2xl bg-surface-light p-6 text-center">
           <p className="text-[14px] font-semibold text-text-primary">
             {t('academy.signInPrompt', 'Sign in to access the Academy.')}
@@ -158,6 +169,15 @@ export const AcademyPage = () => {
 
   return (
     <PageContainer>
+      <PageHeader
+        title={t('nav.academy', 'Academy')}
+        subtitle={t(
+          'academy.heroSubtitle',
+          'Courses and lessons for your parenting journey.',
+        )}
+        iconName={appAssetIcons.academy}
+      />
+
       {loading && (
         <p className="rounded-2xl bg-surface-light px-4 py-3 text-[13px] text-text-secondary">
           {t('common.loading', 'Loading...')}
@@ -182,6 +202,8 @@ export const AcademyPage = () => {
           </p>
         </div>
       )}
+
+      {!loading && !error && courses.length > 0 && <ResumeCard />}
 
       {(generalCourse || recommendedLeap) && (
         <section className="mb-6">
@@ -284,11 +306,13 @@ const RecommendedCard = ({
   accent: Accent;
 }) => {
   const { t } = useTranslation();
+  const posthog = usePostHog();
   const styles = ACCENT_STYLES[accent];
   const phaseCount = course.phases?.length ?? 0;
   return (
     <Link
       to={`/academy/${course.id}`}
+      onClick={() => posthog.capture('course_opened', { course_id: course.id, course_title: course.title, badge })}
       className={clsx(
         'group flex h-full flex-col rounded-2xl border border-border bg-surface p-4 transition-all hover:-translate-y-0.5 hover:shadow-md',
         styles.ring,
@@ -347,10 +371,12 @@ const RecommendedCard = ({
 
 const CompactCourseLink = ({ course }: { course: Course }) => {
   const { t } = useTranslation();
+  const posthog = usePostHog();
   const phaseCount = course.phases?.length ?? 0;
   return (
     <Link
       to={`/academy/${course.id}`}
+      onClick={() => posthog.capture('course_opened', { course_id: course.id, course_title: course.title })}
       className="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 transition-colors hover:border-brand-blue/40 hover:bg-surface-light"
     >
       <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-pink/10 text-brand-pink">

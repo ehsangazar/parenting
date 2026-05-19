@@ -1,10 +1,16 @@
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import {
   chatQuerySchema,
   listConversationsQuerySchema,
   conversationIdParamSchema,
 } from "./assistant.schema.js";
 import * as svc from "./assistant.service.js";
+
+const guestQuerySchema = z.object({
+  message: z.string().min(1).max(1200),
+  locale: z.string().min(2).max(10).optional(),
+});
 
 const bearerSecurity = [{ bearerAuth: [] }];
 
@@ -269,6 +275,110 @@ export default async function assistantRoutes(app: FastifyInstance) {
             // Already closed, ignore
           }
         }
+      }
+    },
+  );
+
+  // POST /chat/guest-query (SSE streaming, no auth)
+  // One-turn taste of Raised for logged-out visitors. Bypasses the orchestrator
+  // entirely: no tools, no retrieval, no DB writes. IP-rate-limited so it
+  // can't be used as a free LLM proxy.
+  app.post(
+    "/guest-query",
+    {
+      schema: {
+        tags: ["Assistant"],
+        summary: "One-turn AI reply for unauthenticated visitors (SSE)",
+        body: {
+          type: "object",
+          required: ["message"],
+          properties: {
+            message: { type: "string", minLength: 1, maxLength: 1200 },
+            locale: { type: "string", minLength: 2, maxLength: 10 },
+          },
+        },
+      },
+      config: {
+        rateLimit: {
+          max: 5,
+          timeWindow: "1 hour",
+        },
+      },
+    },
+    async (req, reply) => {
+      try {
+        const body = guestQuerySchema.parse(req.body);
+
+        const headers: Record<string, string> = {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        };
+        if (req.headers.origin) {
+          headers["Access-Control-Allow-Origin"] = req.headers.origin;
+          headers["Access-Control-Allow-Credentials"] = "true";
+        }
+        reply.raw.writeHead(200, headers);
+
+        await svc.runGuestQuery(body.message, body.locale ?? null, (chunk) =>
+          writeSSE(reply, null, chunk),
+        );
+        writeSSE(reply, "done", "");
+
+        try {
+          reply.raw.end();
+        } catch {
+          // Already closed, ignore
+        }
+      } catch (error) {
+        req.log.error(error);
+        if (!reply.raw.headersSent) {
+          reply.status(500).send({ error: "Internal Server Error" });
+        } else {
+          writeSSE(reply, "error", JSON.stringify({ error: "An error occurred" }));
+          try {
+            reply.raw.end();
+          } catch {
+            // Already closed, ignore
+          }
+        }
+      }
+    },
+  );
+
+  // GET /chat/usage — daily AI cap status
+  app.get(
+    "/usage",
+    {
+      schema: {
+        tags: ["Assistant"],
+        summary: "Get the user's daily AI message usage and cap",
+        security: bearerSecurity,
+      },
+      preHandler: [app.authenticate],
+    },
+    async (req) => {
+      return svc.getDailyAiUsage(req.user.sub);
+    },
+  );
+
+  // POST /chat/usage/topup — spend coins for extra messages today
+  app.post(
+    "/usage/topup",
+    {
+      schema: {
+        tags: ["Assistant"],
+        summary: "Buy a coin-funded AI message top-up for today",
+        security: bearerSecurity,
+      },
+      preHandler: [app.authenticate],
+    },
+    async (req, reply) => {
+      try {
+        return await svc.purchaseAiTopup(req.user.sub);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.badRequest(message);
       }
     },
   );

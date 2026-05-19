@@ -4,7 +4,7 @@ export interface MarketingLead {
   id: string;
   email: string;
   resourceId: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
   status: 'pending' | 'delivered' | 'error';
   createdAt: string;
   updatedAt: string;

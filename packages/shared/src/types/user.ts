@@ -21,4 +21,5 @@ export interface User {
   locale?: string;
   createdAt?: string;
   gamification?: Gamification;
+  hasPassword?: boolean;
 }

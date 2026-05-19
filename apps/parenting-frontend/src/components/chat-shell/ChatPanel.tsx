@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useNavigate, Link } from 'react-router-dom';
+import { usePostHog } from '@posthog/react';
 import { Icon, type IconName } from '../icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
@@ -11,6 +12,7 @@ import { useAppContext } from '../app/AppContext.js';
 import { useChatShell } from './ChatShellContext.js';
 import { CardRenderer } from './cards/CardRenderer.js';
 import type { Card, CardActionHandlers } from './cards/types.js';
+import { OnboardingChat } from './OnboardingChat.js';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
@@ -217,7 +219,7 @@ function MarkdownContent({ content }: { content: string }) {
           );
         }
 
-        const combined = group.items.map((i) => (i as any).text).join(' ');
+        const combined = group.items.map((i) => (i as { text?: string }).text ?? '').join(' ');
         return <p key={gi} className="leading-relaxed">{ri(combined)}</p>;
       })}
     </div>
@@ -343,8 +345,9 @@ function NavCardsRow({ cards }: { cards: NavCard[] }) {
 
 export const ChatPanel = () => {
   const { t, i18n } = useTranslation();
+  const posthog = usePostHog();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { activeFamily } = useAppContext();
   const {
     activeConversationId,
@@ -358,6 +361,10 @@ export const ChatPanel = () => {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
+  const [guestUsedTurn, setGuestUsedTurn] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return sessionStorage.getItem('guestTurnUsed') === '1';
+  });
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -395,10 +402,17 @@ export const ChatPanel = () => {
 
     chatApi.getMessages(activeConversationId)
       .then((data) => setMessages(
-        (data.messages ?? [])
-          .filter((m: any) => m.role !== 'system')
-          .map((m: any) => {
-            const cites = m.citations && typeof m.citations === 'object' ? m.citations : null;
+        ((data.messages ?? []) as Array<{
+          id: string;
+          role: 'user' | 'assistant' | 'system';
+          content: string;
+          citations?: unknown;
+        }>)
+          .filter((m) => m.role !== 'system')
+          .map((m) => {
+            const cites = m.citations && typeof m.citations === 'object'
+              ? (m.citations as { navCards?: unknown; cards?: unknown })
+              : null;
             const navCards = Array.isArray(cites?.navCards) ? (cites.navCards as NavCard[]) : undefined;
             const cards = Array.isArray(cites?.cards) ? (cites.cards as Card[]) : undefined;
             return { id: m.id, role: m.role, content: m.content, navCards, cards };
@@ -456,16 +470,129 @@ export const ChatPanel = () => {
     if (sendingRef.current) return;
     sendingRef.current = true;
 
-    // Login gate — logged-out users get bounced to /login with the draft message
-    // preserved as next-action context.
+    // Guest path: visitors get one free turn through the public /guest-query
+    // endpoint. After that, sends bounce to /login with both the draft message
+    // and the local conversation preserved so the post-signup landing can
+    // restore continuity.
     if (!token) {
-      try {
-        localStorage.setItem('pendingChatMessage', message);
-      } catch {
-        // localStorage unavailable; non-fatal.
+      if (guestUsedTurn) {
+        try {
+          localStorage.setItem('pendingChatMessage', message);
+        } catch {
+          // localStorage unavailable; non-fatal.
+        }
+        sendingRef.current = false;
+        navigate('/login?next=/');
+        return;
       }
-      sendingRef.current = false;
-      navigate('/login?next=/');
+
+      setInput('');
+      if (inputRef.current) inputRef.current.style.height = 'auto';
+
+      const userId =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const guestAssistantId = (Date.now() + 1).toString();
+      const abort = new AbortController();
+      abortRef.current = abort;
+      let hasContent = false;
+
+      setMessages((prev) => [...prev, { id: userId, role: 'user', content: message }]);
+      setStreaming(true);
+      setLoadingStatus(t('chatPage.thinking'));
+
+      try {
+        const response = await fetch(`${API_BASE}/api/guest-query`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, locale: i18n.language }),
+          signal: abort.signal,
+        });
+
+        if (response.status === 429) {
+          throw new Error(t('chatPage.guestRateLimited', 'Too many free questions, sign in to keep going.'));
+        }
+        if (!response.ok) throw new Error(`Server ${response.status}`);
+        if (!response.body) throw new Error('No stream');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const events = buffer.split('\n\n');
+          buffer = events.pop() ?? '';
+
+          for (const rawEvent of events) {
+            if (!rawEvent.trim()) continue;
+            const lines = rawEvent.split('\n');
+            let eventName: string | null = null;
+            const dataLines: string[] = [];
+            for (const line of lines) {
+              if (line.startsWith('event: ')) eventName = line.slice(7).trim();
+              else if (line.startsWith('data: ')) dataLines.push(line.slice(6));
+            }
+            if (dataLines.length === 0) continue;
+            const dataLine = dataLines.join('\n');
+
+            if (eventName === 'done') {
+              setLoadingStatus(null);
+            } else if (eventName === 'error') {
+              setLoadingStatus(null);
+              let errorText = t('chatPage.somethingWentWrong', 'Sorry, something went wrong. Please try again.');
+              try {
+                const parsed = JSON.parse(dataLine);
+                if (parsed?.error) errorText = parsed.error;
+              } catch {
+                // dataLine wasn't JSON; fall back to default message
+              }
+              if (!hasContent) {
+                hasContent = true;
+                setMessages((prev) => [...prev, { id: guestAssistantId, role: 'assistant', content: errorText }]);
+              }
+            } else if (!eventName) {
+              if (!hasContent) {
+                hasContent = true;
+                setLoadingStatus(null);
+                setMessages((prev) => [...prev, { id: guestAssistantId, role: 'assistant', content: '' }]);
+              }
+              setMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last?.id === guestAssistantId) {
+                  updated[updated.length - 1] = { ...last, content: last.content + dataLine };
+                }
+                return updated;
+              });
+            }
+          }
+        }
+
+        if (hasContent) {
+          sessionStorage.setItem('guestTurnUsed', '1');
+          setGuestUsedTurn(true);
+        }
+      } catch (err: unknown) {
+        if ((err as Error)?.name !== 'AbortError' && !hasContent) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: guestAssistantId,
+              role: 'assistant',
+              content: (err as Error)?.message || t('chatPage.somethingWentWrong', 'Sorry, something went wrong. Please try again.'),
+            },
+          ]);
+        }
+      } finally {
+        setStreaming(false);
+        setLoadingStatus(null);
+        sendingRef.current = false;
+      }
       return;
     }
 
@@ -477,6 +604,10 @@ export const ChatPanel = () => {
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+    posthog.capture('chat_message_sent', {
+      message_length: message.length,
+      has_active_child: !!activeChild,
+    });
     setMessages((prev) => [...prev, { id: clientMessageId, role: 'user', content: message }]);
     setStreaming(true);
     setLoadingStatus(t('chatPage.thinking'));
@@ -697,15 +828,53 @@ export const ChatPanel = () => {
       setLoadingStatus(null);
       sendingRef.current = false;
     }
-  }, [input, activeConversationId, activeChild, token, navigate, t, i18n.language, setActiveConversationId, refreshChildren, CHILD_MUTATION_TOOLS]);
+  }, [input, activeConversationId, activeChild, token, guestUsedTurn, navigate, t, i18n.language, setActiveConversationId, refreshChildren, CHILD_MUTATION_TOOLS]);
 
-  // After login, resume any pending draft saved before the login redirect.
+  const gotoSignIn = useCallback(() => {
+    try {
+      const guestMessages = messages
+        .filter((m) => m.role !== 'system')
+        .map((m) => ({ role: m.role, content: m.content }));
+      if (guestMessages.length > 0) {
+        localStorage.setItem('guestConversation', JSON.stringify(guestMessages));
+      }
+    } catch {
+      // localStorage unavailable; non-fatal.
+    }
+    navigate('/login?next=/');
+  }, [messages, navigate]);
+
+  // After login, replay any pending draft saved before the login redirect AND
+  // rehydrate the local guest conversation so the visitor sees Q1/A1 above
+  // their new authenticated send. Guest messages live locally only; they are
+  // not migrated server-side.
   useEffect(() => {
     if (!token) return;
+
+    let restored: ChatMessage[] = [];
+    try {
+      const raw = localStorage.getItem('guestConversation');
+      if (raw) {
+        const parsed = JSON.parse(raw) as Array<{ role: 'user' | 'assistant'; content: string }>;
+        restored = parsed.map((m, i) => ({ id: `guest-${i}-${Date.now()}`, role: m.role, content: m.content }));
+        localStorage.removeItem('guestConversation');
+      }
+    } catch {
+      // ignore malformed payload
+    }
+    if (restored.length > 0) setMessages(restored);
+    try {
+      sessionStorage.removeItem('guestTurnUsed');
+    } catch {
+      // sessionStorage unavailable; non-fatal.
+    }
+    setGuestUsedTurn(false);
+
     const pending = localStorage.getItem('pendingChatMessage');
-    if (!pending) return;
-    localStorage.removeItem('pendingChatMessage');
-    void handleSend(pending);
+    if (pending) {
+      localStorage.removeItem('pendingChatMessage');
+      void handleSend(pending);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -733,6 +902,23 @@ export const ChatPanel = () => {
     }),
     [handleSend, navigate],
   );
+
+  // Chat-native onboarding: logged-in but not yet onboarded users see a
+  // scripted conversation in place of the normal chat. On completion the
+  // user object flips onboarded=true and this branch unmounts, revealing
+  // the real chat with their first question already sent (if they tapped
+  // a suggestion chip).
+  if (token && user && !user.profile?.onboarded) {
+    return (
+      <OnboardingChat
+        onComplete={(firstQuestion) => {
+          if (firstQuestion) {
+            void handleSend(firstQuestion);
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -794,14 +980,14 @@ export const ChatPanel = () => {
               <div className="mt-4 flex flex-col items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => navigate('/login?next=/')}
+                  onClick={gotoSignIn}
                   className="inline-flex items-center gap-2 rounded-xl bg-brand-blue px-5 py-3 text-[15px] font-bold text-white shadow-sm hover:brightness-110 min-h-[44px]"
                 >
                   <Icon name={uiIcons.user} className="h-4 w-4 object-contain brightness-0 invert" alt="" />
                   {t('chatPage.signInToChat')}
                 </button>
                 <p className="text-[13px] text-text-secondary">
-                  {t('chatPage.signInToChatHint')}
+                  {t('chatPage.signInToChatHint', 'Or ask one question first, no account needed.')}
                 </p>
               </div>
             )}
@@ -897,44 +1083,72 @@ export const ChatPanel = () => {
             </div>
           )}
 
-          <div className="flex items-end overflow-hidden rounded-[20px] border border-border bg-surface-light pr-2 pb-2 pl-4 transition-all focus-within:border-brand-blue focus-within:bg-surface focus-within:ring-2 focus-within:ring-brand-blue/20">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder={placeholder}
-              rows={1}
-              disabled={streaming}
-              className="flex-1 resize-none rounded-none border-0 bg-transparent py-3 text-[15px] leading-relaxed text-text-primary shadow-none outline-none ring-0 ring-offset-0 placeholder:text-text-secondary focus:border-transparent focus:outline-none focus:ring-0 focus-visible:ring-0 disabled:opacity-50"
-              style={{ minHeight: '24px', maxHeight: '120px' }}
-            />
-            {streaming ? (
+          {!token && guestUsedTurn && !streaming ? (
+            <div className="flex flex-col items-stretch gap-3 rounded-2xl border border-brand-blue/40 bg-brand-blue/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-bold text-text-primary">
+                  {t('chatPage.guestWallTitle', 'Save this conversation and ask follow-ups')}
+                </p>
+                <p className="mt-0.5 text-[13px] text-text-secondary">
+                  {t('chatPage.guestWallSubtitle', 'Free account, takes about 30 seconds. Your question and answer come with you.')}
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={handleStop}
-                className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-red-500/10 px-4 text-[14px] font-bold text-red-500 hover:bg-red-500/20"
+                onClick={gotoSignIn}
+                className="inline-flex min-h-[44px] flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-2.5 text-[14px] font-bold text-white shadow-sm hover:brightness-110"
               >
-                <Icon name={uiIcons.stopSquare} className="h-4 w-4 object-contain" alt="" />
-                {t('chatPage.stop')}
+                <Icon name={uiIcons.user} className="h-4 w-4 object-contain brightness-0 invert" alt="" />
+                {t('chatPage.guestWallCta', 'Sign in to continue')}
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => handleSend()}
-                disabled={!input.trim()}
-                className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-brand-blue px-4 text-[14px] font-bold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:bg-border-dark disabled:text-text-secondary"
-              >
-                {t('chatPage.send')}
-                <Icon name={uiIcons.send} className="h-4 w-4 object-contain brightness-0 invert" alt="" />
-              </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-end overflow-hidden rounded-[20px] border border-border bg-surface-light pr-2 pb-2 pl-4 transition-all focus-within:border-brand-blue focus-within:bg-surface focus-within:ring-2 focus-within:ring-brand-blue/20">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder={placeholder}
+                  rows={1}
+                  disabled={streaming}
+                  className="flex-1 resize-none rounded-none border-0 bg-transparent py-3 text-[15px] leading-relaxed text-text-primary shadow-none outline-none ring-0 ring-offset-0 placeholder:text-text-secondary focus:border-transparent focus:outline-none focus:ring-0 focus-visible:ring-0 disabled:opacity-50"
+                  style={{ minHeight: '24px', maxHeight: '120px' }}
+                />
+                {streaming ? (
+                  <button
+                    type="button"
+                    onClick={handleStop}
+                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-red-500/10 px-4 text-[14px] font-bold text-red-500 hover:bg-red-500/20"
+                  >
+                    <Icon name={uiIcons.stopSquare} className="h-4 w-4 object-contain" alt="" />
+                    {t('chatPage.stop')}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSend()}
+                    disabled={!input.trim()}
+                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-brand-blue px-4 text-[14px] font-bold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:bg-border-dark disabled:text-text-secondary"
+                  >
+                    {t('chatPage.send')}
+                    <Icon name={uiIcons.send} className="h-4 w-4 object-contain brightness-0 invert" alt="" />
+                  </button>
+                )}
+              </div>
+              {!token && !guestUsedTurn && !isEmpty && (
+                <p className="mt-2 text-center text-[12px] text-text-secondary">
+                  {t('chatPage.guestFreeTurnHint', 'One free question, no account needed.')}
+                </p>
+              )}
+            </>
+          )}
           <p className="mt-2 text-center text-[12px] text-text-secondary">
             {t('chatPage.disclaimer')}
           </p>

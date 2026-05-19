@@ -90,9 +90,44 @@ export const resetPassword = async (userId: string, newPassword: string) => {
 };
 
 export const getMe = async (userId: string): Promise<PublicUser | null> => {
-  const user = await repo.findUserById(userId);
+  const user = await repo.findUserWithHashById(userId);
   if (!user) return null;
-  return { ...user, profile: await signProfileAvatarUrl(user.profile) };
+  const { passwordHash, ...rest } = user;
+  return {
+    ...rest,
+    hasPassword: passwordHash != null,
+    profile: await signProfileAvatarUrl(user.profile),
+  };
+};
+
+export type ChangePasswordResult =
+  | { ok: true }
+  | { ok: false; reason: "wrong_current" | "no_password" | "same_as_old" };
+
+export const changePassword = async (
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<ChangePasswordResult> => {
+  const user = await repo.findUserWithHashById(userId);
+  if (!user?.passwordHash) return { ok: false, reason: "no_password" };
+
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) return { ok: false, reason: "wrong_current" };
+
+  const sameAsOld = await bcrypt.compare(newPassword, user.passwordHash);
+  if (sameAsOld) return { ok: false, reason: "same_as_old" };
+
+  const passwordHash = await hashPassword(newPassword);
+  await repo.updateUser(userId, { passwordHash });
+  await repo.createAuditLog({
+    userId,
+    action: "password_change",
+    resourceType: "user",
+    resourceId: userId,
+  });
+
+  return { ok: true };
 };
 
 export const updateMe = async (
@@ -112,6 +147,8 @@ export const updateMe = async (
     ...(body.onboarded !== undefined && { onboarded: body.onboarded }),
     ...(body.roleInHousehold !== undefined && { roleInHousehold: body.roleInHousehold }),
     ...(body.interests !== undefined && { interests: body.interests }),
+    ...(body.notificationPrefs !== undefined && { notificationPrefs: body.notificationPrefs }),
+    ...(body.timeZone !== undefined && { timeZone: body.timeZone }),
   };
 
   const updated = await repo.updateUser(userId, {

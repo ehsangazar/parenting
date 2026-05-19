@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { Icon } from '../icons/index.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
 

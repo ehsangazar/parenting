@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePostHog } from '@posthog/react';
 import { useAppBase } from '../../hooks/useAppBase.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ type Step = 'welcome' | 'profile' | 'family' | 'invite' | 'goals';
 
 export const OnboardingPage = () => {
   const { t } = useTranslation();
+  const posthog = usePostHog();
   const [step, setStep] = useState<Step>('welcome');
   const [profileData, setProfileData] = useState<{ name: string; role: string } | null>(null);
   const [familyData, setFamilyData] = useState<{ name: string; birthday: string }[]>([]);
@@ -76,8 +78,14 @@ export const OnboardingPage = () => {
       // 3. Invite partner if any
       if (defaultFamily && partnerEmail) {
         await familiesApi.inviteMember(defaultFamily.id, partnerEmail);
+        posthog.capture('onboarding_partner_invited');
       }
 
+      posthog.capture('onboarding_completed', {
+        children_added: familyData.length,
+        role: profileData?.role,
+        goals_count: goals.length,
+      });
       toast.success(t('onboarding.toastComplete'));
       navigate(toApp('/app'));
     } catch (err) {

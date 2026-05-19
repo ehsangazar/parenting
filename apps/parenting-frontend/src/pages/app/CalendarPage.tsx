@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { useAuth } from '../../state/auth.js';
 import { useAppContext } from '../../components/app/AppContext.js';
 import { calendarApi, familiesApi } from '../../lib/appApi.js';
@@ -354,7 +354,7 @@ type EventFormDrawerProps = {
   onClose: () => void;
   mode: 'create' | 'edit';
   event: CalendarEvent | null;
-  children: ChildOption[];
+  childOptions: ChildOption[];
   onSaved: () => void;
 };
 
@@ -367,7 +367,7 @@ const AI_CREATE_EXAMPLES = [
   "Sam's birthday party Sat afternoon, all day reminder",
 ];
 
-const EventFormDrawer = ({ open, onClose, mode, event, children: childOptions, onSaved }: EventFormDrawerProps) => {
+const EventFormDrawer = ({ open, onClose, mode, event, childOptions, onSaved }: EventFormDrawerProps) => {
   const { t, i18n } = useTranslation();
   const { activeFamily } = useAppContext();
   const defaultChildId = childOptions[0]?.id ?? '';
@@ -1268,7 +1268,7 @@ export const CalendarPage = () => {
         onClose={() => setDrawerOpen(false)}
         mode={editing ? 'edit' : 'create'}
         event={editing}
-        children={childOptions}
+        childOptions={childOptions}
         onSaved={loadEvents}
       />
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { SUPPORTED_LOCALES, type AppLocale } from '../i18n.js';
 import { useAuth } from '../state/auth.js';
 import { profileApi } from '../lib/appApi.js';

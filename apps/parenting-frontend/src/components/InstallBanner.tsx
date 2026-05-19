@@ -12,7 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
 const HIDE_FOREVER_KEY = 'raised_install_banner_hide_forever';
 
 function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as any).MSStream;
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream;
 }
 
 function getBrowserName() {
@@ -38,7 +38,7 @@ function isMobileDevice() {
 function isInStandaloneMode() {
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as any).standalone === true
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
   );
 }
 

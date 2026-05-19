@@ -30,7 +30,7 @@ export async function extractTextFromPDF(file: File): Promise<string> {
       
       // Combine text items
       const pageText = textContent.items
-        .map((item: any) => item.str)
+        .map((item) => ('str' in item ? item.str : ''))
         .join(' ');
       
       if (pageText.trim()) {
@@ -46,9 +46,10 @@ export async function extractTextFromPDF(file: File): Promise<string> {
     }
     
     return fullText;
-  } catch (error: any) {
+  } catch (error) {
     console.error('PDF extraction error:', error);
-    throw new Error(`Failed to extract text from PDF: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to extract text from PDF: ${message}`);
   }
 }
 

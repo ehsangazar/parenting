@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { DEFAULT_AVATAR_URL } from '../../lib/defaultAvatar.js';
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg';

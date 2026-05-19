@@ -1,5 +1,5 @@
 import { recordAudit } from "../../shared/audit/index.js";
-import { awardCoins } from "../../shared/gamification/index.js";
+import { awardCoins, awardInsight } from "../../shared/gamification/index.js";
 import { POINTS } from "../../config/points.js";
 import * as repo from "./community.repository.js";
 import type {
@@ -30,7 +30,10 @@ export async function createPost(userId: string, data: CreatePostInput) {
   });
 
   try {
-    await awardCoins(userId, POINTS.COINS_VILLAGE_POST);
+    await Promise.all([
+      awardCoins(userId, POINTS.COINS_VILLAGE_POST),
+      awardInsight(userId, POINTS.INSIGHT_VILLAGE_POST, "village_post"),
+    ]);
   } catch {
     // gamification failure is non-fatal
   }
@@ -154,7 +157,10 @@ export async function createComment(
   const comment = await repo.createComment(postId, userId, data);
 
   try {
-    await awardCoins(userId, POINTS.COINS_VILLAGE_COMMENT);
+    await Promise.all([
+      awardCoins(userId, POINTS.COINS_VILLAGE_COMMENT),
+      awardInsight(userId, POINTS.INSIGHT_VILLAGE_COMMENT, "village_comment"),
+    ]);
   } catch {
     // gamification failure is non-fatal
   }

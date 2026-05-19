@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
 
 import { appAssetIcons } from '../../lib/appAssetIcons.js';

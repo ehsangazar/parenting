@@ -46,6 +46,19 @@ export default async function learningRoutes(app: FastifyInstance) {
     return reply.send({ courseId, phases });
   });
 
+  // GET /learning/resume
+  app.get("/resume", {
+    schema: {
+      tags: ["Learning"],
+      summary: "Get the user's resume target (continue where you left off)",
+      security: bearerSecurity,
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const target = await svc.getResumeTarget(req.user.sub);
+    return reply.send({ target });
+  });
+
   // GET /learning/courses/:courseId/modules
   app.get("/courses/:courseId/modules", {
     schema: {

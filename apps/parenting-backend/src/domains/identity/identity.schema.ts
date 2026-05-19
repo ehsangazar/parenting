@@ -23,6 +23,32 @@ export const resetSchema = z.object({
   newPassword: z.string().min(8),
 });
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+
+const timeOfDay = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Expected HH:mm");
+
+export const notificationPrefsSchema = z.object({
+  channels: z.object({
+    push: z.boolean(),
+    email: z.boolean(),
+  }),
+  topics: z.object({
+    dailyTip: z.boolean(),
+    weeklyRecap: z.boolean(),
+    courseReminders: z.boolean(),
+    calendarReminders: z.boolean(),
+    marketing: z.boolean(),
+  }),
+  quietHours: z.object({
+    enabled: z.boolean(),
+    start: timeOfDay,
+    end: timeOfDay,
+  }),
+});
+
 export const updateProfileSchema = z.object({
   name: z.string().max(100).optional(),
   avatarUrl: z.string().url().optional(),
@@ -30,6 +56,8 @@ export const updateProfileSchema = z.object({
   roleInHousehold: z.string().optional(),
   interests: z.array(z.string()).optional(),
   locale: z.string().optional(),
+  notificationPrefs: notificationPrefsSchema.optional(),
+  timeZone: z.string().max(100).optional(),
 });
 
 export const consentSchema = z.object({

@@ -1,11 +1,24 @@
 import { createContext, useContext } from 'react';
 
+export type FamilyMember = {
+  id?: string;
+  userId?: string;
+  role?: string;
+};
+
+export type FamilyChild = {
+  id?: string;
+  name?: string;
+  birthday?: string | Date | null;
+  isUnborn?: boolean | null;
+};
+
 export type Family = {
   id: string;
   name: string;
   modules?: Record<string, boolean> | null;
-  members?: any[];
-  children?: any[];
+  members?: FamilyMember[];
+  children?: FamilyChild[];
   _count?: {
     members?: number;
     children?: number;

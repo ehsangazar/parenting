@@ -14,6 +14,7 @@ import {
   reorderLessonsSchema,
 } from "./admin.schema.js";
 import * as svc from "./admin.service.js";
+import { dispatchEventReminders } from "../../shared/reminders/index.js";
 
 const bearerSecurity = [{ bearerAuth: [] }];
 
@@ -636,6 +637,23 @@ export default async function adminRoutes(app: FastifyInstance) {
       const { lessonIds } = reorderLessonsSchema.parse(req.body);
       await svc.reorderLessons(lessonIds);
       return reply.send({ success: true });
+    },
+  );
+
+  app.post(
+    "/reminders/run",
+    {
+      schema: {
+        tags: ["Admin"],
+        summary: "Manually trigger calendar event reminders for tomorrow",
+        security: bearerSecurity,
+      },
+      preHandler: [app.authenticate],
+    },
+    async (req, reply) => {
+      if (!requireAdmin(req, reply)) return;
+      const result = await dispatchEventReminders(app.log);
+      return reply.send(result);
     },
   );
 }

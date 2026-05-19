@@ -67,6 +67,20 @@ export function createLearningApi(api: AxiosInstance) {
       (await api.get(`/api/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`)).data,
     completeLesson: async (courseId: string, moduleId: string, lessonId: string) =>
       (await api.post(`/api/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}/complete`)).data,
+    getResumeTarget: async () => (await api.get('/api/resume')).data as {
+      target: {
+        courseId: string;
+        courseTitle: string | null;
+        moduleId: string;
+        moduleTitle: string | null;
+        lessonId: string;
+        lessonTitle: string | null;
+        lessonOrder: number;
+        totalLessonsInModule: number;
+        completedLessonsInModule: number;
+        isFreshStart: boolean;
+      } | null;
+    },
   };
 }
 
@@ -170,13 +184,32 @@ export function createGamificationApi(api: AxiosInstance) {
   };
 }
 
+export type NotificationPrefs = {
+  channels: { push: boolean; email: boolean };
+  topics: {
+    dailyTip: boolean;
+    weeklyRecap: boolean;
+    courseReminders: boolean;
+    calendarReminders: boolean;
+    marketing: boolean;
+  };
+  quietHours: { enabled: boolean; start: string; end: string };
+};
+
 export function createProfileApi(api: AxiosInstance) {
   return {
-    update: async (data: { name?: string; avatarUrl?: string; locale?: string }) =>
-      (await api.put('/api/identity/me', data)).data,
+    update: async (data: {
+      name?: string;
+      avatarUrl?: string;
+      locale?: string;
+      notificationPrefs?: NotificationPrefs;
+      timeZone?: string;
+    }) => (await api.put('/api/identity/me', data)).data,
     getAvatarUploadUrl: async (contentType: string, contentLength: number) =>
       (await api.get('/api/identity/me/avatar-upload-url', { params: { contentType, contentLength } })).data,
     deleteAccount: async () => (await api.delete('/api/identity/me')).data,
+    changePassword: async (data: { currentPassword: string; newPassword: string }) =>
+      (await api.put('/api/identity/me/password', data)).data,
   };
 }
 
@@ -207,6 +240,33 @@ export function createVillageApi(api: AxiosInstance) {
     addReaction: async (postId: string, reactionType?: string) =>
       (await api.post(`/api/village/posts/${postId}/reactions`, { reactionType })).data,
     listCategories: async () => (await api.get('/api/village/categories')).data,
+  };
+}
+
+export interface PushSubscriptionPayload {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}
+
+export interface SendTestPushResult {
+  sent: number;
+  removed: number;
+  skipped: string | null;
+}
+
+export function createNotificationsApi(api: AxiosInstance) {
+  return {
+    getConfig: async () =>
+      (await api.get('/api/notifications/push/config')).data as { enabled: boolean; publicKey: string },
+    subscribe: async (data: {
+      subscription: PushSubscriptionPayload;
+      userAgent?: string;
+      timeZone?: string;
+    }) => (await api.post('/api/notifications/push/subscribe', data)).data,
+    unsubscribe: async (endpoint: string) =>
+      (await api.post('/api/notifications/push/unsubscribe', { endpoint })).data,
+    sendTest: async (data?: { title?: string; body?: string }) =>
+      (await api.post('/api/notifications/push/test', data ?? {})).data as SendTestPushResult,
   };
 }
 

@@ -1,5 +1,10 @@
 import type { FastifyReply } from "fastify";
-import { awardCoins, spendCoins, ensureGamificationProfile } from "../../shared/gamification/index.js";
+import {
+  awardCoins,
+  awardInsight,
+  spendCoins,
+  ensureGamificationProfile,
+} from "../../shared/gamification/index.js";
 import { getSignedViewUrl } from "../../shared/storage/index.js";
 import { POINTS } from "../../config/points.js";
 import * as repo from "./learning.repository.js";
@@ -250,14 +255,18 @@ export async function completeLesson(
   const progress = await repo.upsertLessonProgress(userId, lessonId, POINTS.COINS_COMPLETE_LESSON);
 
   try {
-    await awardCoins(userId, POINTS.COINS_COMPLETE_LESSON);
+    await Promise.all([
+      awardCoins(userId, POINTS.COINS_COMPLETE_LESSON),
+      awardInsight(userId, POINTS.INSIGHT_COMPLETE_LESSON, "lesson_complete"),
+    ]);
   } catch (e) {
-    console.error("Failed to award coins for lesson completion", e);
+    console.error("Failed to award coins/insight for lesson completion", e);
   }
 
   return {
     progress,
     coinsAwarded: POINTS.COINS_COMPLETE_LESSON,
+    insightAwarded: POINTS.INSIGHT_COMPLETE_LESSON,
     newlyUnlockedAchievements: [],
     completedQuestLabels: [],
   };
@@ -267,6 +276,74 @@ export async function completeLesson(
 
 export async function unlockModule(userId: string): Promise<void> {
   await spendCoins(userId, POINTS.COST_UNLOCK_MODULE);
+}
+
+// ── Resume (continue where you left off) ──────────────────────────────────────
+
+type ResumeTarget = {
+  courseId: string;
+  courseTitle: string | null;
+  moduleId: string;
+  moduleTitle: string | null;
+  lessonId: string;
+  lessonTitle: string | null;
+  lessonOrder: number;
+  totalLessonsInModule: number;
+  completedLessonsInModule: number;
+  isFreshStart: boolean;
+};
+
+export async function getResumeTarget(userId: string): Promise<ResumeTarget | null> {
+  const recent = await repo.findMostRecentProgress(userId);
+
+  if (recent) {
+    const moduleId = recent.lesson.moduleId;
+    const totalInModule = await repo.countLessonsInModule(moduleId);
+    const completedInModule = await repo.countCompletedLessonsInModule(userId, moduleId);
+
+    const next = await repo.findFirstIncompleteLessonInModule(userId, moduleId);
+    // If everything in this module is done, surface the lesson they most
+    // recently completed as the resume target so users can re-enter the
+    // module from a familiar spot.
+    const lesson = next ?? recent.lesson;
+
+    return {
+      courseId: recent.lesson.module.phase.course.id,
+      courseTitle: recent.lesson.module.phase.course.title ?? null,
+      moduleId,
+      moduleTitle: recent.lesson.module.title ?? null,
+      lessonId: lesson.id,
+      lessonTitle: lesson.title ?? null,
+      lessonOrder: lesson.order ?? 0,
+      totalLessonsInModule: totalInModule,
+      completedLessonsInModule: completedInModule,
+      isFreshStart: !next,
+    };
+  }
+
+  // No progress yet: surface the first lesson of the first course so the card
+  // doubles as a "start your first lesson" affordance.
+  const courses = await repo.findAllCourses("en", false);
+  const firstCourse = courses[0];
+  if (!firstCourse) return null;
+
+  const firstLesson = await repo.findFirstLessonOfFirstModule(firstCourse.id);
+  if (!firstLesson) return null;
+
+  const totalInModule = await repo.countLessonsInModule(firstLesson.module.id);
+
+  return {
+    courseId: firstCourse.id,
+    courseTitle: firstCourse.title ?? null,
+    moduleId: firstLesson.module.id,
+    moduleTitle: firstLesson.module.title ?? null,
+    lessonId: firstLesson.lesson.id,
+    lessonTitle: firstLesson.lesson.title ?? null,
+    lessonOrder: firstLesson.lesson.order ?? 0,
+    totalLessonsInModule: totalInModule,
+    completedLessonsInModule: 0,
+    isFreshStart: true,
+  };
 }
 
 // ── Playbook services ─────────────────────────────────────────────────────────
@@ -328,21 +405,34 @@ export async function tryPlaybookWithGroup(
   await repo.upsertPlaybookProgress(userId, playbookId);
 
   let coinsAwarded = 0;
+  let insightAwarded = 0;
   let groupBonusAwarded = false;
 
   await ensureGamificationProfile(userId);
 
   if (isFirstTry) {
-    await awardCoins(userId, COINS_PLAYBOOK_FIRST_TRY);
+    await Promise.all([
+      awardCoins(userId, COINS_PLAYBOOK_FIRST_TRY),
+      awardInsight(userId, POINTS.INSIGHT_PLAYBOOK_FIRST_TRY, "playbook_first_try"),
+    ]);
     coinsAwarded += COINS_PLAYBOOK_FIRST_TRY;
+    insightAwarded += POINTS.INSIGHT_PLAYBOOK_FIRST_TRY;
 
     const groupPlaybooks = await repo.findPlaybooksInGroup(leapNumber, groupNumber);
     const groupIds = groupPlaybooks.map((p) => p.id);
     const triedCount = await repo.countTriedInGroup(userId, groupIds);
 
     if (triedCount === groupIds.length) {
-      await awardCoins(userId, COINS_PLAYBOOK_GROUP_COMPLETE);
+      await Promise.all([
+        awardCoins(userId, COINS_PLAYBOOK_GROUP_COMPLETE),
+        awardInsight(
+          userId,
+          POINTS.INSIGHT_PLAYBOOK_GROUP_COMPLETE,
+          "playbook_group_complete",
+        ),
+      ]);
       coinsAwarded += COINS_PLAYBOOK_GROUP_COMPLETE;
+      insightAwarded += POINTS.INSIGHT_PLAYBOOK_GROUP_COMPLETE;
       groupBonusAwarded = true;
     }
   }
@@ -353,6 +443,7 @@ export async function tryPlaybookWithGroup(
     triedCount: progress?.triedCount ?? 1,
     isFirstTry,
     coinsAwarded,
+    insightAwarded,
     groupBonusAwarded,
   };
 }

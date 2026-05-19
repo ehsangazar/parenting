@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { usePostHog } from '@posthog/react';
 import { api } from '../lib/api.js';
 import { toast } from 'sonner';
 import { LogoBrand } from '../components/ui/LogoBrand';
@@ -85,6 +86,7 @@ function getFirstIncompleteStep(responses: SurveyResponses): number {
 
 export const SurveyPage = () => {
   const navigate = useNavigate();
+  const posthog = usePostHog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [responses, setResponses] = useState<SurveyResponses>(loadResponsesFromStorage);
   const [step, setStep] = useState(() => {
@@ -147,11 +149,12 @@ export const SurveyPage = () => {
 
       // Submit survey with text responses + audio URLs
       await api.post('/api/surveys', { ...responses, ...audioUrls });
-      
+
+      posthog.capture('survey_completed', { steps_count: PARTS.length });
       localStorage.removeItem(STORAGE_KEY);
       audioRecordings.clear();
-      
-      
+
+
       useNotificationStore.getState().addNotification({
         type: 'success',
         title: 'Feedback Received',

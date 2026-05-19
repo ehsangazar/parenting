@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { useAuth } from '../../state/auth.js';
 import { Icon, type IconName } from '../icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
+import { BalancePills } from '../app/BalancePills.js';
 
 type Feature = {
   to: string;
@@ -65,10 +66,11 @@ export const FeaturesPanel = ({ onClose }: { onClose?: () => void }) => {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="flex items-center justify-between border-b border-border px-4 py-4">
+      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-4">
         <span className="text-[14px] font-extrabold uppercase tracking-wider text-text-primary">
           {t('chatShell.tools', 'Tools')}
         </span>
+        <BalancePills />
         {onClose && (
           <button
             type="button"

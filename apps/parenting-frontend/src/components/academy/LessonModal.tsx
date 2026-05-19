@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import ReactMarkdown from 'react-markdown';
 import { Icon } from '../icons/index.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
@@ -159,32 +159,32 @@ export const LessonModal = ({
                   <ReactMarkdown
                     components={{
                       p: ({ children }) => (
-                        <p className="my-3 text-[15px] leading-relaxed text-text-primary first:mt-0 last:mb-0 sm:text-[16px]">
+                        <p className="my-4 text-[17px] leading-relaxed text-text-primary first:mt-0 last:mb-0 sm:text-[18px] sm:leading-[1.7]">
                           {children}
                         </p>
                       ),
                       h1: ({ children }) => (
-                        <h3 className="mb-3 mt-4 text-[20px] font-extrabold leading-tight text-text-primary first:mt-0">
+                        <h3 className="mb-3 mt-5 text-[24px] font-extrabold leading-tight text-text-primary first:mt-0 sm:text-[26px]">
                           {children}
                         </h3>
                       ),
                       h2: ({ children }) => (
-                        <h3 className="mb-3 mt-4 text-[18px] font-extrabold leading-tight text-text-primary first:mt-0">
+                        <h3 className="mb-3 mt-5 text-[22px] font-extrabold leading-tight text-text-primary first:mt-0 sm:text-[24px]">
                           {children}
                         </h3>
                       ),
                       h3: ({ children }) => (
-                        <h4 className="mb-2 mt-3 text-[16px] font-extrabold leading-tight text-text-primary first:mt-0">
+                        <h4 className="mb-2 mt-4 text-[19px] font-extrabold leading-tight text-text-primary first:mt-0 sm:text-[20px]">
                           {children}
                         </h4>
                       ),
                       ul: ({ children }) => (
-                        <ul className="my-3 list-disc space-y-1 pl-5 text-[15px] leading-relaxed text-text-primary sm:text-[16px]">
+                        <ul className="my-4 list-disc space-y-2 pl-6 text-[17px] leading-relaxed text-text-primary sm:text-[18px] sm:leading-[1.7]">
                           {children}
                         </ul>
                       ),
                       ol: ({ children }) => (
-                        <ol className="my-3 list-decimal space-y-1 pl-5 text-[15px] leading-relaxed text-text-primary sm:text-[16px]">
+                        <ol className="my-4 list-decimal space-y-2 pl-6 text-[17px] leading-relaxed text-text-primary sm:text-[18px] sm:leading-[1.7]">
                           {children}
                         </ol>
                       ),
@@ -193,20 +193,20 @@ export const LessonModal = ({
                       ),
                       em: ({ children }) => <em className="italic">{children}</em>,
                       blockquote: ({ children }) => (
-                        <blockquote className="my-3 border-l-4 border-brand-blue/40 bg-brand-blue/5 px-3 py-2 text-[14px] italic leading-relaxed text-text-secondary sm:text-[15px]">
+                        <blockquote className="my-4 border-l-4 border-brand-blue/40 bg-brand-blue/5 px-4 py-3 text-[16px] italic leading-relaxed text-text-secondary sm:text-[17px]">
                           {children}
                         </blockquote>
                       ),
                       img: ({ src, alt }) =>
                         src ? (
-                          <figure className="my-3 first:mt-0 last:mb-0">
+                          <figure className="my-4 first:mt-0 last:mb-0">
                             <img
                               src={src}
                               alt={alt || ''}
                               className="block aspect-video w-full rounded-2xl object-cover"
                             />
                             {alt && (
-                              <figcaption className="mt-2 text-center text-[12px] italic leading-snug text-text-secondary">
+                              <figcaption className="mt-2 text-center text-[13px] italic leading-snug text-text-secondary sm:text-[14px]">
                                 {alt}
                               </figcaption>
                             )}
@@ -223,14 +223,14 @@ export const LessonModal = ({
                                     .join('')
                                 : '';
                           return (
-                            <figure className="my-3 first:mt-0 last:mb-0">
+                            <figure className="my-4 first:mt-0 last:mb-0">
                               <img
                                 src={href}
                                 alt={caption}
                                 className="block aspect-video w-full rounded-2xl object-cover"
                               />
                               {caption && (
-                                <figcaption className="mt-2 text-center text-[12px] italic leading-snug text-text-secondary">
+                                <figcaption className="mt-2 text-center text-[13px] italic leading-snug text-text-secondary sm:text-[14px]">
                                   {caption}
                                 </figcaption>
                               )}

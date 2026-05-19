@@ -1,6 +1,6 @@
 import { spendCoins } from "../../shared/gamification/index.js";
 import { getSignedViewUrl } from "../../shared/storage/index.js";
-import { POINTS } from "../../config/points.js";
+import { POINTS, insightLevelFor } from "../../config/points.js";
 import * as repo from "./gamification.repository.js";
 import type {
   LeaderboardScope,
@@ -19,10 +19,20 @@ export async function getGamificationProfile(userId: string) {
     repo.findUserStreak(userId),
   ]);
 
+  const totalInsight = points?.totalXp ?? 0;
+  const level = insightLevelFor(totalInsight);
+
   return {
     coins: {
       balance: points?.gemsBalance ?? 0,
       earned: points?.gemsEarned ?? 0,
+    },
+    insight: {
+      total: totalInsight,
+      level: level.level,
+      currentLevelStart: level.currentLevelStart,
+      nextLevelAt: level.nextLevelAt,
+      progress: level.progress,
     },
     streak: {
       current: streak?.currentStreak ?? 0,

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { useAuth } from '../../state/auth.js';
 import { familiesApi } from '../../lib/appApi.js';
 import { AppContext, type Family } from '../app/AppContext.js';
@@ -10,6 +10,7 @@ import { uiIcons } from '../../lib/iconSemantics.js';
 import { HistorySidebar } from './HistorySidebar.js';
 import { FeaturesPanel } from './FeaturesPanel.js';
 import { ChatShellContext, type ChatShellContextValue } from './ChatShellContext.js';
+import { BalancePills } from '../app/BalancePills.js';
 
 const STORAGE_KEY = 'active_family_id';
 
@@ -116,14 +117,17 @@ export const ChatShell = () => {
               >
                 <Icon name={uiIcons.menu} className="h-5 w-5 object-contain" alt="" />
               </button>
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                aria-label={t('chatShell.backToChat', 'Back to chat')}
-                className="flex min-h-[40px] items-center rounded-lg px-3 text-[15px] font-extrabold tracking-tight text-text-primary hover:bg-surface-light"
-              >
-                {t('common.appName', 'Raised')}
-              </button>
+              <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  aria-label={t('chatShell.backToChat', 'Back to chat')}
+                  className="flex min-h-[40px] items-center rounded-lg px-2 text-[15px] font-extrabold tracking-tight text-text-primary hover:bg-surface-light"
+                >
+                  {t('common.appName', 'Raised')}
+                </button>
+                <BalancePills />
+              </div>
               <button
                 type="button"
                 onClick={() => setFeaturesOpen(true)}

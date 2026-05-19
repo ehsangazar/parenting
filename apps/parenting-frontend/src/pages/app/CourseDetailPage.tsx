@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
+import { usePostHog } from '@posthog/react';
 import { useAuth } from '../../state/auth.js';
 import { learningApi } from '../../lib/appApi.js';
 import { PageContainer } from '../../components/app/PageContainer.js';
+import { PageHeader } from '../../components/app/PageHeader.js';
 import { Icon } from '../../components/icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
@@ -14,6 +16,7 @@ import {
   type LessonCard,
 } from '../../components/academy/LessonModal.js';
 import { ModuleLessonsModal } from '../../components/academy/ModuleLessonsModal.js';
+import { notifyGamificationChange } from '../../components/app/BalancePills.js';
 
 type ModuleSummary = {
   id: string;
@@ -85,11 +88,17 @@ const NODE_OFFSETS = [0, 56, 28, -28, -56, -28, 28];
 
 export const CourseDetailPage = () => {
   const { t } = useTranslation();
+  const posthog = usePostHog();
   const { token } = useAuth();
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const resumeLessonId = searchParams.get('resumeLesson');
+  const resumedOnceRef = useRef(false);
 
   const [phases, setPhases] = useState<Phase[]>([]);
+  const [courseTitle, setCourseTitle] = useState<string | null>(null);
+  const [courseDescription, setCourseDescription] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -127,13 +136,25 @@ export const CourseDetailPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await learningApi.getCourseModules(courseId);
-      const list = Array.isArray(data)
-        ? (data as Phase[])
-        : Array.isArray((data as { phases?: Phase[] })?.phases)
-          ? ((data as { phases: Phase[] }).phases)
+      const [phasesData, coursesData] = await Promise.all([
+        learningApi.getCourseModules(courseId),
+        learningApi.getCourses(),
+      ]);
+      const list = Array.isArray(phasesData)
+        ? (phasesData as Phase[])
+        : Array.isArray((phasesData as { phases?: Phase[] })?.phases)
+          ? ((phasesData as { phases: Phase[] }).phases)
           : [];
       setPhases(list);
+
+      const courses = Array.isArray(coursesData)
+        ? (coursesData as Array<{ id: string; title?: string | null; description?: string | null }>)
+        : Array.isArray((coursesData as { courses?: unknown })?.courses)
+          ? ((coursesData as { courses: Array<{ id: string; title?: string | null; description?: string | null }> }).courses)
+          : [];
+      const match = courses.find((c) => c.id === courseId) ?? null;
+      setCourseTitle(match?.title ?? null);
+      setCourseDescription(match?.description ?? null);
     } catch (err) {
       setError(
         err instanceof Error
@@ -199,7 +220,12 @@ export const CourseDetailPage = () => {
   const openLesson = useCallback((lesson: Lesson) => {
     setActiveLesson(lesson);
     setCardIndex(0);
-  }, []);
+    posthog.capture('lesson_started', {
+      lesson_id: lesson.id,
+      lesson_title: lesson.title,
+      course_id: courseId,
+    });
+  }, [posthog, courseId]);
 
   const handleSelectLessonId = useCallback(
     (lessonId: string) => {
@@ -208,6 +234,49 @@ export const CourseDetailPage = () => {
     },
     [lessons, openLesson],
   );
+
+  // Resume deep-link: when ?resumeLesson=<id> is present, fetch lessons for
+  // every module on this course until we find the one that contains the
+  // target lesson, then open it. We only run this once per mount so closing
+  // the lesson doesn't reopen it.
+  useEffect(() => {
+    if (!resumeLessonId || !courseId || resumedOnceRef.current) return;
+    if (phases.length === 0) return;
+
+    resumedOnceRef.current = true;
+    (async () => {
+      for (const phase of phases) {
+        for (const mod of phase.modules ?? []) {
+          try {
+            const data = await learningApi.getLessons(courseId, mod.id);
+            const list = Array.isArray(data)
+              ? (data as Lesson[])
+              : Array.isArray((data as { lessons?: Lesson[] })?.lessons)
+                ? ((data as { lessons: Lesson[] }).lessons)
+                : [];
+            const found = list.find((l) => l.id === resumeLessonId);
+            if (found) {
+              setActiveModule(mod);
+              setLessons(list);
+              setActiveLesson(found);
+              setCardIndex(0);
+              setSearchParams(
+                (prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.delete('resumeLesson');
+                  return next;
+                },
+                { replace: true },
+              );
+              return;
+            }
+          } catch {
+            // Module fetch failed; continue searching others.
+          }
+        }
+      }
+    })();
+  }, [resumeLessonId, courseId, phases, setSearchParams]);
 
   const handleComplete = useCallback(async () => {
     if (!courseId || !activeModule || !activeLesson) return;
@@ -219,11 +288,23 @@ export const CourseDetailPage = () => {
         activeLesson.id,
       );
       const coins = (result as { coinsAwarded?: number })?.coinsAwarded ?? 0;
+      const insight = (result as { insightAwarded?: number })?.insightAwarded ?? 0;
+      posthog.capture('lesson_completed', {
+        lesson_id: activeLesson.id,
+        lesson_title: activeLesson.title,
+        course_id: courseId,
+        module_id: activeModule.id,
+        coins_awarded: coins,
+        insight_awarded: insight,
+      });
       toast.success(
-        coins > 0
-          ? t('academy.lesson.completedWithCoins', 'Lesson complete! +{{coins}} coins', { coins })
-          : t('academy.lesson.completed', 'Lesson complete!'),
+        insight > 0
+          ? t('academy.lesson.completedWithInsight', 'Lesson complete! +{{insight}} Insight, +{{coins}} coins', { insight, coins })
+          : coins > 0
+            ? t('academy.lesson.completedWithCoins', 'Lesson complete! +{{coins}} coins', { coins })
+            : t('academy.lesson.completed', 'Lesson complete!'),
       );
+      notifyGamificationChange();
       const completedAt = new Date().toISOString();
       setLessons((prev) =>
         prev.map((l) =>
@@ -275,7 +356,7 @@ export const CourseDetailPage = () => {
 
   return (
     <PageContainer>
-      <header className="mb-4">
+      <div className="mb-2">
         <Link
           to="/academy"
           className="inline-flex items-center gap-1 text-[13px] font-semibold text-text-secondary hover:text-text-primary"
@@ -287,7 +368,13 @@ export const CourseDetailPage = () => {
           />
           {t('academy.backToCourses', 'Back to courses')}
         </Link>
-      </header>
+      </div>
+
+      <PageHeader
+        title={courseTitle ?? t('academy.untitledCourse', 'Untitled course')}
+        subtitle={courseDescription ?? undefined}
+        iconName={appAssetIcons.academy}
+      />
 
       {loading && (
         <p className="rounded-2xl bg-surface-light px-4 py-3 text-[13px] text-text-secondary">

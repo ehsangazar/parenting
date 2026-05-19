@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import type { HTMLAttributes, ReactNode } from 'react';
 
 export type DuoCardVariant = 'default' | 'skill' | 'promo' | 'stat';

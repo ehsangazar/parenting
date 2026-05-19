@@ -79,6 +79,8 @@
     "welcomeBack": "Welcome back",
     "titleSignIn": "Welcome Back!",
     "titleSignUp": "Create account",
+    "guestReturnTitle": "Save this conversation",
+    "guestReturnSubtitle": "Your question and answer are waiting. Sign in to keep them and ask follow-ups.",
     "createAccount": "Create your account",
     "email": "Email address",
     "emailFieldLabel": "Email",
@@ -114,7 +116,94 @@
     "toastWelcomeBack": "Welcome back, {{name}}!",
     "toastAccountCreated": "Account created! Please sign in to get started.",
     "toastAccountCreatedDescription": "Welcome to the family!",
-    "resetPasswordContactSupport": "Reset link — contact support for now."
+    "resetPasswordContactSupport": "Reset link, contact support for now."
+  },
+  "onboardingChat": {
+    "intro": "Hi! I'm Raised. Four quick questions so I can give advice that fits your family. Skip anything, no wrong answers.",
+    "askName": "What should I call you?",
+    "namePlaceholder": "Your name",
+    "askRole": "Nice to meet you, {{name}}. Which best fits you?",
+    "askKids": "Tell me about your kids. Add as many as you like.",
+    "kidNamePlaceholder": "Child's name",
+    "kidAgeLabel": "Child's age",
+    "addKid": "+ Add",
+    "remove": "Remove",
+    "removeKid": "Remove child",
+    "askConcerns": "What's on your mind this week? Pick anything that feels true.",
+    "askPartner": "Want to bring your co-parent in? They can see family insights too.",
+    "partnerPlaceholder": "Partner's email (optional)",
+    "invite": "Invite",
+    "inviteSummary": "Invite to {{email}}",
+    "skip": "Skip",
+    "skipped": "Skipped",
+    "closing": "Got it, {{name}}. Here's something for you and {{firstKid}}:",
+    "closingNoKids": "Got it, {{name}}. Here are a few places to start:",
+    "thereFallback": "there",
+    "saving": "Saving...",
+    "startChat": "Or just take me to the chat",
+    "preferForm": "Prefer a form? Fill it out instead.",
+    "defaultFamilyName": "My family",
+    "toastError": "Could not save. You can finish setup in Settings.",
+    "partnerInviteFailed": "We saved everything else, but couldn't send the partner invite. Try again from Settings.",
+    "roles": {
+      "mom": "Mom",
+      "dad": "Dad",
+      "stepParent": "Step-parent",
+      "grandparent": "Grandparent",
+      "caregiver": "Caregiver",
+      "other": "Other"
+    },
+    "age": {
+      "expecting": "Expecting",
+      "under1": "Under 1",
+      "years_one": "{{count}} year",
+      "years_other": "{{count}} years"
+    },
+    "concerns": {
+      "sleep": "Sleep",
+      "tantrums": "Tantrums",
+      "screens": "Screens",
+      "milestones": "Milestones",
+      "school": "School",
+      "stress": "My stress"
+    },
+    "suggestions": {
+      "generic": {
+        "tantrum": "How do I respond to a public tantrum?",
+        "screens": "Evidence-based screen time guidance for young kids",
+        "stress": "How to stay calm when my kid is melting down"
+      },
+      "expecting": {
+        "prep": "What should we set up before baby arrives?",
+        "sleep": "Realistic newborn sleep expectations",
+        "partner": "How to share the newborn load with a partner"
+      },
+      "baby": {
+        "sleep": "Sleep tips for {{name}} (under 1)",
+        "soothing": "Soothing techniques that actually work",
+        "milestones": "Milestones to look for by 12 months"
+      },
+      "toddler": {
+        "tantrum": "Tantrum cooldown script for {{name}}",
+        "bedtime": "Bedtime routine for a toddler",
+        "speech": "Encouraging speech without pressure"
+      },
+      "preschool": {
+        "sharing": "Helping {{name}} share with siblings",
+        "school": "Getting {{name}} ready for school",
+        "snacks": "Healthy snack ideas kids actually eat"
+      },
+      "school": {
+        "screens": "A screen-time approach for school-age kids",
+        "homework": "Homework battles, what helps",
+        "feelings": "Talking to {{name}} about big feelings"
+      },
+      "teen": {
+        "connect": "Staying connected with a teenager who pulls away",
+        "phones": "Phones, social media, and ground rules",
+        "anxiety": "When normal teen mood becomes anxiety"
+      }
+    }
   },
   "onboarding": {
     "title": "Let's get started",
@@ -1317,7 +1406,63 @@
     "editChild": "Edit",
     "signOutConfirmTitle": "Sign out?",
     "signOutConfirmBody": "You can sign back in any time with the same email and password.",
-    "signOutConfirm": "Sign out"
+    "signOutConfirm": "Sign out",
+    "notifications": {
+      "title": "Notifications",
+      "saving": "Saving",
+      "pushLabel": "Push notifications",
+      "pushDesc": "Get tips and reminders on this device.",
+      "pushBlocked": "Push notifications are blocked. Enable them in your browser settings, then try again.",
+      "pushBlockedHint": "Blocked in browser settings. Allow notifications for this site, then toggle on.",
+      "pushUnsupported": "This browser does not support push notifications.",
+      "pushUnsupportedHint": "Not available in this browser. Install Raised to your home screen on iOS for push support.",
+      "emailLabel": "Email",
+      "emailDesc": "Sent to {{email}}.",
+      "whatToSend": "What to send",
+      "dailyTipLabel": "Daily parenting tip",
+      "dailyTipDesc": "One short, age-appropriate idea each day.",
+      "weeklyRecapLabel": "Weekly recap",
+      "weeklyRecapDesc": "Sunday summary of your family's progress.",
+      "courseRemindersLabel": "Course reminders",
+      "courseRemindersDesc": "Nudges to continue lessons you've started.",
+      "calendarRemindersLabel": "Calendar reminders",
+      "calendarRemindersDesc": "Heads-up before events on your family calendar.",
+      "marketingLabel": "Product news",
+      "marketingDesc": "Occasional updates about new features.",
+      "quietHoursLabel": "Quiet hours",
+      "quietHoursDesc": "Hold all notifications during this window.",
+      "quietStart": "From",
+      "quietEnd": "Until",
+      "pushNotConfigured": "Push isn't configured on this server yet.",
+      "pushEnabled": "Push notifications are on.",
+      "testHint": "Send yourself a test push to confirm delivery on this device.",
+      "sendTest": "Send test push",
+      "testSent": "Test sent to {{count}} device(s).",
+      "testNotDelivered": "Push provider accepted, but no devices received it. Check this device's notification permission."
+    },
+    "security": {
+      "title": "Security",
+      "changePasswordTitle": "Change password",
+      "changePasswordDesc": "Use a strong password you don't reuse elsewhere.",
+      "currentPasswordLabel": "Current password",
+      "currentPasswordPlaceholder": "Your current password",
+      "newPasswordLabel": "New password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "newPasswordHint": "At least 8 characters.",
+      "confirmNewPasswordLabel": "Confirm new password",
+      "confirmNewPasswordPlaceholder": "Type the new password again",
+      "show": "Show",
+      "hide": "Hide",
+      "submit": "Update password",
+      "submitting": "Updating…",
+      "success": "Password updated.",
+      "wrongCurrent": "That current password is incorrect.",
+      "tooShort": "New password must be at least 8 characters.",
+      "mismatch": "New passwords don't match.",
+      "sameAsOld": "New password must be different from your current one.",
+      "googleOnlyTitle": "Signed in with Google",
+      "googleOnlyDesc": "Your account uses Google sign-in, so there's no password to change here. Manage it in your Google account."
+    }
   },
   "resourcesPage": {
     "allResources": "All Resources",

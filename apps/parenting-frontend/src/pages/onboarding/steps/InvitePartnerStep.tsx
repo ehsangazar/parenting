@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Icon } from '../../../components/icons/index.js';
 import { uiIcons } from '../../../lib/iconSemantics.js';
 import { DuoButton } from '../../../components/ui/DuoButton.js';

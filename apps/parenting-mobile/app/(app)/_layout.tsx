@@ -1,7 +1,6 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { View, Text } from 'react-native';
 import { useAuth } from '@/lib/store';
-import { Redirect } from 'expo-router';
 
 function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
   return (

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import * as Sentry from '@sentry/react';
 import {
   createApiClient,
@@ -12,6 +11,7 @@ import {
   createProfileApi,
   createLeaderboardApi,
   createVillageApi,
+  createNotificationsApi,
 } from '@parenting/shared/api';
 import { useAuth } from '../state/auth.js';
 import i18n from '../i18n.js';
@@ -49,3 +49,4 @@ export const gamificationApi = createGamificationApi(api);
 export const profileApi = createProfileApi(api);
 export const leaderboardApi = createLeaderboardApi(api);
 export const villageApi = createVillageApi(api);
+export const notificationsApi = createNotificationsApi(api);

@@ -20,7 +20,7 @@ export const articleApi = {
 
   // Protected routes
   getRecommendedArticles: async () => {
-    const response = await api.get<{ articles: Article[]; children: any[] }>('/api/articles/recommendations');
+    const response = await api.get<{ articles: Article[]; children: unknown[] }>('/api/articles/recommendations');
     return response.data;
   },
 

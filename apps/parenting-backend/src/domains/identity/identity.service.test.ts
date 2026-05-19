@@ -180,7 +180,7 @@ describe("getMe", () => {
   });
 
   it("returns user with profile when found", async () => {
-    vi.mocked(repo.findUserById).mockResolvedValue(mockUser);
+    vi.mocked(repo.findUserWithHashById).mockResolvedValue({ ...mockUser, passwordHash: null });
     vi.mocked(storage.extractS3Key).mockReturnValue(null);
     const result = await getMe("user-1");
     expect(result).toMatchObject({ id: "user-1", email: "user@example.com" });

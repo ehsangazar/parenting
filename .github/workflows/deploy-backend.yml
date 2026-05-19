@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'apps/parenting-backend/**'
+      - 'packages/shared/**'
       - 'pnpm-lock.yaml'
   workflow_dispatch:
 

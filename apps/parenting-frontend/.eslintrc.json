@@ -50,6 +50,12 @@
       "rules": {
         "import/no-unresolved": "off"
       }
+    },
+    {
+      "files": ["src/sw.ts"],
+      "rules": {
+        "import/no-unresolved": "off"
+      }
     }
   ]
 }

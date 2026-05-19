@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 type LevelInfo = { level: number; name: string; currentXp: number; nextLevelXp: number | null; progress: number };
 
 type LevelBadgeProps = {

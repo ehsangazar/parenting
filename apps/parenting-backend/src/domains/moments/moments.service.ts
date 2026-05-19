@@ -1,5 +1,5 @@
 import { recordAudit } from "../../shared/audit/index.js";
-import { awardCoins } from "../../shared/gamification/index.js";
+import { awardCoins, awardInsight } from "../../shared/gamification/index.js";
 import { POINTS } from "../../config/points.js";
 import { createUploadUrl, getSignedViewUrl } from "../../shared/storage/index.js";
 import * as repo from "./moments.repository.js";
@@ -80,7 +80,10 @@ export async function createMoment(
   });
 
   try {
-    await awardCoins(userId, POINTS.COINS_CAPTURE_MOMENT);
+    await Promise.all([
+      awardCoins(userId, POINTS.COINS_CAPTURE_MOMENT),
+      awardInsight(userId, POINTS.INSIGHT_CAPTURE_MOMENT, "capture_moment"),
+    ]);
   } catch {
     // non-fatal: gamification failure should not block the response
   }

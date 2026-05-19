@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react';
 import { toast } from 'sonner';
+import { usePostHog } from '@posthog/react';
 import { api, parseApiError } from '../lib/api.js';
 import { useAuth } from '../state/auth.js';
 import { useNotificationStore } from '../state/notification.js';
@@ -17,6 +18,7 @@ import {
 
 export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | 'signup' }) => {
   const { t, i18n } = useTranslation();
+  const posthog = usePostHog();
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,6 +28,16 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const next = searchParams.get('next') || '/';
+
+  // Returning from the guest conversion wall: surface a value-pitch headline
+  // and confirm their draft is waiting, instead of a generic "Welcome back".
+  const [isGuestReturn] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !!(
+      localStorage.getItem('guestConversation') ||
+      localStorage.getItem('pendingChatMessage')
+    );
+  });
 
   const isLoading = isSubmitting || isGoogleLoading;
 
@@ -53,6 +65,8 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
         setToken(res.data.token);
         const userRes = await api.get('/api/identity/me');
         setUser(userRes.data.user);
+        posthog.identify(userRes.data.user.id, { email: userRes.data.user.email });
+        posthog.capture('user_logged_in_with_google', { email: userRes.data.user.email });
         navigate(next);
       } catch (err: unknown) {
         const status = (err as { response?: { status?: number } })?.response?.status;
@@ -86,10 +100,10 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
       window.google.accounts.id.renderButton(buttonElement, {
         theme: 'outline',
         size: 'large',
-        width: 400,
+        width: buttonElement.clientWidth || 400,
         text: 'signin_with',
         shape: 'rectangular',
-        logo_alignment: 'left',
+        logo_alignment: 'center',
       });
     };
 
@@ -130,6 +144,8 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
         setToken(res.data.token);
         const userRes = await api.get('/api/identity/me');
         setUser(userRes.data.user);
+        posthog.identify(userRes.data.user.id, { email: userRes.data.user.email });
+        posthog.capture('user_logged_in', { email: userRes.data.user.email });
         navigate(next);
 
         const displayName = formatDisplayName(userRes.data.user?.email?.split('@')[0]);
@@ -142,6 +158,7 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
 
         toast.success(t('auth.toastWelcomeBack', { name: displayName }));
       } else {
+        posthog.capture('user_signed_up', { email });
         toast.success(t('auth.toastAccountCreated'), {
           description: t('auth.toastAccountCreatedDescription'),
         });
@@ -198,9 +215,17 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
               />
             </div>
             <h1 className="font-display text-3xl font-bold text-text-primary sm:text-4xl">
-              {mode === 'login' ? t('auth.titleSignIn') : t('auth.titleSignUp')}
+              {isGuestReturn
+                ? t('auth.guestReturnTitle')
+                : mode === 'login'
+                  ? t('auth.titleSignIn')
+                  : t('auth.titleSignUp')}
             </h1>
-            {mode === 'login' && (
+            {isGuestReturn ? (
+              <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-text-secondary">
+                {t('auth.guestReturnSubtitle')}
+              </p>
+            ) : mode === 'login' ? (
               <ActionLink
                 onClick={() => {
                   setEmail('');
@@ -210,10 +235,29 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
               >
                 {t('auth.useAnotherAccount')}
               </ActionLink>
-            )}
+            ) : null}
           </div>
 
           <div className="mt-10 space-y-5">
+            {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+              <>
+                <div
+                  id="google-signin-button"
+                  className={`flex w-full justify-center ${isGoogleLoading ? 'pointer-events-none opacity-60' : ''}`}
+                  aria-label={t('auth.loginWithGoogle')}
+                />
+
+                <div className="relative py-1">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border-medium" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-background px-4 text-text-tertiary">{t('auth.orEmailPassword', 'or use email & password')}</span>
+                  </div>
+                </div>
+              </>
+            )}
+
             <DuoInput
               label={t('auth.emailFieldLabel')}
               type="email"
@@ -241,28 +285,9 @@ export const LoginPage = ({ initialMode = 'login' }: { initialMode?: 'login' | '
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             />
 
-            <DuoButton variant="blue" fullWidth loading={isSubmitting} disabled={isGoogleLoading} onClick={submit}>
+            <DuoButton variant={import.meta.env.VITE_GOOGLE_CLIENT_ID ? 'outline' : 'blue'} fullWidth loading={isSubmitting} disabled={isGoogleLoading} onClick={submit}>
               {mode === 'login' ? t('home.nav.signIn') : t('auth.titleSignUp')}
             </DuoButton>
-
-            {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
-              <>
-                <div className="relative py-1">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border-medium" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="bg-background px-4 text-text-tertiary">{t('auth.orContinueWith')}</span>
-                  </div>
-                </div>
-
-                <div
-                  id="google-signin-button"
-                  className={`w-full ${isGoogleLoading ? 'pointer-events-none opacity-60' : ''}`}
-                  aria-label={t('auth.loginWithGoogle')}
-                />
-              </>
-            )}
           </div>
 
           <div className="mt-auto pt-8">

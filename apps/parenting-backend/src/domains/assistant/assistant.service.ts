@@ -2,9 +2,16 @@ import { nanoid } from "nanoid";
 import { Prisma } from "@prisma/client";
 // orchestrator.ts lives at src/shared/parenting-ai/orchestrator.ts (to be ported from raised-backend)
 import { orchestrateFlow } from "../../shared/parenting-ai/orchestrator.js";
-import { awardCoins } from "../../shared/gamification/index.js";
+import { getOpenAI } from "../../shared/parenting-ai/openai.js";
+import { awardCoins, awardInsight } from "../../shared/gamification/index.js";
 import { POINTS } from "../../config/points.js";
 import { redactPII, applyBlocklist } from "../../shared/security/index.js";
+import {
+  canSendAiMessage,
+  incrementAiUsage,
+  getAiUsage,
+  buyAiTopup,
+} from "../../shared/aiUsage/index.js";
 import * as repo from "./assistant.repository.js";
 
 const BLOCKLIST = ["password", "ssn"];
@@ -15,6 +22,28 @@ export async function listConversations(
   offset: number,
 ) {
   return repo.findConversations(userId, limit, offset);
+}
+
+export async function getDailyAiUsage(userId: string) {
+  const usage = await getAiUsage(userId);
+  return {
+    used: usage.used,
+    cap: usage.cap,
+    topupRemaining: usage.topupRemaining,
+    remaining: usage.remaining,
+    resetsAt: usage.resetsAt.toISOString(),
+  };
+}
+
+export async function purchaseAiTopup(userId: string) {
+  const usage = await buyAiTopup(userId);
+  return {
+    used: usage.used,
+    cap: usage.cap,
+    topupRemaining: usage.topupRemaining,
+    remaining: usage.remaining,
+    resetsAt: usage.resetsAt.toISOString(),
+  };
 }
 
 export async function createConversation(userId: string) {
@@ -63,6 +92,15 @@ export async function runQuery(
   callbacks: QueryStreamCallbacks,
 ): Promise<{ conversationId: string } | { error: string; status: number }> {
   let conversationId = input.conversationId;
+
+  // Daily AI cap check. We do this before any DB write so failed quota checks
+  // don't create empty conversations or messages.
+  if (userRole !== "admin") {
+    const { allowed } = await canSendAiMessage(userId);
+    if (!allowed) {
+      return { error: "Daily AI message cap reached", status: 429 };
+    }
+  }
 
   if (conversationId) {
     const existing = await repo.findConversationOwner(conversationId);
@@ -147,10 +185,50 @@ export async function runQuery(
     onCard: callbacks.onCard,
   });
 
-  // Award coins for AI chat interaction (fire-and-forget)
-  awardCoins(userId, POINTS.COINS_AI_CHAT).catch(() => {
-    // Non-critical, ignore errors
-  });
+  // Consume one message from the daily cap. We do this after orchestrateFlow
+  // succeeds so failed sends don't burn quota.
+  incrementAiUsage(userId).catch(() => {});
+
+  // Award coins + insight for AI chat interaction (fire-and-forget)
+  awardCoins(userId, POINTS.COINS_AI_CHAT).catch(() => {});
+  awardInsight(userId, POINTS.INSIGHT_AI_CHAT, "ai_chat").catch(() => {});
 
   return { conversationId: conversationId! };
+}
+
+// Single-turn answer for logged-out visitors. No tools, no retrieval, no DB,
+// no memory: just a clean taste of Raised's voice so they can decide to sign
+// up. The route layer enforces a strict IP rate limit on top of this.
+const GUEST_SYSTEM_PROMPT = `You are Raised, a calm, evidence-based parenting assistant.
+
+You are answering a one-off question for a visitor who has not signed up yet. Be warm, specific, and useful. Aim for a clear, actionable answer in 4-8 short sentences or a few bullet points. Use Markdown. Reply in the same language the visitor wrote in. If the question is not about parenting, briefly say what you can help with and offer to assist.
+
+You do NOT have access to the visitor's family, children, calendar, or history. Do not pretend to, do not ask follow-up questions that depend on data you can't see, and do not ask the visitor to sign up; the surrounding UI handles sign-up.`;
+
+export async function runGuestQuery(
+  message: string,
+  locale: string | null,
+  onStream: (chunk: string) => void,
+): Promise<void> {
+  const sanitized = applyBlocklist(redactPII(message), BLOCKLIST).slice(0, 1200);
+  const oai = getOpenAI();
+  const systemPrompt = locale
+    ? `${GUEST_SYSTEM_PROMPT}\n\nRespond in language code "${locale}".`
+    : GUEST_SYSTEM_PROMPT;
+
+  const stream = await oai.chat.completions.create({
+    model: "gpt-4o",
+    stream: true,
+    temperature: 0.6,
+    max_tokens: 600,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: sanitized },
+    ],
+  });
+
+  for await (const event of stream) {
+    const delta = event.choices?.[0]?.delta?.content;
+    if (delta) onStream(delta);
+  }
 }

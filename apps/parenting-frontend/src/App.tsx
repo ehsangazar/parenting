@@ -186,9 +186,35 @@ const LocaleLayout = () => {
 };
 
 export default function App() {
-  const { token, user } = useAuth();
+  const { token, user, setUser, setToken } = useAuth();
   const location = useLocation();
   const { i18n, t } = useTranslation();
+
+  // Hydrate `user` from /me whenever a token exists but the user object
+  // isn't loaded yet. Without this, the chat-shell route at `/` shows a
+  // logged-in token but no user, hiding identity-dependent UI like the
+  // sidebar sign-out row.
+  useEffect(() => {
+    if (!token || user) return;
+    let cancelled = false;
+    api
+      .get('/api/identity/me')
+      .then((res) => {
+        if (cancelled) return;
+        setUser({ ...res.data.user, gamification: res.data.gamification });
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 401 || status === 403) {
+          setToken(null);
+          setUser(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, user, setUser, setToken]);
   const [isInitialLoading, setIsInitialLoading] = useState(() =>
     typeof window !== 'undefined' && !isPublicMarketingPath(window.location.pathname),
   );
@@ -198,7 +224,7 @@ export default function App() {
 
   // Sync i18next with user's stored locale preference after sign-in.
   useEffect(() => {
-    const userLocale = (user as any)?.locale as string | undefined;
+    const userLocale = (user as { locale?: string } | null | undefined)?.locale;
     if (userLocale && userLocale !== 'en' && userLocale !== i18n.language) {
       i18n.changeLanguage(userLocale);
     }

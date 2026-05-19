@@ -21,6 +21,12 @@ export const findUserWithHashByEmail = (email: string) =>
     select: { ...userSelect, passwordHash: true, googleId: true },
   });
 
+export const findUserWithHashById = (id: string) =>
+  prisma.user.findUnique({
+    where: { id },
+    select: { ...userSelect, passwordHash: true },
+  });
+
 export const createUser = (data: {
   email: string;
   passwordHash?: string;

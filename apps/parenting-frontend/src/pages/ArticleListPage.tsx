@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams , Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Icon } from '../components/icons/index.js';
 import { uiIcons } from '../lib/iconSemantics.js';
 import { articleApi } from '../lib/articleApi.js';

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { chatApi } from '../../lib/appApi.js';
 import { useAuth } from '../../state/auth.js';
 import { Icon } from '../icons/index.js';
@@ -29,9 +29,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
   const isNewConversationActive = location.pathname === '/' && !activeConversationId;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const rtf = useMemo(
     () => new Intl.RelativeTimeFormat(i18n.language, { numeric: 'auto' }),
@@ -79,24 +77,6 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
     const id = setInterval(loadConversations, 15000);
     return () => clearInterval(id);
   }, [loadConversations, token]);
-
-  useEffect(() => {
-    if (!userMenuOpen) return undefined;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    };
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setUserMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [userMenuOpen]);
 
   const handleNew = () => {
     setActiveConversationId(null);
@@ -273,48 +253,16 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
         })}
       </div>
 
-      <div className="flex-shrink-0 border-t border-border px-3 py-3">
+      <div className="flex-shrink-0 space-y-2 border-t border-border px-3 py-3">
         {token && user ? (
-          <div className="relative" ref={userMenuRef}>
-            {userMenuOpen && (
-              <div
-                role="menu"
-                className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-border bg-surface p-1.5 shadow-lg"
-              >
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    navigate('/settings');
-                    onClose?.();
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
-                >
-                  {t('nav.settings', 'Settings')}
-                </button>
-                <div className="px-3 py-2">
-                  <LanguageSwitcher variant="full" className="w-full" />
-                </div>
-                <div className="my-1 border-t border-border" />
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    setSignOutConfirmOpen(true);
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
-                >
-                  {t('common.signOut', 'Sign out')}
-                </button>
-              </div>
-            )}
+          <>
             <button
               type="button"
-              onClick={() => setUserMenuOpen((v) => !v)}
-              aria-expanded={userMenuOpen}
-              aria-haspopup="menu"
+              onClick={() => {
+                navigate('/settings');
+                onClose?.();
+              }}
+              aria-label={t('chatShell.openSettings', 'Open settings')}
               className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
             >
               <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-blue/15">
@@ -322,12 +270,23 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
               </span>
               <span className="flex-1 truncate text-left">{user.email}</span>
               <Icon
-                name={userMenuOpen ? uiIcons.chevronDown : uiIcons.chevronUp}
+                name={uiIcons.chevronRight}
                 className="h-3.5 w-3.5 object-contain opacity-70"
                 alt=""
               />
             </button>
-          </div>
+
+            <LanguageSwitcher variant="full" className="w-full" />
+
+            <button
+              type="button"
+              onClick={() => setSignOutConfirmOpen(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2.5 text-[13px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
+            >
+              <Icon name={uiIcons.logout} className="h-4 w-4 object-contain" alt="" />
+              {t('common.signOut', 'Sign out')}
+            </button>
+          </>
         ) : (
           <LanguageSwitcher variant="full" className="w-full" />
         )}

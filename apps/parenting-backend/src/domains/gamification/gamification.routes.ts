@@ -22,6 +22,16 @@ export default async function gamificationRoutes(app: FastifyInstance) {
                 earned: { type: "number" },
               },
             },
+            insight: {
+              type: "object",
+              properties: {
+                total: { type: "number" },
+                level: { type: "number" },
+                currentLevelStart: { type: "number" },
+                nextLevelAt: { type: "number" },
+                progress: { type: "number" },
+              },
+            },
             streak: {
               type: "object",
               properties: {

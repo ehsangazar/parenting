@@ -118,6 +118,67 @@ export async function upsertLessonProgress(userId: string, lessonId: string, poi
   });
 }
 
+// ── Resume (continue where you left off) ──────────────────────────────────────
+
+// Most recent lesson the user touched. We use it as the seed for the resume
+// card: from this lesson we either resume it (if not complete) or surface the
+// next lesson in the same module.
+export async function findMostRecentProgress(userId: string) {
+  return prisma.learningProgress.findFirst({
+    where: { userId },
+    orderBy: { completedAt: "desc" },
+    include: {
+      lesson: {
+        include: {
+          module: {
+            include: {
+              phase: {
+                include: {
+                  course: { select: { id: true, title: true } },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function findFirstIncompleteLessonInModule(
+  userId: string,
+  moduleId: string,
+) {
+  return prisma.learningLesson.findFirst({
+    where: {
+      moduleId,
+      progress: { none: { userId } },
+    },
+    orderBy: { order: "asc" },
+    select: { id: true, title: true, order: true, moduleId: true },
+  });
+}
+
+export async function findFirstLessonOfFirstModule(courseId: string) {
+  const phase = await prisma.learningPhase.findFirst({
+    where: { courseId },
+    orderBy: { order: "asc" },
+    include: {
+      modules: {
+        orderBy: { order: "asc" },
+        take: 1,
+        include: {
+          lessons: { orderBy: { order: "asc" }, take: 1 },
+        },
+      },
+    },
+  });
+  const mod = phase?.modules[0];
+  const lesson = mod?.lessons[0];
+  if (!mod || !lesson) return null;
+  return { module: mod, lesson };
+}
+
 // ── Module unlock ─────────────────────────────────────────────────────────────
 
 // (Unlock itself is coin-spend only — no separate DB record needed beyond gamification)

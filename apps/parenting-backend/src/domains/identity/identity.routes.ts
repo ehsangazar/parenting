@@ -6,6 +6,7 @@ import {
   googleSchema,
   resetRequestSchema,
   resetSchema,
+  changePasswordSchema,
   updateProfileSchema,
   consentSchema,
   avatarUploadQuerySchema,
@@ -39,6 +40,7 @@ const userShape = {
     role: { type: "string" },
     locale: { type: "string" },
     profile: {},
+    hasPassword: { type: "boolean" },
   },
 };
 
@@ -257,6 +259,37 @@ export default async function identityRoutes(app: FastifyInstance) {
     const body = updateProfileSchema.parse(req.body);
     const user = await svc.updateMe(req.user.sub, body);
     return reply.send({ user });
+  });
+
+  app.put("/me/password", {
+    schema: {
+      tags: ["Identity"],
+      summary: "Change the authenticated user's password",
+      security: bearerSecurity,
+      body: {
+        type: "object",
+        required: ["currentPassword", "newPassword"],
+        properties: {
+          currentPassword: { type: "string", minLength: 1 },
+          newPassword: { type: "string", minLength: 8 },
+        },
+      },
+      response: {
+        ...okResponse,
+        400: { description: "Validation error", type: "object", properties: { message: { type: "string" } } },
+        401: { description: "Unauthorized or current password wrong", type: "object", properties: { message: { type: "string" } } },
+      },
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const body = changePasswordSchema.parse(req.body);
+    const result = await svc.changePassword(req.user.sub, body.currentPassword, body.newPassword);
+    if (!result.ok) {
+      if (result.reason === "wrong_current") return reply.unauthorized("wrong_current");
+      if (result.reason === "no_password") return reply.badRequest("no_password");
+      if (result.reason === "same_as_old") return reply.badRequest("same_as_old");
+    }
+    return reply.send({ ok: true });
   });
 
   app.get("/me/avatar-upload-url", {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePostHog } from '@posthog/react';
 
 import { uiIcons } from '../lib/iconSemantics.js';
 import { Icon } from './icons/index.js';
@@ -21,6 +22,7 @@ export const LeadCapture: React.FC<LeadCaptureProps> = ({
   className = "",
 }) => {
   const { t } = useTranslation();
+  const posthog = usePostHog();
   const resolvedTitle = title ?? t('leadCapture.defaultTitle');
   const resolvedDescription = description ?? t('leadCapture.defaultDescription');
   const resolvedCta = ctaText ?? t('leadCapture.defaultCta');
@@ -41,6 +43,7 @@ export const LeadCapture: React.FC<LeadCaptureProps> = ({
           userAgent: navigator.userAgent,
         },
       });
+      posthog.capture('lead_captured', { resource_id: resourceId, source: window.location.pathname });
       setStatus('success');
       setEmail('');
     } catch (err) {

@@ -49,6 +49,18 @@ const envSchema = z.object({
 
   // Monitoring
   SENTRY_DSN: z.string().optional(),
+
+  // Reminders
+  REMINDER_HOUR: z.coerce.number().int().min(0).max(23).default(9),
+  REMINDER_ENABLED: z
+    .string()
+    .optional()
+    .transform((v) => v !== "false"),
+
+  // Web Push
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

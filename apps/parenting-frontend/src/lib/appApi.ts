@@ -11,4 +11,5 @@ export {
   profileApi,
   leaderboardApi,
   villageApi,
+  notificationsApi,
 } from './api.js';

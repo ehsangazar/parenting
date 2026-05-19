@@ -13,6 +13,7 @@ export function isRTL(locale: string): boolean {
   return RTL_LOCALES.includes(locale as AppLocale);
 }
 
+// eslint-disable-next-line import/no-named-as-default-member -- .use is a method on the i18n instance, not the named `use` export
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)

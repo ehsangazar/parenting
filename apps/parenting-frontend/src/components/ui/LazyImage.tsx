@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 
 type LazyImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
   containerClassName?: string;
