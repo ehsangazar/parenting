@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,46 @@ import { clsx } from 'clsx';
 import ReactMarkdown from 'react-markdown';
 import { Icon } from '../icons/index.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
+
+// Lazy + fade-in image with a shimmer placeholder so lesson cards stop
+// painting top-to-bottom as bytes arrive. Caller picks the wrapper sizing
+// via `wrapperClassName` (aspect-video for markdown, contained for media).
+type LazyImageProps = {
+  src: string;
+  alt?: string;
+  wrapperClassName: string;
+  imgClassName?: string;
+  fit?: 'cover' | 'contain';
+};
+const LazyImage = ({ src, alt, wrapperClassName, imgClassName, fit = 'cover' }: LazyImageProps) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div
+      className={clsx(
+        'relative isolate overflow-hidden bg-surface-light',
+        wrapperClassName,
+      )}
+    >
+      {!loaded && (
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-surface-light via-surface to-surface-light" />
+      )}
+      <img
+        src={src}
+        alt={alt || ''}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        className={clsx(
+          'relative h-full w-full transition-opacity duration-500 ease-out',
+          fit === 'cover' ? 'object-cover' : 'object-contain',
+          loaded ? 'opacity-100' : 'opacity-0',
+          imgClassName,
+        )}
+      />
+    </div>
+  );
+};
 
 const IMAGE_HREF_RE = /\.(png|jpe?g|gif|webp|svg|avif)(\?|#|$)/i;
 
@@ -136,10 +176,11 @@ export const LessonModal = ({
                     className="m-auto w-full max-h-[60vh] rounded-xl bg-black"
                   />
                 ) : currentCard.mediaType?.startsWith('image') ? (
-                  <img
+                  <LazyImage
                     src={currentCard.mediaUrl}
                     alt=""
-                    className="m-auto w-full max-h-[60vh] rounded-xl object-contain"
+                    fit="contain"
+                    wrapperClassName="m-auto w-full max-h-[60vh] min-h-[40vh] rounded-xl"
                   />
                 ) : (
                   <a
@@ -200,10 +241,10 @@ export const LessonModal = ({
                       img: ({ src, alt }) =>
                         src ? (
                           <figure className="my-4 first:mt-0 last:mb-0">
-                            <img
+                            <LazyImage
                               src={src}
                               alt={alt || ''}
-                              className="block aspect-video w-full rounded-2xl object-cover"
+                              wrapperClassName="aspect-video w-full rounded-2xl"
                             />
                             {alt && (
                               <figcaption className="mt-2 text-center text-[13px] italic leading-snug text-text-secondary sm:text-[14px]">
@@ -224,10 +265,10 @@ export const LessonModal = ({
                                 : '';
                           return (
                             <figure className="my-4 first:mt-0 last:mb-0">
-                              <img
+                              <LazyImage
                                 src={href}
                                 alt={caption}
-                                className="block aspect-video w-full rounded-2xl object-cover"
+                                wrapperClassName="aspect-video w-full rounded-2xl"
                               />
                               {caption && (
                                 <figcaption className="mt-2 text-center text-[13px] italic leading-snug text-text-secondary sm:text-[14px]">
