@@ -4,6 +4,7 @@ import type {
   EventCardData,
   ChecklistCardData,
   ArticleCardData,
+  LessonCardData,
   ConfirmCardData,
   CardAction,
 } from "./types.js";
@@ -48,6 +49,14 @@ export function articleCard(data: ArticleCardData): Card {
     actions: [
       { kind: "navigate", label: "Read article", to: `/articles/${data.slug}`, tone: "primary" },
     ],
+  };
+}
+
+export function lessonCard(data: LessonCardData): Card {
+  return {
+    id: `lesson-${data.lessonId}`,
+    type: "lesson",
+    data,
   };
 }
 

@@ -32,6 +32,18 @@ export type ArticleCardData = {
   slug: string;
 };
 
+export type LessonCardData = {
+  lessonId: string;
+  moduleId: string;
+  courseId: string;
+  title: string;
+  courseTitle: string;
+  moduleTitle: string;
+  readingMinutes: number;
+  isCompleted: boolean;
+  excerpt?: string;
+};
+
 export type ConfirmCardData = {
   title: string;
   description: string;
@@ -46,6 +58,7 @@ export type Card =
   | { id: string; type: 'event'; data: EventCardData; actions?: CardAction[] }
   | { id: string; type: 'checklist'; data: ChecklistCardData; actions?: CardAction[] }
   | { id: string; type: 'article'; data: ArticleCardData; actions?: CardAction[] }
+  | { id: string; type: 'lesson'; data: LessonCardData; actions?: CardAction[] }
   | { id: string; type: 'confirm'; data: ConfirmCardData };
 
 export type CardActionHandlers = {
