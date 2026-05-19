@@ -275,6 +275,27 @@ export default async function learningRoutes(app: FastifyInstance) {
     return reply.send({ practices });
   });
 
+  // GET /practice/recap — rolling N-day summary for the WeeklyRecapCard
+  app.get("/practice/recap", {
+    schema: {
+      tags: ["Learning"],
+      summary: "Rolling N-day recap of pledges and reflections",
+      security: bearerSecurity,
+      querystring: {
+        type: "object",
+        properties: {
+          days: { type: "integer", minimum: 1, maximum: 60 },
+        },
+      },
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const q = req.query as { days?: number };
+    const days = q.days ?? 7;
+    const recap = await svc.getPracticeRecap(req.user.sub, days);
+    return reply.send({ recap });
+  });
+
   // POST /practice/:id/reflect — submit outcome
   app.post("/practice/:id/reflect", {
     schema: {

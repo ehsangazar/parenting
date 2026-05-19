@@ -523,6 +523,79 @@ export async function listRecentReflections(
   }));
 }
 
+export type PracticeRecapEntry = {
+  practiceId: string;
+  lessonId: string;
+  lessonTitle: string;
+  courseId: string | null;
+  courseTitle: string | null;
+  technique: string;
+  childName: string | null;
+  outcome: "worked" | "mixed" | "didnt_work" | null;
+  note: string | null;
+  pledgedAt: string;
+  reflectedAt: string | null;
+};
+
+export type PracticeRecap = {
+  windowStart: string;
+  windowEnd: string;
+  pledgesMade: number;
+  reflectionsLogged: number;
+  outcomes: { worked: number; mixed: number; didnt_work: number };
+  entries: PracticeRecapEntry[];
+};
+
+// Build the weekly recap: counts + a chronological list of every practice
+// the user pledged or reflected on in the last N days. Frontend decides how
+// to surface it (e.g. group wins first, show the latest 4, etc.).
+export async function getPracticeRecap(
+  userId: string,
+  days = 7,
+): Promise<PracticeRecap> {
+  const now = new Date();
+  const windowMs = days * 24 * 60 * 60 * 1000;
+  const since = new Date(now.getTime() - windowMs);
+  const rows = await repo.findPracticesInWindow(userId, since);
+
+  const outcomes = { worked: 0, mixed: 0, didnt_work: 0 };
+  let pledgesMade = 0;
+  let reflectionsLogged = 0;
+
+  for (const p of rows) {
+    if (p.pledgedAt >= since) pledgesMade += 1;
+    if (p.reflectedAt && p.reflectedAt >= since) {
+      reflectionsLogged += 1;
+      const outcome = p.reflectionOutcome as keyof typeof outcomes | null;
+      if (outcome && outcome in outcomes) outcomes[outcome] += 1;
+    }
+  }
+
+  const entries: PracticeRecapEntry[] = rows.map((p) => ({
+    practiceId: p.id,
+    lessonId: p.lessonId,
+    lessonTitle: p.lesson.title ?? "",
+    courseId: p.lesson.module?.phase?.course?.id ?? null,
+    courseTitle: p.lesson.module?.phase?.course?.title ?? null,
+    technique: p.technique,
+    childName: p.child?.name ?? null,
+    outcome:
+      (p.reflectionOutcome as "worked" | "mixed" | "didnt_work" | null) ?? null,
+    note: p.reflectionNote,
+    pledgedAt: p.pledgedAt.toISOString(),
+    reflectedAt: p.reflectedAt ? p.reflectedAt.toISOString() : null,
+  }));
+
+  return {
+    windowStart: since.toISOString(),
+    windowEnd: now.toISOString(),
+    pledgesMade,
+    reflectionsLogged,
+    outcomes,
+    entries,
+  };
+}
+
 export async function tryPlaybookWithGroup(
   userId: string,
   playbookId: string,

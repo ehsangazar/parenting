@@ -128,6 +128,29 @@ export function createLearningApi(api: AxiosInstance) {
       },
     dismissPractice: async (practiceId: string) =>
       (await api.delete(`/api/practice/${practiceId}`)).data as { success: boolean },
+    getPracticeRecap: async (days = 7) =>
+      (await api.get(`/api/practice/recap`, { params: { days } })).data as {
+        recap: {
+          windowStart: string;
+          windowEnd: string;
+          pledgesMade: number;
+          reflectionsLogged: number;
+          outcomes: { worked: number; mixed: number; didnt_work: number };
+          entries: Array<{
+            practiceId: string;
+            lessonId: string;
+            lessonTitle: string;
+            courseId: string | null;
+            courseTitle: string | null;
+            technique: string;
+            childName: string | null;
+            outcome: 'worked' | 'mixed' | 'didnt_work' | null;
+            note: string | null;
+            pledgedAt: string;
+            reflectedAt: string | null;
+          }>;
+        };
+      },
   };
 }
 

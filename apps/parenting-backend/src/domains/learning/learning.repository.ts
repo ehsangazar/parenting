@@ -329,6 +329,36 @@ export async function findRecentReflectedPractices(userId: string, limit = 5) {
   });
 }
 
+// Pull every practice the user touched in the window: any pledge that was
+// either created OR reflected on between `since` and now. Used by the
+// weekly recap, which needs to count both "I committed to try X" and
+// "here's how it actually went."
+export async function findPracticesInWindow(userId: string, since: Date) {
+  return prisma.lessonPractice.findMany({
+    where: {
+      userId,
+      OR: [{ pledgedAt: { gte: since } }, { reflectedAt: { gte: since } }],
+    },
+    orderBy: { pledgedAt: "desc" },
+    include: {
+      lesson: {
+        select: {
+          id: true,
+          title: true,
+          module: {
+            select: {
+              id: true,
+              title: true,
+              phase: { select: { course: { select: { id: true, title: true } } } },
+            },
+          },
+        },
+      },
+      child: { select: { id: true, name: true } },
+    },
+  });
+}
+
 export async function findPracticesReadyForNudge(now: Date, limit = 50) {
   return prisma.lessonPractice.findMany({
     where: {

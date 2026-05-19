@@ -13,6 +13,7 @@ import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
 import { ResumeCard } from '../../components/academy/ResumeCard.js';
 import { PendingPracticeCard } from '../../components/academy/PendingPracticeCard.js';
+import { WeeklyRecapCard } from '../../components/academy/WeeklyRecapCard.js';
 
 type Phase = {
   id: string;
@@ -206,6 +207,7 @@ export const AcademyPage = () => {
 
       {!loading && !error && courses.length > 0 && (
         <>
+          <WeeklyRecapCard />
           <PendingPracticeCard />
           <ResumeCard />
         </>
