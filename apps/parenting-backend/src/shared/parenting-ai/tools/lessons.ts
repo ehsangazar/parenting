@@ -12,6 +12,29 @@ function readingMinutes(content: string | null | undefined): number {
   return Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE));
 }
 
+// Strip the markdown noise (image refs, link refs, bold/italic, headings,
+// code) so the card excerpt is human-readable plain text. Cheap and good
+// enough for a 140-char preview; full markdown is rendered inside the
+// lesson sheet.
+function plainExcerpt(content: string | null | undefined, maxLen = 140): string {
+  if (!content) return "";
+  let out = content;
+  // Image refs: ![alt](path) -> alt
+  out = out.replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1");
+  // Link refs: [text](url) -> text
+  out = out.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  // Headings, blockquotes, list markers at line start
+  out = out.replace(/^\s*[#>*\-+]+\s+/gm, "");
+  // Bold / italic / strike / code wrappers
+  out = out.replace(/(\*\*|__|\*|_|`|~~)/g, "");
+  // Horizontal rules
+  out = out.replace(/^\s*-{3,}\s*$/gm, "");
+  // Collapse whitespace
+  out = out.replace(/\s+/g, " ").trim();
+  if (out.length <= maxLen) return out;
+  return out.slice(0, maxLen - 1).trimEnd() + "…";
+}
+
 function youngestChildAgeMonths(
   children: Array<{ birthday: Date | null; isUnborn: boolean }>,
 ): number | null {
@@ -147,10 +170,7 @@ const recommend: ToolDefinition = {
         moduleTitle: lesson.module.title,
         readingMinutes: readingMinutes(lesson.content),
         isCompleted: lesson.progress.length > 0,
-        excerpt: (lesson.content ?? "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 140),
+        excerpt: plainExcerpt(lesson.content),
       }),
     );
 

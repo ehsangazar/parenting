@@ -73,7 +73,10 @@ export const LessonViewer = ({
     setCompletedLocally(false);
     (async () => {
       try {
-        const data = (await learningApi.getLesson(courseId, moduleId, lessonId)) as FetchedLesson;
+        const res = (await learningApi.getLesson(courseId, moduleId, lessonId)) as
+          | FetchedLesson
+          | { lesson: FetchedLesson };
+        const data = 'lesson' in res && res.lesson ? res.lesson : (res as FetchedLesson);
         if (alive) setLesson(data);
       } catch (err) {
         if (alive) {
