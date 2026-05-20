@@ -28,7 +28,7 @@ export const AchievementUnlockModal = ({ achievements, onDismiss }: AchievementU
 
   useEffect(() => {
     if (!current) return;
-    // Simple CSS confetti burst via canvas — no dep needed
+    // Simple CSS confetti burst via canvas, no dep needed
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -42,7 +42,9 @@ export const AchievementUnlockModal = ({ achievements, onDismiss }: AchievementU
       y: canvas.height * 0.4,
       vx: (Math.random() - 0.5) * 14,
       vy: -(Math.random() * 10 + 4),
-      color: ['#52D68C', '#FFD700', '#FF6B6B', '#7B8FFF', '#C084FC'][Math.floor(Math.random() * 5)],
+      // Confetti hex literals must stay inline (canvas API), but the palette
+      // is the Confident Calm brand inks: sage, peach, dusty rose, dusty blue, lilac.
+      color: ['#3D7D6E', '#BD7338', '#BE7A93', '#5586A8', '#9B7BBE'][Math.floor(Math.random() * 5)],
       size: Math.random() * 8 + 4,
       rotation: Math.random() * 360,
       rotationSpeed: (Math.random() - 0.5) * 8,
@@ -107,12 +109,12 @@ export const AchievementUnlockModal = ({ achievements, onDismiss }: AchievementU
           {achievements.length > 1 && (
             <div className="mb-3 flex justify-center gap-1">
               {achievements.map((_, i) => (
-                <div key={i} className={`h-1.5 w-6 rounded-full ${i === index ? 'bg-primary-500' : 'bg-[#E8EDFF]'}`} />
+                <div key={i} className={`h-1.5 w-6 rounded-full ${i === index ? 'bg-primary-500' : 'bg-card-border'}`} />
               ))}
             </div>
           )}
 
-          <div className="mb-2 text-xs font-black uppercase tracking-widest text-primary-500">
+          <div className="celebrate-eyebrow mb-2">
             Achievement Unlocked!
           </div>
 
@@ -124,16 +126,16 @@ export const AchievementUnlockModal = ({ achievements, onDismiss }: AchievementU
             {current.icon}
           </motion.div>
 
-          <h2 className="mb-1 text-2xl font-black text-text-primary">{current.title}</h2>
+          <h2 className="celebrate-headline mb-1 text-2xl">{current.title}</h2>
 
           <div className="mt-3 flex justify-center gap-3">
             {current.xpReward > 0 && (
-              <span className="rounded-full bg-[#FFD700]/10 px-3 py-1 text-sm font-bold text-[#FFD700]">
+              <span className="rounded-full bg-gamification-xp/10 px-3 py-1 text-sm font-bold text-gamification-xp">
                 +{current.xpReward} XP
               </span>
             )}
             {current.gemsReward > 0 && (
-              <span className="rounded-full bg-[#7B8FFF]/10 px-3 py-1 text-sm font-bold text-[#7B8FFF]">
+              <span className="rounded-full bg-brand-blue/10 px-3 py-1 text-sm font-bold text-brand-blue">
                 +{current.gemsReward} 💎
               </span>
             )}
@@ -141,7 +143,7 @@ export const AchievementUnlockModal = ({ achievements, onDismiss }: AchievementU
 
           <button
             onClick={handleNext}
-            className="mt-6 w-full rounded-2xl bg-primary-500 py-3 text-base font-black uppercase tracking-wide text-text-inverse transition-transform active:scale-95"
+            className="btn-duo-green mt-6 w-full"
           >
             {index < achievements.length - 1 ? 'Next' : 'Awesome!'}
           </button>

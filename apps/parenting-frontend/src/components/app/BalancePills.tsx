@@ -63,7 +63,7 @@ export const BalancePills = ({ className }: { className?: string }) => {
     <div className={clsx('flex items-center gap-1.5', className)}>
       {profile.streak.current > 0 && (
         <span
-          className="inline-flex items-center gap-1 rounded-full bg-orange-500/10 px-2 py-1 text-[11px] font-extrabold text-orange-600"
+          className="inline-flex items-center gap-1 rounded-full bg-gamification-streak/10 px-2 py-1 text-[11px] font-extrabold text-gamification-streak"
           title={t('balance.streakTitle', '{{n}}-day streak', { n: profile.streak.current })}
         >
           <Icon name={uiIcons.flame} className="h-3 w-3 object-contain" alt="" />
@@ -81,7 +81,7 @@ export const BalancePills = ({ className }: { className?: string }) => {
         {profile.insight.total}
       </span>
       <span
-        className="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 px-2 py-1 text-[11px] font-extrabold text-yellow-700"
+        className="inline-flex items-center gap-1 rounded-full bg-secondary-50 px-2 py-1 text-[11px] font-extrabold text-secondary-fg"
         title={t('balance.coinsTitle', '{{n}} coins', { n: profile.coins.balance })}
       >
         <Icon name={appAssetIcons.gems} className="h-3 w-3 object-contain" alt="" />

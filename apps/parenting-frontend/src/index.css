@@ -4,19 +4,19 @@
 
 @layer base {
   /**
-   * Raised · Confident Calm — canvas matches tailwind `background` (#FBFAF7, warm paper).
-   * Default type: DM Sans. Fredoka (.font-game) is RESERVED for celebration moments
-   * (.celebrate-* utilities, achievement / streak / lesson-complete overlays). Do not
-   * use Fredoka on regular CTAs, nav, or chrome.
+   * Raised · Confident Calm (Garden Morning). Canvas matches tailwind `background`
+   * (#EEF6F0, pale mint). Default type: DM Sans. Fredoka (.font-game) is RESERVED
+   * for celebration moments (.celebrate-* utilities, achievement / streak /
+   * lesson-complete overlays). Do not use Fredoka on regular CTAs, nav, or chrome.
    */
   html {
-    background-color: #f9f4ec;
+    background-color: #eef6f0;
     min-height: 100%;
   }
 
   #root {
     min-height: 100%;
-    background-color: #f9f4ec;
+    background-color: #eef6f0;
   }
 
   body {
@@ -163,14 +163,14 @@
     @apply font-game relative inline-flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-[0.06em] cursor-pointer transition-colors duration-150;
     min-height: 52px;
     padding: 0 28px;
-    border: 2px solid #e8dfcb;
+    border: 2px solid #d7e5da;
     background: #ffffff;
     color: #1f1b16;
     outline: none;
   }
   .btn-duo-surface-pill:hover:not(:disabled) {
-    background: #f2ebde;
-    border-color: #d4c8ae;
+    background: #e3efe6;
+    border-color: #b8cdbe;
   }
   .btn-duo-surface-pill:active:not(:disabled) {
     transform: scale(0.98);
@@ -190,13 +190,13 @@
     padding: 0 32px;
     border: none;
     outline: none;
-    background: #bd7338;
+    background: #d87749;
     color: #ffffff;
-    box-shadow: 0 4px 0 0 #7d4818;
+    box-shadow: 0 4px 0 0 #864e29;
   }
   .btn-duo-violet-pill:active:not(:disabled) {
     transform: translateY(3px);
-    box-shadow: 0 1px 0 0 #7d4818;
+    box-shadow: 0 1px 0 0 #864e29;
   }
   .btn-duo-violet-pill:disabled {
     @apply opacity-50 cursor-not-allowed;
@@ -206,7 +206,7 @@
     @apply btn-duo bg-secondary-500 text-text-inverse;
   }
   .btn-duo-gold:hover:not(:disabled) {
-    background: #8e5526;
+    background: #a45a30;
   }
 
   .btn-duo-outline {
@@ -415,7 +415,7 @@
     animation: pop-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
   .animate-shimmer {
-    background: linear-gradient(90deg, #f2ebde 25%, #eae0cc 50%, #f2ebde 75%);
+    background: linear-gradient(90deg, #e3efe6 25%, #d2e5d7 50%, #e3efe6 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
@@ -635,7 +635,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .toggle-switch[data-on="true"] {
-  background-color: #3D7D6E;
+  background-color: #2F7D6A;
 }
 .toggle-switch[data-on="true"] .toggle-switch-thumb {
   transform: translateX(20px);

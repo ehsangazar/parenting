@@ -1,67 +1,70 @@
 /** @type {import('tailwindcss').Config} */
 /**
- * Raised · Confident Calm (softened pastel) — cream-paper canvas, sage-teal
- * primary, warm-peach accent reserved for celebration moments. Primary and
- * secondary fills are still dark enough for WCAG AA white-text contrast;
- * pastel tints (-100/-200) live on light surfaces with dark `*-fg` text.
+ * Raised · Confident Calm (Garden Morning). Pale-mint canvas, sage-teal
+ * primary, warm peach reserved for celebration moments. Primary and secondary
+ * -500 fills are still dark enough for WCAG AA-Large white-text contrast;
+ * brighter peach lives in `secondary.400` for tints + ornament. Pastel tints
+ * (-100/-200) live on light surfaces with dark `*-fg` text.
  */
 module.exports = {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        /** Cream-paper canvas, white surfaces. Warmer than the prior #FBFAF7,
-         *  pairs better with sage / peach without feeling clinical. */
-        background: '#F9F4EC',
+        /** Garden-mint canvas, white surfaces. Cool pastel paper that pairs
+         *  with sage-teal primary and warm peach celebration. */
+        background: '#EEF6F0',
         surface: {
           DEFAULT: '#FFFFFF',
-          light: '#F2EBDE',
-          warm: '#EAE0CC',
+          light: '#E3EFE6',
+          warm: '#D2E5D7',
         },
-        /** Sage-teal — softer than deep teal, still passes white-on-fill AA at -500. */
+        /** Sage-teal. -500 fills carry white text (AA-Large). */
         primary: {
-          50: 'rgba(61,125,110,0.06)',
-          100: 'rgba(61,125,110,0.14)',
-          200: 'rgba(61,125,110,0.22)',
-          300: '#9DC8BC',
-          400: '#6FAA98',
-          500: '#3D7D6E',
-          600: '#2F665A',
-          700: '#234D45',
-          DEFAULT: '#3D7D6E',
+          50: 'rgba(47,125,106,0.06)',
+          100: 'rgba(47,125,106,0.14)',
+          200: 'rgba(47,125,106,0.22)',
+          300: '#9CC8BB',
+          400: '#6DAA98',
+          500: '#2F7D6A',
+          600: '#225A4E',
+          700: '#194038',
+          DEFAULT: '#2F7D6A',
           /** Text / strokes on sage tints */
-          fg: '#1A3D37',
+          fg: '#16332C',
         },
-        /** Warm peach / marigold — celebration only (streak, XP gain, weekly recap). */
+        /** Warm peach. -500 is the AA-Large fill; -400 carries the brighter
+         *  "energy peach" used for tints + celebration accents. */
         secondary: {
-          50: 'rgba(189,115,56,0.08)',
-          100: 'rgba(189,115,56,0.18)',
-          400: '#E9A977',
-          500: '#BD7338',
-          DEFAULT: '#BD7338',
+          50: 'rgba(232,145,99,0.10)',
+          100: 'rgba(232,145,99,0.22)',
+          400: '#E89163',
+          500: '#D87749',
+          DEFAULT: '#D87749',
           fg: '#5C3211',
         },
         brand: {
-          green: '#3D7D6E',
-          /** Dusty blue — info / calendar / links (softer than steel #0369A1). */
-          blue: '#5586A8',
+          green: '#2F7D6A',
+          /** Sky blue — info / calendar / links / user voice. */
+          blue: '#4A8AB4',
           red: '#C75555',
-          yellow: '#BD7338',
-          'yellow-fg': '#5C3211',
+          /** Honey — XP-adjacent accent, distinct from peach. */
+          yellow: '#DDA94A',
+          'yellow-fg': '#6E4E15',
           purple: '#9B7BBE',
           /** Dusty rose — Academy / Practice / Reminders category accent. */
-          pink: '#BE7A93',
+          pink: '#D88BA0',
           'pink-fg': '#6E2940',
           periwinkle: '#B9C0E8',
           energy: '#F5D5CF',
           stars: '#E4D6E8',
           rhythm: '#F5DDC3',
         },
-        hub: '#F9F4EC',
-        'card-border': '#E8DFCB',
+        hub: '#EEF6F0',
+        'card-border': '#D7E5DA',
         quest: {
-          track: '#E8DFCB',
-          fill: '#3D7D6E',
+          track: '#D7E5DA',
+          fill: '#2F7D6A',
         },
         /** Top-bar StatPills — each metric has its own ink (no collisions). */
         gamification: {
@@ -70,50 +73,50 @@ module.exports = {
         },
         /** SUPER badge — the only sanctioned gradient in the UI. */
         super: {
-          from: '#3D7D6E',
-          to: '#BD7338',
+          from: '#2F7D6A',
+          to: '#D87749',
         },
-        /** Warm dark text on cream canvas reads less clinical than pure navy. */
+        /** Warm dark text on mint canvas reads less clinical than pure navy. */
         text: {
           primary: '#1F1B16',
           secondary: '#4A453D',
-          tertiary: '#736B5C',
-          dimmed: '#A3998A',
-          muted: '#5C5547',
+          tertiary: '#677570',
+          dimmed: '#9CA29C',
+          muted: '#545B53',
           /** Text on filled sage / peach buttons */
           inverse: '#FFFFFF',
         },
         border: {
-          DEFAULT: '#E8DFCB',
-          light: '#F0E8D6',
-          medium: '#E8DFCB',
-          dark: '#D4C8AE',
-          focus: '#3D7D6E',
+          DEFAULT: '#D7E5DA',
+          light: '#E3EFE6',
+          medium: '#D7E5DA',
+          dark: '#B8CDBE',
+          focus: '#2F7D6A',
         },
-        success: '#3D7D6E',
-        warning: '#BD7338',
+        success: '#2F7D6A',
+        warning: '#D87749',
         error: '#C75555',
-        info: '#5586A8',
-        cream: '#F9F4EC',
+        info: '#4A8AB4',
+        cream: '#EEF6F0',
         accent: {
-          blue: '#5586A8',
-          green: '#3D7D6E',
-          blueHover: '#3F6E8B',
-          greenHover: '#2F665A',
+          blue: '#4A8AB4',
+          green: '#2F7D6A',
+          blueHover: '#3A7299',
+          greenHover: '#225A4E',
         },
         header: {
           blue: '#FFFFFF',
-          background: '#F9F4EC',
+          background: '#EEF6F0',
         },
         pregnancy: {
           card: '#FFFFFF',
-          cardDark: '#F2EBDE',
-          progress: '#3D7D6E',
-          progressBg: 'rgba(61,125,110,0.18)',
-          iconPulse: '#F2EBDE',
+          cardDark: '#E3EFE6',
+          progress: '#2F7D6A',
+          progressBg: 'rgba(47,125,106,0.18)',
+          iconPulse: '#E3EFE6',
           iconHeart: '#F5D5CF',
           iconCart: '#F5DDC3',
-          iconChart: '#5586A8',
+          iconChart: '#4A8AB4',
         },
       },
       spacing: {
@@ -162,10 +165,10 @@ module.exports = {
         full: '9999px',
       },
       boxShadow: {
-        sm: '0 1px 2px 0 rgba(70, 60, 45, 0.06)',
-        md: '0 4px 12px 0 rgba(70, 60, 45, 0.07)',
-        lg: '0 8px 24px 0 rgba(70, 60, 45, 0.10)',
-        xl: '0 16px 40px 0 rgba(70, 60, 45, 0.12)',
+        sm: '0 1px 2px 0 rgba(45, 60, 55, 0.06)',
+        md: '0 4px 12px 0 rgba(45, 60, 55, 0.07)',
+        lg: '0 8px 24px 0 rgba(45, 60, 55, 0.10)',
+        xl: '0 16px 40px 0 rgba(45, 60, 55, 0.12)',
         none: 'none',
       },
       transitionDuration: {
