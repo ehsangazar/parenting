@@ -39,6 +39,7 @@
     "react-i18next": "^17.0.2",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.28.0",
+    "roughjs": "^4.6.6",
     "sonner": "^2.0.7",
     "swr": "^2.3.3",
     "zustand": "^5.0.1"

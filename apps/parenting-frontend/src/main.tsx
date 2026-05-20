@@ -6,6 +6,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import posthog from 'posthog-js';
 import { PostHogErrorBoundary, PostHogProvider } from '@posthog/react';
 import App from './App.js';
+import { RoughEnhancer } from './components/rough/index.js';
 import './i18n.js';
 import './index.css';
 
@@ -92,6 +93,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <PostHogErrorBoundary>
         <HelmetProvider>
           <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+            <RoughEnhancer />
             <App />
           </BrowserRouter>
         </HelmetProvider>

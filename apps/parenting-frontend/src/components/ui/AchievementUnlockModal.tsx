@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { soundManager } from '../../lib/soundManager.js';
+import { RoughBox, RoughButton } from '../rough/index.js';
 
 export type Achievement = {
   key: string;
@@ -100,53 +101,85 @@ export const AchievementUnlockModal = ({ achievements, onDismiss }: AchievementU
         <canvas ref={canvasRef} className="pointer-events-none absolute inset-0" />
 
         <motion.div
-          className="relative mx-4 w-full max-w-sm rounded-3xl border-2 border-primary-500/35 bg-surface p-8 text-center shadow-2xl"
+          className="relative mx-4 w-full max-w-sm"
           initial={{ scale: 0.7, y: 40 }}
           animate={{ scale: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 20 } }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {achievements.length > 1 && (
-            <div className="mb-3 flex justify-center gap-1">
-              {achievements.map((_, i) => (
-                <div key={i} className={`h-1.5 w-6 rounded-full ${i === index ? 'bg-primary-500' : 'bg-card-border'}`} />
-              ))}
+          <RoughBox
+            stroke="#2F7D6A"
+            fill="#FFFFFF"
+            strokeWidth={2.4}
+            radius={24}
+            roughness={1.8}
+            seedKey={`achievement-${current.key}`}
+            className="p-8 text-center shadow-2xl"
+          >
+            {achievements.length > 1 && (
+              <div className="mb-3 flex justify-center gap-1">
+                {achievements.map((_, i) => (
+                  <div key={i} className={`h-1.5 w-6 rounded-full ${i === index ? 'bg-primary-500' : 'bg-card-border'}`} />
+                ))}
+              </div>
+            )}
+
+            <div className="celebrate-eyebrow mb-2">
+              Achievement Unlocked!
             </div>
-          )}
 
-          <div className="celebrate-eyebrow mb-2">
-            Achievement Unlocked!
-          </div>
+            <motion.div
+              className="my-4 text-7xl"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1, transition: { delay: 0.15, type: 'spring', stiffness: 300, damping: 15 } }}
+            >
+              {current.icon}
+            </motion.div>
 
-          <motion.div
-            className="my-4 text-7xl"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1, transition: { delay: 0.15, type: 'spring', stiffness: 300, damping: 15 } }}
-          >
-            {current.icon}
-          </motion.div>
+            <h2 className="celebrate-headline mb-1 text-2xl">{current.title}</h2>
 
-          <h2 className="celebrate-headline mb-1 text-2xl">{current.title}</h2>
+            <div className="mt-3 flex justify-center gap-3">
+              {current.xpReward > 0 && (
+                <RoughBox
+                  stroke="#9B7BBE"
+                  fill="rgba(155, 123, 190, 0.10)"
+                  strokeWidth={1.4}
+                  radius={9999}
+                  roughness={1.2}
+                  seedKey={`ach-xp-${current.key}`}
+                  className="px-3 py-1 text-sm font-bold"
+                  style={{ color: '#9B7BBE' }}
+                >
+                  +{current.xpReward} XP
+                </RoughBox>
+              )}
+              {current.gemsReward > 0 && (
+                <RoughBox
+                  stroke="#4A8AB4"
+                  fill="rgba(74, 138, 180, 0.10)"
+                  strokeWidth={1.4}
+                  radius={9999}
+                  roughness={1.2}
+                  seedKey={`ach-gems-${current.key}`}
+                  className="px-3 py-1 text-sm font-bold"
+                  style={{ color: '#4A8AB4' }}
+                >
+                  +{current.gemsReward} 💎
+                </RoughBox>
+              )}
+            </div>
 
-          <div className="mt-3 flex justify-center gap-3">
-            {current.xpReward > 0 && (
-              <span className="rounded-full bg-gamification-xp/10 px-3 py-1 text-sm font-bold text-gamification-xp">
-                +{current.xpReward} XP
-              </span>
-            )}
-            {current.gemsReward > 0 && (
-              <span className="rounded-full bg-brand-blue/10 px-3 py-1 text-sm font-bold text-brand-blue">
-                +{current.gemsReward} 💎
-              </span>
-            )}
-          </div>
-
-          <button
-            onClick={handleNext}
-            className="btn-duo-green mt-6 w-full"
-          >
-            {index < achievements.length - 1 ? 'Next' : 'Awesome!'}
-          </button>
+            <div className="mt-6">
+              <RoughButton
+                variant="sage"
+                fullWidth
+                onClick={handleNext}
+                seedKey={`ach-cta-${current.key}-${index}`}
+              >
+                {index < achievements.length - 1 ? 'Next' : 'Awesome!'}
+              </RoughButton>
+            </div>
+          </RoughBox>
         </motion.div>
       </motion.div>
     </AnimatePresence>

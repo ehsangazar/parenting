@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Coins } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { soundManager } from '../../lib/soundManager.js';
+import { RoughBox, RoughButton } from '../rough/index.js';
 
 type LessonCompleteScreenProps = {
   coinsAwarded: number;
@@ -50,24 +51,35 @@ export const LessonCompleteScreen = ({ coinsAwarded, xpAwarded, onContinue }: Le
         </div>
 
         <motion.div
-          className="flex items-center gap-2 rounded-2xl border border-secondary-100 bg-secondary-50 px-6 py-4"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1, transition: { delay: 0.2 } }}
         >
-          <Coins size={28} weight="fill" className="text-secondary-500" />
-          <span className="celebrate-stat text-2xl text-secondary-500">{coinsLabel}</span>
-          <span className="text-base font-semibold text-secondary-fg">{t('learning.coinsEarned')}</span>
+          <RoughBox
+            stroke="#D87749"
+            fill="rgba(216, 119, 73, 0.10)"
+            strokeWidth={1.6}
+            radius={18}
+            roughness={1.5}
+            seedKey={`lesson-coin-chip-${awarded}`}
+            className="px-6 py-4"
+            innerClassName="flex items-center gap-2"
+          >
+            <Coins size={28} weight="fill" className="text-secondary-500" />
+            <span className="celebrate-stat text-2xl text-secondary-500">{coinsLabel}</span>
+            <span className="text-base font-semibold text-secondary-fg">{t('learning.coinsEarned')}</span>
+          </RoughBox>
         </motion.div>
       </div>
 
-      <motion.button
-        onClick={onContinue}
-        className="btn-duo-green absolute bottom-8 w-[calc(100%-3rem)] max-w-sm"
+      <motion.div
+        className="absolute bottom-8 w-[calc(100%-3rem)] max-w-sm"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0, transition: { delay: 0.45 } }}
       >
-        {t('learning.continue')}
-      </motion.button>
+        <RoughButton variant="sage" fullWidth onClick={onContinue} seedKey="lesson-continue">
+          {t('learning.continue')}
+        </RoughButton>
+      </motion.div>
     </motion.div>
   );
 };

@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import { RoughProgress } from '../rough/index.js';
 
 export type ProgressBarProps = {
   value: number;
@@ -7,16 +8,16 @@ export type ProgressBarProps = {
   color?: 'green' | 'yellow' | 'blue' | 'quest';
   showLabel?: boolean;
   size?: 'sm' | 'md';
-  /** Adds a moving light sweep to make in-progress bars feel alive. */
+  /** Kept for API compat; rough progress doesn't animate the fill. */
   animated?: boolean;
   className?: string;
 };
 
-const fillColor: Record<NonNullable<ProgressBarProps['color']>, string> = {
-  green: '!bg-primary-400',
-  yellow: '!bg-secondary-400',
-  blue: '!bg-brand-blue',
-  quest: '!bg-quest-fill',
+const COLOR_HEX: Record<NonNullable<ProgressBarProps['color']>, string> = {
+  green: '#2F7D6A',
+  yellow: '#D87749',
+  blue: '#4A8AB4',
+  quest: '#2F7D6A',
 };
 
 export const ProgressBar = ({
@@ -26,26 +27,20 @@ export const ProgressBar = ({
   color = 'green',
   showLabel,
   size = 'md',
-  animated = false,
   className,
 }: ProgressBarProps) => {
   const pct = Math.min(100, Math.max(0, value));
   const label =
     showLabel && current !== undefined && max !== undefined ? `${current} / ${max}` : null;
-  const isActive = animated && pct > 0 && pct < 100;
 
   return (
     <div className={clsx('w-full', className)}>
-      <div className={clsx('duo-progress-track', size === 'sm' && '!h-2')}>
-        <div
-          className={clsx('duo-progress-fill', fillColor[color], isActive && 'duo-progress-fill--active')}
-          style={{ width: `${pct}%` }}
-          role="progressbar"
-          aria-valuenow={pct}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        />
-      </div>
+      <RoughProgress
+        value={pct}
+        color={COLOR_HEX[color]}
+        height={size === 'sm' ? 10 : 14}
+        seedKey={`${color}-${size}`}
+      />
       {label && (
         <p className="mt-1 text-xs font-semibold text-text-tertiary">{label}</p>
       )}
