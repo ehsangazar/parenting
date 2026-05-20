@@ -43,8 +43,8 @@ export const AchievementUnlockModal = ({ achievements, onDismiss }: AchievementU
       vx: (Math.random() - 0.5) * 14,
       vy: -(Math.random() * 10 + 4),
       // Confetti hex literals must stay inline (canvas API), but the palette
-      // is the Confident Calm brand inks: sage, peach, dusty rose, dusty blue, lilac.
-      color: ['#3D7D6E', '#BD7338', '#BE7A93', '#5586A8', '#9B7BBE'][Math.floor(Math.random() * 5)],
+      // is the Garden Morning brand inks: sage, energy peach, dusty rose, sky blue, lilac.
+      color: ['#2F7D6A', '#E89163', '#D88BA0', '#4A8AB4', '#9B7BBE'][Math.floor(Math.random() * 5)],
       size: Math.random() * 8 + 4,
       rotation: Math.random() * 360,
       rotationSpeed: (Math.random() - 0.5) * 8,
