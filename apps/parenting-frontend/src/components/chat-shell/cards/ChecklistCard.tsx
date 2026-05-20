@@ -45,7 +45,7 @@ export function ChecklistCard({ id, data, actions, handlers }: Props) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-3.5">
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-blue/15">
+        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-primary-100">
           <Icon name={uiIcons.clipboardList} className="h-5 w-5 object-contain" alt="" />
         </div>
         <div className="min-w-0 flex-1">
@@ -55,7 +55,7 @@ export function ChecklistCard({ id, data, actions, handlers }: Props) {
           {data.subtitle && (
             <div className="mt-0.5 text-[12px] text-text-secondary">{data.subtitle}</div>
           )}
-          <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">
+          <div className="mt-1 text-[12px] font-semibold text-text-tertiary">
             {doneCount}/{data.items.length} done {allDone && '✓'}
           </div>
         </div>
@@ -70,14 +70,14 @@ export function ChecklistCard({ id, data, actions, handlers }: Props) {
                 onClick={() => toggle(item.id)}
                 className={`group flex w-full items-start gap-2.5 rounded-xl border px-3 py-2 text-left transition-colors ${
                   isOn
-                    ? 'border-emerald-200 bg-emerald-50/60'
-                    : 'border-border bg-surface-light hover:border-brand-blue/40'
+                    ? 'border-primary-200 bg-primary-50'
+                    : 'border-border bg-surface-light hover:border-primary-400'
                 }`}
               >
                 <span
                   className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border ${
                     isOn
-                      ? 'border-emerald-500 bg-emerald-500 text-white'
+                      ? 'border-primary-500 bg-primary-500 text-white'
                       : 'border-border-dark bg-surface'
                   }`}
                 >

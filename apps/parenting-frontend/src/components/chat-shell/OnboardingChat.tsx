@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
@@ -20,7 +19,6 @@ type OnboardingChatProps = {
 
 export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { setUser } = useAuth();
   const posthog = usePostHog();
 
@@ -185,7 +183,10 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
       ref={scrollRef}
       className="flex h-full w-full flex-col overflow-y-auto bg-background px-4 py-6 sm:px-6"
     >
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-3 pb-12">
+      {/* mt-auto glues the conversation to the bottom of the viewport when it's
+          short, so the active input/CTA sits where the user expects in a chat
+          UI. As bubbles accumulate, the column grows upward and scrolls. */}
+      <div className="mx-auto mt-auto flex w-full max-w-2xl flex-col gap-3 pb-6">
         <AssistantBubble>
           {t(
             'onboardingChat.intro',
@@ -262,7 +263,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
                           type="button"
                           onClick={() => removeKid(idx)}
                           aria-label={t('onboardingChat.removeKid', 'Remove')}
-                          className="text-[12px] font-semibold text-red-500 hover:underline"
+                          className="text-[12px] font-semibold text-error hover:underline"
                         >
                           {t('onboardingChat.remove', 'Remove')}
                         </button>
@@ -483,18 +484,6 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
           </>
         )}
 
-        <div className="pt-6 text-center">
-          <button
-            type="button"
-            onClick={() => {
-              posthog.capture('onboarding_form_fallback_clicked', { from_step: step });
-              navigate('/onboarding');
-            }}
-            className="text-[12px] text-text-tertiary underline hover:text-text-primary"
-          >
-            {t('onboardingChat.preferForm', 'Prefer a form? Fill it out instead.')}
-          </button>
-        </div>
       </div>
     </div>
   );

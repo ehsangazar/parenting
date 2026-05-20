@@ -8,9 +8,9 @@ type Props = {
 
 const TONE_CLASSES: Record<Required<CardAction>['tone'], string> = {
   primary:
-    'bg-brand-blue text-white border-transparent hover:brightness-110 disabled:opacity-50',
+    'bg-brand-blue text-white border-transparent hover:bg-accent-blueHover disabled:opacity-50',
   danger:
-    'bg-rose-500 text-white border-transparent hover:brightness-110 disabled:opacity-50',
+    'bg-error text-white border-transparent hover:brightness-95 disabled:opacity-50',
   ghost:
     'bg-transparent text-text-secondary border-border hover:bg-surface-light disabled:opacity-50',
 };

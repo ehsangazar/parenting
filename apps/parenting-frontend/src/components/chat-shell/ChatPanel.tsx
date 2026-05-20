@@ -253,8 +253,8 @@ function renderInline(text: string, recommendedArticleLabel: string): React.Reac
                   <Icon name={uiIcons.bookOpen} className="h-5 w-5 object-contain opacity-80" alt="" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider mb-0.5">{recommendedArticleLabel}</div>
-                  <div className="text-sm font-bold text-text-primary group-hover:text-primary-300 transition-colors">{label}</div>
+                  <div className="mb-0.5 text-[11px] font-bold text-primary-500">{recommendedArticleLabel}</div>
+                  <div className="text-sm font-bold text-text-primary group-hover:text-primary-600 transition-colors">{label}</div>
                 </div>
               </div>
               <Icon name={uiIcons.chevronRight} className="h-5 w-5 object-contain opacity-60 transition-all group-hover:translate-x-1" alt="" />
@@ -306,9 +306,9 @@ function ToolPillsRow({ pills }: { pills: ToolPill[] }) {
       {pills.map((p) => {
         const tone =
           p.state === 'ok'
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            ? 'bg-primary-50 text-primary-fg border-primary-200'
             : p.state === 'error'
-            ? 'bg-rose-50 text-rose-700 border-rose-200'
+            ? 'bg-error/10 text-error border-error/30'
             : 'bg-brand-blue/10 text-brand-blue border-brand-blue/30';
         return (
           <span
@@ -954,12 +954,12 @@ export const ChatPanel = () => {
         {isEmpty && !streaming && (
           <div className="mx-auto flex max-w-2xl min-h-[300px] flex-col items-center justify-center gap-5 text-center">
             <div className="relative">
-              <div className="absolute inset-0 rounded-2xl bg-brand-blue/20 blur-xl" />
-              <div className="relative flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-blue/15">
+              <div className="absolute inset-0 rounded-2xl bg-primary-200 blur-xl" />
+              <div className="relative flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-primary-100">
                 <Icon name={appAssetIcons.aiGuide} className="h-8 w-8 object-contain" alt="" />
               </div>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-blue/10 px-3 py-1 text-[12px] font-bold uppercase tracking-wider text-brand-blue">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-100 px-3 py-1 text-[12px] font-bold text-primary-fg">
               <Icon name={appAssetIcons.aiGuide} className="h-3 w-3 object-contain" alt="" />
               {t('chatPage.aiAssistantBadge', 'AI parenting assistant')}
             </span>
@@ -979,15 +979,15 @@ export const ChatPanel = () => {
             </div>
             <div className="grid w-full max-w-md grid-cols-3 gap-2 text-[12px]">
               <div className="flex flex-col items-center gap-1 rounded-xl border border-border bg-surface px-2 py-3">
-                <Icon name={uiIcons.shieldCheck} className="h-5 w-5 object-contain text-brand-blue" alt="" />
+                <Icon name={uiIcons.shieldCheck} className="h-5 w-5 object-contain text-primary-500" alt="" />
                 <span className="font-semibold text-text-primary">{t('chatPage.valueProp1', 'Evidence-based')}</span>
               </div>
               <div className="flex flex-col items-center gap-1 rounded-xl border border-border bg-surface px-2 py-3">
-                <Icon name={uiIcons.baby} className="h-5 w-5 object-contain text-brand-blue" alt="" />
+                <Icon name={uiIcons.baby} className="h-5 w-5 object-contain text-primary-500" alt="" />
                 <span className="font-semibold text-text-primary">{t('chatPage.valueProp2', 'Age-appropriate')}</span>
               </div>
               <div className="flex flex-col items-center gap-1 rounded-xl border border-border bg-surface px-2 py-3">
-                <Icon name={uiIcons.bookOpen} className="h-5 w-5 object-contain text-brand-blue" alt="" />
+                <Icon name={uiIcons.bookOpen} className="h-5 w-5 object-contain text-primary-500" alt="" />
                 <span className="font-semibold text-text-primary">{t('chatPage.valueProp3', 'Sourced answers')}</span>
               </div>
             </div>
@@ -996,7 +996,7 @@ export const ChatPanel = () => {
                 <button
                   key={q.text}
                   onClick={() => handleSend(q.text)}
-                  className="flex min-h-[48px] items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-left text-[14px] font-medium text-text-primary transition-colors hover:border-brand-blue/50 hover:bg-surface-light"
+                  className="flex min-h-[48px] items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-left text-[14px] font-medium text-text-primary transition-colors hover:border-primary-400 hover:bg-surface-light"
                 >
                   <Icon name={q.iconName} className="h-5 w-5 shrink-0 object-contain" alt="" />
                   <span>{q.text}</span>
@@ -1008,7 +1008,7 @@ export const ChatPanel = () => {
                 <button
                   type="button"
                   onClick={gotoSignIn}
-                  className="inline-flex items-center gap-2 rounded-xl bg-brand-blue px-5 py-3 text-[15px] font-bold text-white shadow-sm hover:brightness-110 min-h-[44px]"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-3 text-[15px] font-bold text-white shadow-sm hover:bg-primary-600 min-h-[44px]"
                 >
                   <Icon name={uiIcons.user} className="h-4 w-4 object-contain brightness-0 invert" alt="" />
                   {t('chatPage.signInToChat')}
@@ -1030,7 +1030,7 @@ export const ChatPanel = () => {
                 style={{ animationDelay: `${Math.min(idx * 40, 300)}ms` }}
               >
                 {msg.role === 'assistant' && (
-                  <div className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-brand-blue/15">
+                  <div className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-primary-100">
                     <Icon name={appAssetIcons.aiGuide} className="h-4 w-4 object-contain" alt="" />
                   </div>
                 )}
@@ -1057,11 +1057,11 @@ export const ChatPanel = () => {
 
             {streaming && loadingStatus && (
               <div className="flex items-end gap-3 justify-start animate-slide-up">
-                <div className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-brand-blue/15">
+                <div className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-primary-100">
                   <Icon name={appAssetIcons.aiGuide} className="h-4 w-4 object-contain" alt="" />
                 </div>
                 <div className="rounded-2xl rounded-bl-sm border border-border bg-surface px-4 py-3">
-                  <div className="flex items-center gap-1 text-brand-blue">
+                  <div className="flex items-center gap-1 text-primary-500">
                     <span className="typing-dot" />
                     <span className="typing-dot" />
                     <span className="typing-dot" />
@@ -1081,7 +1081,7 @@ export const ChatPanel = () => {
         <div className="mx-auto max-w-3xl">
           {token && children.length > 0 && (
             <div className="mb-2 flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
-              <span className="flex-shrink-0 text-[12px] font-bold text-text-secondary uppercase tracking-wide">
+              <span className="flex-shrink-0 text-[12px] font-semibold text-text-tertiary">
                 {t('chatPage.contextLabel')}
               </span>
               {children.map((child) => (
@@ -1123,7 +1123,7 @@ export const ChatPanel = () => {
               <button
                 type="button"
                 onClick={gotoSignIn}
-                className="inline-flex min-h-[44px] flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-2.5 text-[14px] font-bold text-white shadow-sm hover:brightness-110"
+                className="inline-flex min-h-[44px] flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-2.5 text-[14px] font-bold text-white shadow-sm transition-colors hover:bg-accent-blueHover"
               >
                 <Icon name={uiIcons.user} className="h-4 w-4 object-contain brightness-0 invert" alt="" />
                 {t('chatPage.guestWallCta', 'Sign in to continue')}
@@ -1152,7 +1152,7 @@ export const ChatPanel = () => {
                   <button
                     type="button"
                     onClick={handleStop}
-                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-red-500/10 px-4 text-[14px] font-bold text-red-500 hover:bg-red-500/20"
+                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-error/10 px-4 text-[14px] font-bold text-error hover:bg-error/20"
                   >
                     <Icon name={uiIcons.stopSquare} className="h-4 w-4 object-contain" alt="" />
                     {t('chatPage.stop')}
@@ -1162,7 +1162,7 @@ export const ChatPanel = () => {
                     type="button"
                     onClick={() => handleSend()}
                     disabled={!input.trim()}
-                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-brand-blue px-4 text-[14px] font-bold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:bg-border-dark disabled:text-text-secondary"
+                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-brand-blue px-4 text-[14px] font-bold text-white shadow-sm transition-colors hover:bg-accent-blueHover disabled:cursor-not-allowed disabled:bg-border-dark disabled:text-text-secondary"
                   >
                     {t('chatPage.send')}
                     <Icon name={uiIcons.send} className="h-4 w-4 object-contain brightness-0 invert" alt="" />

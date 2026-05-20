@@ -67,7 +67,7 @@ export const FeaturesPanel = ({ onClose }: { onClose?: () => void }) => {
   return (
     <div className="flex h-full w-full flex-col">
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-4">
-        <span className="text-[14px] font-extrabold uppercase tracking-wider text-text-primary">
+        <span className="font-heading text-[16px] font-bold text-text-primary">
           {t('chatShell.tools', 'Tools')}
         </span>
         <BalancePills />
@@ -123,7 +123,7 @@ export const FeaturesPanel = ({ onClose }: { onClose?: () => void }) => {
                 navigate('/login');
                 onClose?.();
               }}
-              className="mt-3 w-full rounded-xl bg-brand-blue px-3 py-2.5 text-[14px] font-bold text-white hover:brightness-110"
+              className="mt-3 w-full rounded-xl bg-primary-500 px-3 py-2.5 text-[14px] font-bold text-white transition-colors hover:bg-primary-600 min-h-[44px]"
             >
               {t('home.nav.signIn', 'Sign in')}
             </button>
@@ -135,7 +135,7 @@ export const FeaturesPanel = ({ onClose }: { onClose?: () => void }) => {
         <button
           type="button"
           onClick={() => setAboutOpen((v) => !v)}
-          className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[12px] font-bold uppercase tracking-wider text-text-secondary hover:bg-surface-light"
+          className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[13px] font-semibold text-text-secondary hover:bg-surface-light"
           aria-expanded={aboutOpen}
         >
           <span>{t('chatShell.aboutAndLegal', 'About & legal')}</span>

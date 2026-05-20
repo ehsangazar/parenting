@@ -21,7 +21,7 @@ export function ArticleCard({ data, actions, handlers }: Props) {
           <Icon name={uiIcons.bookOpen} className="h-5 w-5 object-contain" alt="" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+          <div className="text-[11px] font-bold text-brand-blue">
             Article
           </div>
           <div className="mt-0.5 text-[15px] font-bold text-text-primary leading-tight group-hover:text-brand-blue transition-colors">

@@ -39,9 +39,9 @@ export function ConfirmCard({ id, data, handlers }: Props) {
   const danger = !!data.danger;
   const isResolved = state !== 'pending';
   const tone = danger
-    ? 'border-rose-200 bg-rose-50/60'
-    : 'border-amber-200 bg-amber-50/60';
-  const iconWrap = danger ? 'bg-rose-100' : 'bg-amber-100';
+    ? 'border-error/30 bg-error/5'
+    : 'border-secondary-100 bg-secondary-50';
+  const iconWrap = danger ? 'bg-error/15 text-error' : 'bg-secondary-100 text-secondary-fg';
 
   return (
     <div className={`rounded-2xl border p-3.5 ${tone}`}>
@@ -65,8 +65,8 @@ export function ConfirmCard({ id, data, handlers }: Props) {
           }}
           className={`inline-flex h-9 min-h-0 items-center gap-1.5 rounded-full border border-transparent px-3.5 text-[13px] font-bold transition-colors ${
             danger
-              ? 'bg-rose-500 text-white hover:brightness-110'
-              : 'bg-brand-blue text-white hover:brightness-110'
+              ? 'bg-error text-white hover:brightness-95'
+              : 'bg-brand-blue text-white hover:bg-accent-blueHover'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {state === 'confirmed' ? `${data.confirmLabel} ✓` : data.confirmLabel}

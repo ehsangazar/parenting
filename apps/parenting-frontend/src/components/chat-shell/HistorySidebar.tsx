@@ -243,7 +243,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
                 type="button"
                 onClick={() => setPendingDeleteId(conv.id)}
                 title={t('chatPage.deleteConversation', 'Delete conversation')}
-                className="mt-2 me-2 inline-flex flex-shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-text-secondary hover:bg-red-500/10 hover:text-red-500"
+                className="mt-2 me-2 inline-flex flex-shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-text-secondary hover:bg-error/10 hover:text-error"
               >
                 <Icon name={uiIcons.trash} className="h-3 w-3 object-contain" alt="" />
                 {t('chatPage.deleteConversationShort', 'Delete')}
@@ -265,7 +265,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
               aria-label={t('chatShell.openSettings', 'Open settings')}
               className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-text-primary hover:bg-surface-light min-h-[44px]"
             >
-              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-blue/15">
+              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary-100">
                 <Icon name={uiIcons.user} className="h-3.5 w-3.5 object-contain" alt="" />
               </span>
               <span className="flex-1 truncate text-left">{user.email}</span>
@@ -301,7 +301,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
         >
           <div className="w-full max-w-md rounded-3xl bg-surface p-6 shadow-2xl">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-blue/10">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-100">
                 <Icon name={uiIcons.user} className="h-5 w-5 object-contain" alt="" />
               </div>
               <h2 id="sign-out-confirm-title" className="text-[18px] font-bold text-text-primary">
@@ -328,7 +328,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
                   setSignOutConfirmOpen(false);
                   handleLogout();
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 text-[14px] font-bold text-white transition-colors hover:brightness-110 min-h-[44px]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 text-[14px] font-bold text-white transition-colors hover:bg-accent-blueHover min-h-[44px]"
               >
                 {t('common.signOut', 'Sign out')}
               </button>
@@ -346,7 +346,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
         >
           <div className="w-full max-w-md rounded-3xl bg-surface p-6 shadow-2xl">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-500/10">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-error/10 text-error">
                 <Icon name={uiIcons.trash} className="h-5 w-5 object-contain" alt="" />
               </div>
               <h2 id="delete-conversation-title" className="text-[18px] font-bold text-text-primary">
@@ -369,7 +369,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
                 type="button"
                 disabled={deleting}
                 onClick={confirmDelete}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-2.5 text-[14px] font-bold text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-error px-4 py-2.5 text-[14px] font-bold text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
               >
                 {deleting && (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />

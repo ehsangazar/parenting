@@ -4,17 +4,19 @@
 
 @layer base {
   /**
-   * Raised · Pastel — canvas matches tailwind `background` (#F8F9FE).
-   * Default type: DM Sans. Use `font-game` for Fredoka (CTAs, badges, gamification).
+   * Raised · Confident Calm — canvas matches tailwind `background` (#FBFAF7, warm paper).
+   * Default type: DM Sans. Fredoka (.font-game) is RESERVED for celebration moments
+   * (.celebrate-* utilities, achievement / streak / lesson-complete overlays). Do not
+   * use Fredoka on regular CTAs, nav, or chrome.
    */
   html {
-    background-color: #f8f9fe;
+    background-color: #f9f4ec;
     min-height: 100%;
   }
 
   #root {
     min-height: 100%;
-    background-color: #f8f9fe;
+    background-color: #f9f4ec;
   }
 
   body {
@@ -106,59 +108,69 @@
 }
 
 @layer components {
-  /* 3D tactile CTAs — Fredoka for playful caps (Pastel: gamification type) */
+  /**
+   * Confident-calm CTA base. DM Sans semibold sentence-case, single elevation,
+   * gentle scale on press. No uppercase, no Fredoka, no 3D slab — those move
+   * into .celebrate-* utilities reserved for moments (achievement, streak,
+   * lesson complete, XP gain).
+   */
   .btn-duo {
-    @apply font-game relative inline-flex items-center justify-center rounded-2xl font-bold uppercase tracking-[0.08em] transition-transform duration-100 ease-in-out cursor-pointer;
-    min-height: 56px;
-    padding: 0 24px;
+    @apply relative inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-150 ease-out cursor-pointer;
+    min-height: 48px;
+    padding: 0 20px;
+    font-size: 15px;
+    letter-spacing: -0.005em;
     border: none;
     outline: none;
   }
-  
+
   .btn-duo:active:not(:disabled) {
-    transform: translateY(3px);
+    transform: scale(0.985);
   }
-  
+
   .btn-duo:disabled {
     @apply opacity-50 cursor-not-allowed;
   }
 
   .btn-duo-green {
-    @apply btn-duo bg-primary-400 text-text-inverse;
+    @apply btn-duo bg-primary-500 text-text-inverse;
   }
-  .btn-duo-green:active:not(:disabled) {
+  .btn-duo-green:hover:not(:disabled) {
+    @apply bg-primary-600;
   }
 
   .btn-duo-blue {
     @apply btn-duo bg-brand-blue text-white;
   }
-  .btn-duo-blue:active:not(:disabled) {
+  .btn-duo-blue:hover:not(:disabled) {
+    @apply bg-accent-blueHover;
   }
 
-  /* Sky tactile — bright chip, dark label */
+  /* Sky — lighter teal cousin for secondary-primary actions on white surfaces */
   .btn-duo-sky {
-    @apply btn-duo bg-[#5ED4C8];
-    color: #0a1f14;
+    @apply btn-duo bg-primary-400 text-text-inverse;
   }
-  .btn-duo-sky:active:not(:disabled) {
+  .btn-duo-sky:hover:not(:disabled) {
+    @apply bg-primary-500;
   }
 
   /**
-   * Outlined pill on light canvas — CELEBRATE-style
-   * Thick border, white fill, dark caps label; pair with leading icon (e.g. 🎉).
+   * Celebration-style outlined pill — pair with a leading emoji/icon (🎉)
+   * to mark moments (e.g. "Mark complete" on the lesson-complete screen).
+   * Fredoka uppercase IS allowed here because it lives inside a moment.
    */
   .btn-duo-surface-pill {
-    @apply font-game relative inline-flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-150;
-    min-height: 56px;
-    padding: 0 32px;
-    border: 3px solid #e0e7ff;
+    @apply font-game relative inline-flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-[0.06em] cursor-pointer transition-colors duration-150;
+    min-height: 52px;
+    padding: 0 28px;
+    border: 2px solid #e8dfcb;
     background: #ffffff;
-    color: #1e293b;
+    color: #1f1b16;
     outline: none;
   }
   .btn-duo-surface-pill:hover:not(:disabled) {
-    background: #f1f4ff;
-    border-color: #c7d2fe;
+    background: #f2ebde;
+    border-color: #d4c8ae;
   }
   .btn-duo-surface-pill:active:not(:disabled) {
     transform: scale(0.98);
@@ -168,44 +180,47 @@
   }
 
   /**
-   * Premium 3D pill — TRY N DAYS FREE-style saturated violet + deep slab shadow
-   * Taller depth (6px) than standard duo CTAs (4px) for a heavier press.
+   * Premium / trial pill — the only saturated 3D button left, restricted to
+   * "Try 1 week free" / upgrade / premium-unlock moments. Amber slab signals
+   * a celebration-grade ask, not everyday navigation.
    */
   .btn-duo-violet-pill {
-    @apply font-game relative inline-flex items-center justify-center rounded-full font-bold uppercase tracking-[0.08em] transition-transform duration-100 ease-in-out cursor-pointer;
-    min-height: 56px;
-    padding: 0 36px;
+    @apply font-game relative inline-flex items-center justify-center rounded-full font-bold uppercase tracking-[0.06em] transition-transform duration-100 ease-in-out cursor-pointer;
+    min-height: 52px;
+    padding: 0 32px;
     border: none;
     outline: none;
-    background: #5856d6;
+    background: #bd7338;
     color: #ffffff;
+    box-shadow: 0 4px 0 0 #7d4818;
   }
   .btn-duo-violet-pill:active:not(:disabled) {
-    transform: translateY(2px);
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 0 #7d4818;
   }
   .btn-duo-violet-pill:disabled {
     @apply opacity-50 cursor-not-allowed;
   }
 
   .btn-duo-gold {
-    @apply btn-duo bg-secondary-400 text-text-inverse;
+    @apply btn-duo bg-secondary-500 text-text-inverse;
   }
-  .btn-duo-gold:active:not(:disabled) {
+  .btn-duo-gold:hover:not(:disabled) {
+    background: #8e5526;
   }
 
   .btn-duo-outline {
-    @apply btn-duo bg-surface text-brand-blue border-2 border-border;
+    @apply btn-duo bg-surface text-primary-500 border border-border-dark;
   }
-  .btn-duo-outline:active:not(:disabled) {
+  .btn-duo-outline:hover:not(:disabled) {
+    @apply bg-surface-light;
   }
 
   .btn-duo-ghost {
-    @apply btn-duo bg-surface-light text-text-secondary;
-  }
-  .btn-duo-ghost:active:not(:disabled) {
+    @apply btn-duo bg-transparent text-text-secondary;
   }
   .btn-duo-ghost:hover:not(:disabled) {
-    @apply bg-surface-light;
+    @apply bg-surface-light text-text-primary;
   }
 
   /** Compact duo CTAs — navbar, tables, admin toolbars (same 3D language, smaller footprint) */
@@ -236,9 +251,26 @@
     @apply btn-duo-outline inline-flex items-center justify-center !min-h-12 !rounded-full !px-7 !py-3 !text-sm;
   }
   
-  /* Link utilities */
+  /* Link utilities — sentence-case, weighty enough to read as a tap target */
   .duo-action-link {
-    @apply font-game text-brand-blue font-bold uppercase tracking-[0.08em] text-[13px] hover:underline cursor-pointer inline-flex items-center;
+    @apply text-brand-blue font-semibold text-[14px] hover:underline cursor-pointer inline-flex items-center;
+  }
+
+  /**
+   * Celebration typography. Use these ONLY inside celebration moments:
+   * AchievementUnlockModal, StreakCelebrationModal, LessonCompleteScreen,
+   * WeeklyRecapCard headline, XP-rise float, level-up badge. They are the
+   * "Fredoka shows up because something good just happened" voice.
+   */
+  .celebrate-headline {
+    @apply font-game font-extrabold uppercase tracking-[0.04em] text-text-primary;
+  }
+  .celebrate-stat {
+    @apply font-game font-bold tabular-nums text-text-primary;
+  }
+  .celebrate-eyebrow {
+    @apply font-game font-bold uppercase tracking-[0.18em] text-secondary-500;
+    font-size: 11px;
   }
 
   /* Progress Bar */
@@ -347,22 +379,19 @@
      a radiant halo during achievement moments.
   ─────────────────────────────────────────────────────────────── */
   .glow-primary {
-    filter: drop-shadow(0 0 10px rgba(82, 214, 140, 0.65));
+    filter: drop-shadow(0 0 10px rgba(61, 125, 110, 0.55));
   }
   .glow-gold {
-    filter: drop-shadow(0 0 10px rgba(255, 159, 81, 0.72));
+    filter: drop-shadow(0 0 10px rgba(189, 115, 56, 0.72));
   }
   .glow-blue {
-    filter: drop-shadow(0 0 10px rgba(123, 143, 255, 0.65));
+    filter: drop-shadow(0 0 10px rgba(85, 134, 168, 0.55));
   }
 }
 
 @layer utilities {
   .glass {
     @apply bg-white/85 backdrop-blur-md border border-border;
-  }
-  .glass-dark {
-    @apply glass;
   }
   
   .card-hover {
@@ -386,7 +415,7 @@
     animation: pop-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
   .animate-shimmer {
-    background: linear-gradient(90deg, #f1f4ff 25%, #e8edff 50%, #f1f4ff 75%);
+    background: linear-gradient(90deg, #f2ebde 25%, #eae0cc 50%, #f2ebde 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
@@ -423,8 +452,8 @@
   .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
 
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(82, 214, 140, 0.35); }
-    50% { box-shadow: 0 0 0 8px rgba(82, 214, 140, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(61, 125, 110, 0.35); }
+    50% { box-shadow: 0 0 0 8px rgba(61, 125, 110, 0); }
   }
   .animate-pulse-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
 
@@ -547,7 +576,7 @@
 
   @keyframes flash-green {
   0% { background-color: transparent; }
-  50% { background-color: rgba(150, 230, 179, 0.45); }
+  50% { background-color: rgba(61, 125, 110, 0.18); }
   100% { background-color: transparent; }
 }
 
@@ -606,7 +635,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .toggle-switch[data-on="true"] {
-  background-color: #34C759;
+  background-color: #3D7D6E;
 }
 .toggle-switch[data-on="true"] .toggle-switch-thumb {
   transform: translateX(20px);

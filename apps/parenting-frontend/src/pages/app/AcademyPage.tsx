@@ -14,6 +14,8 @@ import { uiIcons } from '../../lib/iconSemantics.js';
 import { ResumeCard } from '../../components/academy/ResumeCard.js';
 import { PendingPracticeCard } from '../../components/academy/PendingPracticeCard.js';
 import { WeeklyRecapCard } from '../../components/academy/WeeklyRecapCard.js';
+import { TodayCard } from '../../components/academy/TodayCard.js';
+import { DuoButton } from '../../components/ui/index.js';
 
 type Phase = {
   id: string;
@@ -85,6 +87,7 @@ export const AcademyPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAllLeaps, setShowAllLeaps] = useState(false);
+  const [todayReflectId, setTodayReflectId] = useState<string | null>(null);
 
   const loadCourses = useCallback(async () => {
     setLoading(true);
@@ -153,17 +156,21 @@ export const AcademyPage = () => {
           )}
           iconName={appAssetIcons.academy}
         />
-        <div className="rounded-2xl bg-surface-light p-6 text-center">
-          <p className="text-[14px] font-semibold text-text-primary">
+        <div className="rounded-2xl border border-border bg-surface p-6 text-center">
+          <p className="text-[15px] font-semibold text-text-primary">
             {t('academy.signInPrompt', 'Sign in to access the Academy.')}
           </p>
-          <button
-            type="button"
+          <p className="mt-1 text-[13px] text-text-secondary">
+            {t('academy.signInBody', 'Your courses and practice progress live with your account.')}
+          </p>
+          <DuoButton
+            variant="green"
+            size="sm"
             onClick={() => navigate('/login?next=/academy')}
-            className="mt-3 rounded-xl bg-brand-blue px-4 py-2 text-[14px] font-bold text-white hover:brightness-110"
+            className="mt-4"
           >
             {t('home.nav.signIn', 'Sign in')}
-          </button>
+          </DuoButton>
         </div>
       </PageContainer>
     );
@@ -186,7 +193,7 @@ export const AcademyPage = () => {
         </p>
       )}
       {error && (
-        <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-[13px] font-semibold text-red-500">
+        <p className="rounded-2xl bg-error/10 px-4 py-3 text-[13px] font-semibold text-error">
           {error}
         </p>
       )}
@@ -207,8 +214,11 @@ export const AcademyPage = () => {
 
       {!loading && !error && courses.length > 0 && (
         <>
+          <TodayCard onReflectPracticeChange={setTodayReflectId} />
           <WeeklyRecapCard />
-          <PendingPracticeCard />
+          <PendingPracticeCard
+            hidePracticeIds={todayReflectId ? [todayReflectId] : undefined}
+          />
           <ResumeCard />
         </>
       )}

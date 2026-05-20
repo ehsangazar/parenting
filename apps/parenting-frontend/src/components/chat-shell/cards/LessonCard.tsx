@@ -25,7 +25,7 @@ export function LessonCard({ data }: Props) {
             <Icon name={uiIcons.sparkles} className="h-5 w-5 object-contain" alt="" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-pink">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-brand-pink">
               <span>{t('chat.lessonCard.tag', 'Lesson')}</span>
               <span aria-hidden className="opacity-50">·</span>
               <span>
@@ -36,7 +36,7 @@ export function LessonCard({ data }: Props) {
               {data.isCompleted && (
                 <>
                   <span aria-hidden className="opacity-50">·</span>
-                  <span className="text-emerald-600">
+                  <span className="text-primary-600">
                     {t('chat.lessonCard.completed', 'Completed')}
                   </span>
                 </>

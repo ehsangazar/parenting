@@ -1,113 +1,119 @@
 /** @type {import('tailwindcss').Config} */
 /**
- * Raised · Pastel — lavender-grey canvas, mint primary, peach Growth,
- * dusty periwinkle accent. Matches design-system-proposal.html (canonical spec).
+ * Raised · Confident Calm (softened pastel) — cream-paper canvas, sage-teal
+ * primary, warm-peach accent reserved for celebration moments. Primary and
+ * secondary fills are still dark enough for WCAG AA white-text contrast;
+ * pastel tints (-100/-200) live on light surfaces with dark `*-fg` text.
  */
 module.exports = {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        /** Pastel canvas + surfaces */
-        background: '#F8F9FE',
+        /** Cream-paper canvas, white surfaces. Warmer than the prior #FBFAF7,
+         *  pairs better with sage / peach without feeling clinical. */
+        background: '#F9F4EC',
         surface: {
           DEFAULT: '#FFFFFF',
-          light: '#F1F4FF',
-          warm: '#E8EDFF',
+          light: '#F2EBDE',
+          warm: '#EAE0CC',
         },
+        /** Sage-teal — softer than deep teal, still passes white-on-fill AA at -500. */
         primary: {
-          50: 'rgba(150,230,179,0.12)',
-          100: 'rgba(150,230,179,0.25)',
-          200: 'rgba(150,230,179,0.35)',
-          300: '#B7F0CC',
-          400: '#96E6B3',
-          500: '#52D68C',
-          600: '#5FBF82',
-          700: '#3d9e62',
-          DEFAULT: '#96E6B3',
-          /** Text / strokes on mint fills & light surfaces */
-          fg: '#14532d',
+          50: 'rgba(61,125,110,0.06)',
+          100: 'rgba(61,125,110,0.14)',
+          200: 'rgba(61,125,110,0.22)',
+          300: '#9DC8BC',
+          400: '#6FAA98',
+          500: '#3D7D6E',
+          600: '#2F665A',
+          700: '#234D45',
+          DEFAULT: '#3D7D6E',
+          /** Text / strokes on sage tints */
+          fg: '#1A3D37',
         },
+        /** Warm peach / marigold — celebration only (streak, XP gain, weekly recap). */
         secondary: {
-          50: 'rgba(255,216,168,0.14)',
-          100: 'rgba(255,216,168,0.22)',
-          400: '#FFD8A8',
-          500: '#FDBA74',
-          DEFAULT: '#FFD8A8',
-          fg: '#9a3412',
+          50: 'rgba(189,115,56,0.08)',
+          100: 'rgba(189,115,56,0.18)',
+          400: '#E9A977',
+          500: '#BD7338',
+          DEFAULT: '#BD7338',
+          fg: '#5C3211',
         },
         brand: {
-          green: '#96E6B3',
-          /** Interactive blue — darkened to #4F46E5 for WCAG AA compliance (was #7B8FFF, ~2.6:1) */
-          blue: '#4F46E5',
-          red: '#FF6B6B',
-          yellow: '#FFD8A8',
-          purple: '#C084FC',
-          /** design-system-proposal.html — token table */
-          periwinkle: '#D1D8FF',
-          energy: '#FEE2E2',
-          stars: '#E9D5FF',
-          rhythm: '#FFEDD5',
+          green: '#3D7D6E',
+          /** Dusty blue — info / calendar / links (softer than steel #0369A1). */
+          blue: '#5586A8',
+          red: '#C75555',
+          yellow: '#BD7338',
+          'yellow-fg': '#5C3211',
+          purple: '#9B7BBE',
+          /** Dusty rose — Academy / Practice / Reminders category accent. */
+          pink: '#BE7A93',
+          'pink-fg': '#6E2940',
+          periwinkle: '#B9C0E8',
+          energy: '#F5D5CF',
+          stars: '#E4D6E8',
+          rhythm: '#F5DDC3',
         },
-        hub: '#F8F9FE',
-        'card-border': '#E0E7FF',
+        hub: '#F9F4EC',
+        'card-border': '#E8DFCB',
         quest: {
-          /** Visible on white / surface — not surface-3 (too low contrast for tracks) */
-          track: '#E2E8F0',
-          fill: '#D1D8FF',
+          track: '#E8DFCB',
+          fill: '#3D7D6E',
         },
-        /** Top bar StatPills — each metric has its own ink (do not use brand.yellow + secondary.400: both are #FFD8A8) */
+        /** Top-bar StatPills — each metric has its own ink (no collisions). */
         gamification: {
-          streak: '#EA580C',
-          xp: '#6D28D9',
+          streak: '#D77548',
+          xp: '#9B7BBE',
         },
-        /** SUPER badge — only allowed gradient in UI */
+        /** SUPER badge — the only sanctioned gradient in the UI. */
         super: {
-          from: '#be53f2',
-          to: '#4481eb',
+          from: '#3D7D6E',
+          to: '#BD7338',
         },
-        /** Full token reference — design-system-proposal.html #tokens */
+        /** Warm dark text on cream canvas reads less clinical than pure navy. */
         text: {
-          primary: '#334155',
-          secondary: '#475569',
-          /** ≥AA on canvas + surface (avoid slate-300 for UI copy) */
-          tertiary: '#475569',
-          dimmed: '#475569',
-          muted: '#64748B',
-          /** Dark text on mint / gold tactile buttons */
-          inverse: '#0a1f14',
+          primary: '#1F1B16',
+          secondary: '#4A453D',
+          tertiary: '#736B5C',
+          dimmed: '#A3998A',
+          muted: '#5C5547',
+          /** Text on filled sage / peach buttons */
+          inverse: '#FFFFFF',
         },
         border: {
-          DEFAULT: '#E0E7FF',
-          light: '#EEF2FF',
-          medium: '#E0E7FF',
-          dark: '#C7D2FE',
-          focus: '#3730a3',
+          DEFAULT: '#E8DFCB',
+          light: '#F0E8D6',
+          medium: '#E8DFCB',
+          dark: '#D4C8AE',
+          focus: '#3D7D6E',
         },
-        success: '#52D68C',
-        warning: '#FDBA74',
-        error: '#FF6B6B',
-        info: '#4F46E5',
-        cream: '#F8F9FE',
+        success: '#3D7D6E',
+        warning: '#BD7338',
+        error: '#C75555',
+        info: '#5586A8',
+        cream: '#F9F4EC',
         accent: {
-          blue: '#4F46E5',
-          green: '#52D68C',
-          blueHover: '#4338CA',
-          greenHover: '#52D68C',
+          blue: '#5586A8',
+          green: '#3D7D6E',
+          blueHover: '#3F6E8B',
+          greenHover: '#2F665A',
         },
         header: {
           blue: '#FFFFFF',
-          background: '#F8F9FE',
+          background: '#F9F4EC',
         },
         pregnancy: {
           card: '#FFFFFF',
-          cardDark: '#F1F4FF',
-          progress: '#96E6B3',
-          progressBg: 'rgba(150,230,179,0.25)',
-          iconPulse: '#F1F4FF',
-          iconHeart: '#FEE2E2',
-          iconCart: '#FFD8A8',
-          iconChart: '#7B8FFF',
+          cardDark: '#F2EBDE',
+          progress: '#3D7D6E',
+          progressBg: 'rgba(61,125,110,0.18)',
+          iconPulse: '#F2EBDE',
+          iconHeart: '#F5D5CF',
+          iconCart: '#F5DDC3',
+          iconChart: '#5586A8',
         },
       },
       spacing: {
@@ -127,8 +133,8 @@ module.exports = {
         xl: ['20px', { lineHeight: '30px' }],
         '2xl': ['24px', { lineHeight: '36px' }],
         '3xl': ['28px', { lineHeight: '42px' }],
-        '4xl': ['32px', { lineHeight: '48px' }],
-        '5xl': ['40px', { lineHeight: '60px' }],
+        '4xl': ['32px', { lineHeight: '44px' }],
+        '5xl': ['40px', { lineHeight: '52px' }],
       },
       fontWeight: {
         regular: '400',
@@ -137,31 +143,29 @@ module.exports = {
         bold: '700',
       },
       fontFamily: {
-        /** Default UI + reading — DM Sans (Pastel) */
         sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
-        /** Gamification: buttons, badges, nav labels, Fredoka moments */
+        /** Fredoka — RESERVED for celebration moments only. Do not use on regular CTAs. */
         game: ['Fredoka', 'Nunito', 'system-ui', 'sans-serif'],
         display: ['Sora', 'system-ui', 'sans-serif'],
         body: ['"DM Sans"', 'system-ui', 'sans-serif'],
         heading: ['Sora', 'system-ui', 'sans-serif'],
-        /** Persian / RTL — Vazirmatn */
         persian: ['Vazirmatn', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         xs: '4px',
         sm: '8px',
-        md: '12px',
-        lg: '16px',
-        xl: '20px',
-        '2xl': '24px',
-        '3xl': '32px',
+        md: '10px',
+        lg: '14px',
+        xl: '18px',
+        '2xl': '22px',
+        '3xl': '28px',
         full: '9999px',
       },
       boxShadow: {
-        sm: '0 1px 2px 0 rgba(15, 23, 42, 0.06)',
-        md: '0 4px 12px 0 rgba(15, 23, 42, 0.08)',
-        lg: '0 8px 24px 0 rgba(15, 23, 42, 0.1)',
-        xl: '0 16px 40px 0 rgba(15, 23, 42, 0.12)',
+        sm: '0 1px 2px 0 rgba(70, 60, 45, 0.06)',
+        md: '0 4px 12px 0 rgba(70, 60, 45, 0.07)',
+        lg: '0 8px 24px 0 rgba(70, 60, 45, 0.10)',
+        xl: '0 16px 40px 0 rgba(70, 60, 45, 0.12)',
         none: 'none',
       },
       transitionDuration: {

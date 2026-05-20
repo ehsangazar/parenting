@@ -4,11 +4,11 @@ import { CardActionsRow } from './CardActions.js';
 import type { CardActionHandlers, EventCardData, CardAction } from './types.js';
 
 const EVENT_TYPE_TONE: Record<string, string> = {
-  appointment: 'bg-rose-50 text-rose-700 border-rose-200',
-  milestone: 'bg-amber-50 text-amber-800 border-amber-200',
-  activity: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-  reminder: 'bg-violet-50 text-violet-800 border-violet-200',
-  other: 'bg-slate-50 text-slate-700 border-slate-200',
+  appointment: 'bg-brand-pink/10 text-brand-pink-fg border-brand-pink/30',
+  milestone: 'bg-secondary-50 text-secondary-fg border-secondary-100',
+  activity: 'bg-primary-50 text-primary-fg border-primary-200',
+  reminder: 'bg-brand-blue/10 text-brand-blue border-brand-blue/30',
+  other: 'bg-surface-light text-text-secondary border-border',
 };
 
 function formatWhen(startsAt: string, endsAt?: string, allDay?: boolean): string {
@@ -45,13 +45,13 @@ export function EventCard({ data, actions, handlers }: Props) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-3.5">
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-blue/15">
+        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-primary-100">
           <Icon name={uiIcons.calendar} className="h-5 w-5 object-contain" alt="" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span
-              className={`inline-flex h-5 items-center rounded-full border px-2 text-[10px] font-bold uppercase tracking-wide ${tone}`}
+              className={`inline-flex h-5 items-center rounded-full border px-2 text-[11px] font-bold ${tone}`}
             >
               {data.eventType}
             </span>
