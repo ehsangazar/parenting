@@ -680,14 +680,15 @@ export const ChatPanel = () => {
           const lines = rawEvent.split('\n');
 
           let eventName: string | null = null;
-          let dataLine: string | null = null;
+          const dataLines: string[] = [];
 
           for (const line of lines) {
             if (line.startsWith('event: ')) eventName = line.slice(7).trim();
-            else if (line.startsWith('data: ')) dataLine = line.slice(6);
+            else if (line.startsWith('data: ')) dataLines.push(line.slice(6));
           }
 
-          if (!dataLine) continue;
+          if (dataLines.length === 0) continue;
+          const dataLine = dataLines.join('\n');
 
           if (eventName === 'thinking') {
             continue;
