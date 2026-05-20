@@ -17,7 +17,12 @@ const OUTCOME_STYLES: Record<Outcome, string> = {
   didnt_work: 'border-rose-500/40 bg-rose-500/10 text-rose-600 hover:bg-rose-500/20',
 };
 
-export const PendingPracticeCard = () => {
+type PendingPracticeCardProps = {
+  // IDs handled elsewhere on the page (e.g. by TodayCard) so we don't double-render them.
+  hidePracticeIds?: string[];
+};
+
+export const PendingPracticeCard = ({ hidePracticeIds }: PendingPracticeCardProps = {}) => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [practices, setPractices] = useState<Pending[]>([]);
@@ -101,7 +106,10 @@ export const PendingPracticeCard = () => {
     }
   };
 
-  if (loading || practices.length === 0) return null;
+  const hideSet = new Set(hidePracticeIds ?? []);
+  const visible = practices.filter((p) => !hideSet.has(p.id));
+
+  if (loading || visible.length === 0) return null;
 
   return (
     <section className="mb-6">
@@ -109,7 +117,7 @@ export const PendingPracticeCard = () => {
         {t('academy.practice.heading', 'How did it go?')}
       </p>
       <ul className="space-y-3">
-        {practices.map((p) => {
+        {visible.map((p) => {
           const expanded = expandedId === p.id;
           const childPart = p.childName ? ` ${t('academy.practice.with', 'with')} ${p.childName}` : '';
           return (

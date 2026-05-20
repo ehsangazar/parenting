@@ -46,6 +46,19 @@ export default async function learningRoutes(app: FastifyInstance) {
     return reply.send({ courseId, phases });
   });
 
+  // GET /learning/today
+  app.get("/today", {
+    schema: {
+      tags: ["Learning"],
+      summary: "Today's single most-relevant nudge for the current user",
+      security: bearerSecurity,
+    },
+    preHandler: [app.authenticate],
+  }, async (req, reply) => {
+    const today = await svc.getTodayItem(req.user.sub);
+    return reply.send({ today });
+  });
+
   // GET /learning/resume
   app.get("/resume", {
     schema: {

@@ -81,6 +81,42 @@ export function createLearningApi(api: AxiosInstance) {
         isFreshStart: boolean;
       } | null;
     },
+    getToday: async () => (await api.get('/api/today')).data as {
+      today:
+        | {
+            kind: 'reflect';
+            practiceId: string;
+            lessonId: string;
+            lessonTitle: string;
+            courseId: string | null;
+            moduleId: string | null;
+            technique: string;
+            childName: string | null;
+            pledgedAt: string;
+            hoursAgo: number;
+          }
+        | {
+            kind: 'repeat';
+            basedOnPracticeId: string;
+            lessonId: string;
+            lessonTitle: string;
+            courseId: string | null;
+            moduleId: string | null;
+            technique: string;
+            childName: string | null;
+            childId: string | null;
+            reflectedAt: string;
+          }
+        | {
+            kind: 'resume';
+            courseId: string;
+            moduleId: string;
+            lessonId: string;
+            lessonTitle: string | null;
+            isFreshStart: boolean;
+          }
+        | null;
+    },
     pledgePractice: async (
       lessonId: string,
       payload: { technique: string; childId?: string | null },

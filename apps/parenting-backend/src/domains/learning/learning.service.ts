@@ -596,6 +596,116 @@ export async function getPracticeRecap(
   };
 }
 
+// ── Today (single daily nudge) ────────────────────────────────────────────────
+
+// Priority order is deliberate: an open pledge waiting on a reflection
+// matters more than a re-engagement prompt, which matters more than just
+// "your next lesson." We surface ONE card at a time so the morning open
+// is a single decisive ask, not a wall of options.
+
+export type TodayReflect = {
+  kind: "reflect";
+  practiceId: string;
+  lessonId: string;
+  lessonTitle: string;
+  courseId: string | null;
+  moduleId: string | null;
+  technique: string;
+  childName: string | null;
+  pledgedAt: string;
+  hoursAgo: number;
+};
+
+export type TodayRepeat = {
+  kind: "repeat";
+  basedOnPracticeId: string;
+  lessonId: string;
+  lessonTitle: string;
+  courseId: string | null;
+  moduleId: string | null;
+  technique: string;
+  childName: string | null;
+  childId: string | null;
+  reflectedAt: string;
+};
+
+export type TodayResume = {
+  kind: "resume";
+  courseId: string;
+  moduleId: string;
+  lessonId: string;
+  lessonTitle: string | null;
+  isFreshStart: boolean;
+};
+
+export type TodayItem = TodayReflect | TodayRepeat | TodayResume;
+
+const TODAY_REFLECT_AFTER_HOURS = 18;
+const TODAY_REPEAT_WINDOW_DAYS = 7;
+
+export async function getTodayItem(userId: string): Promise<TodayItem | null> {
+  const now = new Date();
+
+  // 1. Oldest pending pledge that's had at least one day to be tried.
+  const olderThan = new Date(now.getTime() - TODAY_REFLECT_AFTER_HOURS * 60 * 60 * 1000);
+  const oldestPending = await repo.findOldestPendingPracticeOlderThan(userId, olderThan);
+  if (oldestPending) {
+    const hoursAgo = Math.floor(
+      (now.getTime() - oldestPending.pledgedAt.getTime()) / (60 * 60 * 1000),
+    );
+    return {
+      kind: "reflect",
+      practiceId: oldestPending.id,
+      lessonId: oldestPending.lessonId,
+      lessonTitle: oldestPending.lesson.title ?? "",
+      courseId: oldestPending.lesson.module?.phase?.course?.id ?? null,
+      moduleId: oldestPending.lesson.module?.id ?? null,
+      technique: oldestPending.technique,
+      childName: oldestPending.child?.name ?? null,
+      pledgedAt: oldestPending.pledgedAt.toISOString(),
+      hoursAgo,
+    };
+  }
+
+  // 2. Last winning reflection in the past week, only if the user hasn't
+  //    already re-pledged for the same lesson since then.
+  const repeatSince = new Date(now.getTime() - TODAY_REPEAT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+  const lastWin = await repo.findLastWinningReflectionSince(userId, repeatSince);
+  if (lastWin) {
+    const anchor = lastWin.reflectedAt ?? lastWin.pledgedAt;
+    const alreadyActedOn = await repo.hasPledgeSince(userId, lastWin.lessonId, anchor);
+    if (!alreadyActedOn) {
+      return {
+        kind: "repeat",
+        basedOnPracticeId: lastWin.id,
+        lessonId: lastWin.lessonId,
+        lessonTitle: lastWin.lesson.title ?? "",
+        courseId: lastWin.lesson.module?.phase?.course?.id ?? null,
+        moduleId: lastWin.lesson.module?.id ?? null,
+        technique: lastWin.technique,
+        childName: lastWin.child?.name ?? null,
+        childId: lastWin.child?.id ?? null,
+        reflectedAt: (lastWin.reflectedAt ?? lastWin.pledgedAt).toISOString(),
+      };
+    }
+  }
+
+  // 3. Resume target — covers both "next lesson" and first-time onboarding.
+  const resume = await getResumeTarget(userId);
+  if (resume) {
+    return {
+      kind: "resume",
+      courseId: resume.courseId,
+      moduleId: resume.moduleId,
+      lessonId: resume.lessonId,
+      lessonTitle: resume.lessonTitle,
+      isFreshStart: resume.isFreshStart,
+    };
+  }
+
+  return null;
+}
+
 export async function tryPlaybookWithGroup(
   userId: string,
   playbookId: string,

@@ -359,6 +359,68 @@ export async function findPracticesInWindow(userId: string, since: Date) {
   });
 }
 
+// Used by the "Today" card to surface the oldest unreflected pledge once it
+// has had at least one full day to be tried in the field.
+export async function findOldestPendingPracticeOlderThan(userId: string, olderThan: Date) {
+  return prisma.lessonPractice.findFirst({
+    where: { userId, reflectedAt: null, pledgedAt: { lte: olderThan } },
+    orderBy: { pledgedAt: "asc" },
+    include: {
+      lesson: {
+        select: {
+          id: true,
+          title: true,
+          module: {
+            select: {
+              id: true,
+              phase: { select: { course: { select: { id: true } } } },
+            },
+          },
+        },
+      },
+      child: { select: { id: true, name: true } },
+    },
+  });
+}
+
+// Most recent winning reflection in the window. Today surfaces this as a
+// gentle "try it again" prompt so techniques that worked don't fade out.
+export async function findLastWinningReflectionSince(userId: string, since: Date) {
+  return prisma.lessonPractice.findFirst({
+    where: {
+      userId,
+      reflectionOutcome: "worked",
+      reflectedAt: { gte: since },
+    },
+    orderBy: { reflectedAt: "desc" },
+    include: {
+      lesson: {
+        select: {
+          id: true,
+          title: true,
+          module: {
+            select: {
+              id: true,
+              phase: { select: { course: { select: { id: true } } } },
+            },
+          },
+        },
+      },
+      child: { select: { id: true, name: true } },
+    },
+  });
+}
+
+// Has the user already re-pledged on this lesson since the given moment?
+// Used to suppress the "repeat what worked" prompt once they've acted on it.
+export async function hasPledgeSince(userId: string, lessonId: string, since: Date): Promise<boolean> {
+  const found = await prisma.lessonPractice.findFirst({
+    where: { userId, lessonId, pledgedAt: { gt: since } },
+    select: { id: true },
+  });
+  return !!found;
+}
+
 export async function findPracticesReadyForNudge(now: Date, limit = 50) {
   return prisma.lessonPractice.findMany({
     where: {
