@@ -156,38 +156,49 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
     if (!email.trim() || !password) return;
     setIsSubmitting(true);
     setStep('submitting');
+    const trimmedEmail = email.trim();
     try {
-      const endpoint = mode === 'login' ? '/api/identity/login' : '/api/identity/signup';
-      const res = await api.post(endpoint, { email: email.trim(), password });
-      if (mode === 'login') {
-        setToken(res.data.token);
-        const userRes = await api.get('/api/identity/me');
-        setUser(userRes.data.user);
-        posthog.identify(userRes.data.user.id, { email: userRes.data.user.email });
-        posthog.capture('user_logged_in', { email: userRes.data.user.email });
-        navigate(next);
-
-        const displayName = formatDisplayName(userRes.data.user?.email?.split('@')[0]);
-        useNotificationStore.getState().addNotification({
-          type: 'success',
-          title: t('auth.notificationWelcomeTitle'),
-          message: t('auth.notificationWelcomeMessage', { name: displayName }),
+      // Signup creates the account, then we immediately chain into login so
+      // the user lands authenticated without having to tap Sign in again.
+      // The signup endpoint may or may not return a token depending on the
+      // backend; we use whatever login returns to set auth state.
+      let token: string | undefined;
+      if (mode === 'signup') {
+        const signupRes = await api.post('/api/identity/signup', {
+          email: trimmedEmail,
+          password,
         });
-        toast.success(t('auth.toastWelcomeBack', { name: displayName }));
-      } else {
-        posthog.capture('user_signed_up', { email });
-        toast.success(t('auth.toastAccountCreated'), {
-          description: t('auth.toastAccountCreatedDescription'),
-        });
-        // Embedded: switch to login mode in place, keep credentials so the
-        // user can sign in with one more tap. Standalone: route to /login.
-        if (onClose) {
-          setMode('login');
-          setStep('password');
-        } else {
-          navigate('/login');
-        }
+        posthog.capture('user_signed_up', { email: trimmedEmail });
+        token = signupRes.data?.token;
       }
+      if (!token) {
+        const loginRes = await api.post('/api/identity/login', {
+          email: trimmedEmail,
+          password,
+        });
+        token = loginRes.data.token;
+      }
+      if (!token) throw new Error('Auth response did not include a token');
+      setToken(token);
+      const userRes = await api.get('/api/identity/me');
+      setUser(userRes.data.user);
+      posthog.identify(userRes.data.user.id, { email: userRes.data.user.email });
+      posthog.capture(mode === 'signup' ? 'user_logged_in_after_signup' : 'user_logged_in', {
+        email: userRes.data.user.email,
+      });
+      navigate(next);
+
+      const displayName = formatDisplayName(userRes.data.user?.email?.split('@')[0]);
+      useNotificationStore.getState().addNotification({
+        type: 'success',
+        title: t('auth.notificationWelcomeTitle'),
+        message: t('auth.notificationWelcomeMessage', { name: displayName }),
+      });
+      toast.success(
+        mode === 'signup'
+          ? t('auth.toastAccountCreated', "Welcome to Raised, {{name}}!", { name: displayName })
+          : t('auth.toastWelcomeBack', { name: displayName }),
+      );
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (!status || status >= 500) Sentry.captureException(err);
