@@ -15,9 +15,13 @@ type Step = 'method' | 'email' | 'password' | 'submitting';
 
 type AuthChatProps = {
   initialMode?: 'login' | 'signup';
+  /** When provided, the close X calls this instead of navigating away, and
+   *  the mode toggle flips state in place instead of changing routes.
+   *  Use this to embed AuthChat inside another panel (e.g. ChatPanel). */
+  onClose?: () => void;
 };
 
-export const AuthChat = ({ initialMode = 'login' }: AuthChatProps) => {
+export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
   const { t, i18n } = useTranslation();
   const posthog = usePostHog();
   const navigate = useNavigate();
@@ -175,7 +179,14 @@ export const AuthChat = ({ initialMode = 'login' }: AuthChatProps) => {
         toast.success(t('auth.toastAccountCreated'), {
           description: t('auth.toastAccountCreatedDescription'),
         });
-        navigate('/login');
+        // Embedded: switch to login mode in place, keep credentials so the
+        // user can sign in with one more tap. Standalone: route to /login.
+        if (onClose) {
+          setMode('login');
+          setStep('password');
+        } else {
+          navigate('/login');
+        }
       }
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
@@ -193,7 +204,9 @@ export const AuthChat = ({ initialMode = 'login' }: AuthChatProps) => {
     setMode(nextMode);
     setStep('method');
     setMethod(null);
-    navigate(nextMode === 'signup' ? '/register' : '/login');
+    // When embedded, just flip state. When standalone, also update the URL
+    // so the route reflects which mode the user is in.
+    if (!onClose) navigate(nextMode === 'signup' ? '/register' : '/login');
   };
 
   const introBubble =
@@ -212,7 +225,7 @@ export const AuthChat = ({ initialMode = 'login' }: AuthChatProps) => {
       >
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => (onClose ? onClose() : navigate('/'))}
           className="flex h-10 w-10 items-center justify-center rounded-xl text-text-primary transition-colors hover:bg-surface-light"
           aria-label={t('common.close', 'Close')}
         >

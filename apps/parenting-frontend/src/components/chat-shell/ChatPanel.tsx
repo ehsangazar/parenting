@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { usePostHog } from '@posthog/react';
-import { Icon, type IconName } from '../icons/index.js';
+import { Icon, type AnyIconName } from '../icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
 import { chatApi, familiesApi } from '../../lib/appApi.js';
@@ -13,6 +13,7 @@ import { useChatShell } from './ChatShellContext.js';
 import { CardRenderer } from './cards/CardRenderer.js';
 import type { Card, CardActionHandlers } from './cards/types.js';
 import { OnboardingChat } from './OnboardingChat.js';
+import { AuthChat } from './AuthChat.js';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
@@ -33,7 +34,7 @@ function getAge(birthday?: string | null): number | null {
   return Math.floor((Date.now() - new Date(birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25));
 }
 
-type Suggestion = { iconName: IconName; text: string };
+type Suggestion = { iconName: AnyIconName; text: string };
 
 function getSuggestedPool(t: TFunction, childName: string | null, age: number | null, isLoggedOut: boolean): Suggestion[] {
   // Action-style prompts mixed in with questions so the hero hints that
@@ -42,34 +43,34 @@ function getSuggestedPool(t: TFunction, childName: string | null, age: number | 
   // caller shuffles and slices so chips vary on each visit.
   if (childName) {
     if (age !== null && age <= 2) return [
-      { iconName: 'cell_phone', text: t('chatPage.screenTimeChild', { name: childName }) },
-      { iconName: 'biotech', text: t('chatPage.pickyEatingToddler') },
-      { iconName: 'clock', text: t('chatPage.sleepRegressionAge', { name: childName }) },
-      { iconName: 'voice_presentation', text: t('chatPage.speechDelay') },
-      { iconName: 'calendar', text: t('chatPage.actionAddCheckup', { name: childName, defaultValue: "Add {{name}}'s next check-up to the calendar" }) },
-      { iconName: 'checkmark', text: t('chatPage.actionLogFirstSmile', { name: childName, defaultValue: "Log {{name}}'s first smile today" }) },
-      { iconName: 'serial_tasks', text: t('chatPage.actionBedtimeChecklist', { name: childName, defaultValue: "Build a bedtime routine for {{name}}" }) },
-      { iconName: 'calendar', text: t('chatPage.actionReminderBottles', { defaultValue: 'Remind me to sterilise bottles every evening' }) },
+      { iconName: 'doodle_phone_smart', text: t('chatPage.screenTimeChild', { name: childName }) },
+      { iconName: 'doodle_microscope', text: t('chatPage.pickyEatingToddler') },
+      { iconName: 'doodle_clock', text: t('chatPage.sleepRegressionAge', { name: childName }) },
+      { iconName: 'doodle_speaker', text: t('chatPage.speechDelay') },
+      { iconName: 'doodle_calendar', text: t('chatPage.actionAddCheckup', { name: childName, defaultValue: "Add {{name}}'s next check-up to the calendar" }) },
+      { iconName: 'doodle_tick', text: t('chatPage.actionLogFirstSmile', { name: childName, defaultValue: "Log {{name}}'s first smile today" }) },
+      { iconName: 'doodle_checklist', text: t('chatPage.actionBedtimeChecklist', { name: childName, defaultValue: "Build a bedtime routine for {{name}}" }) },
+      { iconName: 'doodle_calendar', text: t('chatPage.actionReminderBottles', { defaultValue: 'Remind me to sterilise bottles every evening' }) },
     ];
     if (age !== null && age <= 6) return [
-      { iconName: 'reading_ebook', text: t('chatPage.learningAtHome', { name: childName }) },
-      { iconName: 'disclaimer', text: t('chatPage.managingTantrums') },
-      { iconName: 'biotech', text: t('chatPage.pickyEating') },
-      { iconName: 'night_landscape', text: t('chatPage.bedtimeRoutine', { name: childName }) },
-      { iconName: 'calendar', text: t('chatPage.actionAddDentist', { name: childName, defaultValue: "Schedule {{name}}'s dentist visit for next Tuesday at 4pm" }) },
-      { iconName: 'checkmark', text: t('chatPage.actionLogMilestone', { name: childName, defaultValue: 'Log that {{name}} started riding a bike today' }) },
-      { iconName: 'serial_tasks', text: t('chatPage.actionPackingList', { defaultValue: 'Build a packing list for a weekend trip with toddlers' }) },
-      { iconName: 'calendar', text: t('chatPage.actionScreenTimeRules', { defaultValue: 'Help me set screen-time rules at home' }) },
+      { iconName: 'doodle_book_open', text: t('chatPage.learningAtHome', { name: childName }) },
+      { iconName: 'doodle_caution', text: t('chatPage.managingTantrums') },
+      { iconName: 'doodle_microscope', text: t('chatPage.pickyEating') },
+      { iconName: 'doodle_moon', text: t('chatPage.bedtimeRoutine', { name: childName }) },
+      { iconName: 'doodle_calendar', text: t('chatPage.actionAddDentist', { name: childName, defaultValue: "Schedule {{name}}'s dentist visit for next Tuesday at 4pm" }) },
+      { iconName: 'doodle_tick', text: t('chatPage.actionLogMilestone', { name: childName, defaultValue: 'Log that {{name}} started riding a bike today' }) },
+      { iconName: 'doodle_checklist', text: t('chatPage.actionPackingList', { defaultValue: 'Build a packing list for a weekend trip with toddlers' }) },
+      { iconName: 'doodle_calendar', text: t('chatPage.actionScreenTimeRules', { defaultValue: 'Help me set screen-time rules at home' }) },
     ];
     return [
-      { iconName: 'cell_phone', text: t('chatPage.screenTimeChild', { name: childName }) },
-      { iconName: 'collaboration', text: t('chatPage.socialSkills') },
-      { iconName: 'reading', text: t('chatPage.lovingReading') },
-      { iconName: 'clock', text: t('chatPage.sleepHabits') },
-      { iconName: 'calendar', text: t('chatPage.actionAddParentTeacher', { name: childName, defaultValue: "Add {{name}}'s parent-teacher meeting to the calendar" }) },
-      { iconName: 'checkmark', text: t('chatPage.actionLogReport', { name: childName, defaultValue: "Log {{name}}'s school report" }) },
-      { iconName: 'serial_tasks', text: t('chatPage.actionHomeworkRoutine', { defaultValue: 'Build a homework routine that actually sticks' }) },
-      { iconName: 'calendar', text: t('chatPage.actionWeeklyChores', { defaultValue: 'Plan weekly chores I can share with my partner' }) },
+      { iconName: 'doodle_phone_smart', text: t('chatPage.screenTimeChild', { name: childName }) },
+      { iconName: 'doodle_collab', text: t('chatPage.socialSkills') },
+      { iconName: 'doodle_book', text: t('chatPage.lovingReading') },
+      { iconName: 'doodle_clock', text: t('chatPage.sleepHabits') },
+      { iconName: 'doodle_calendar', text: t('chatPage.actionAddParentTeacher', { name: childName, defaultValue: "Add {{name}}'s parent-teacher meeting to the calendar" }) },
+      { iconName: 'doodle_tick', text: t('chatPage.actionLogReport', { name: childName, defaultValue: "Log {{name}}'s school report" }) },
+      { iconName: 'doodle_checklist', text: t('chatPage.actionHomeworkRoutine', { defaultValue: 'Build a homework routine that actually sticks' }) },
+      { iconName: 'doodle_calendar', text: t('chatPage.actionWeeklyChores', { defaultValue: 'Plan weekly chores I can share with my partner' }) },
     ];
   }
   // Logged-out visitors: showcase a question per major life stage AND a
@@ -77,24 +78,24 @@ function getSuggestedPool(t: TFunction, childName: string | null, age: number | 
   // not just chat.
   if (isLoggedOut) {
     return [
-      { iconName: 'biotech', text: t('chatPage.qPregnancy', 'Is it normal to feel Braxton Hicks at 34 weeks?') },
-      { iconName: 'night_landscape', text: t('chatPage.qBaby', "Why won't my 4-month-old sleep through the night?") },
-      { iconName: 'disclaimer', text: t('chatPage.qToddler', 'How do I handle tantrums without losing it?') },
-      { iconName: 'cell_phone', text: t('chatPage.qTeen', 'How should I talk to my teen about social media?') },
-      { iconName: 'calendar', text: t('chatPage.actionAddVaccination', { defaultValue: "Add my baby's vaccination to the calendar" }) },
-      { iconName: 'checkmark', text: t('chatPage.actionLogFirstStep', { defaultValue: 'Log my toddler’s first step' }) },
-      { iconName: 'serial_tasks', text: t('chatPage.actionWeaningPlan', { defaultValue: 'Build a 4-week weaning plan' }) },
+      { iconName: 'doodle_microscope', text: t('chatPage.qPregnancy', 'Is it normal to feel Braxton Hicks at 34 weeks?') },
+      { iconName: 'doodle_moon', text: t('chatPage.qBaby', "Why won't my 4-month-old sleep through the night?") },
+      { iconName: 'doodle_caution', text: t('chatPage.qToddler', 'How do I handle tantrums without losing it?') },
+      { iconName: 'doodle_phone_smart', text: t('chatPage.qTeen', 'How should I talk to my teen about social media?') },
+      { iconName: 'doodle_calendar', text: t('chatPage.actionAddVaccination', { defaultValue: "Add my baby's vaccination to the calendar" }) },
+      { iconName: 'doodle_tick', text: t('chatPage.actionLogFirstStep', { defaultValue: 'Log my toddler’s first step' }) },
+      { iconName: 'doodle_checklist', text: t('chatPage.actionWeaningPlan', { defaultValue: 'Build a 4-week weaning plan' }) },
     ];
   }
   return [
-    { iconName: 'cell_phone', text: t('chatPage.screenTimeGeneral') },
-    { iconName: 'biotech', text: t('chatPage.pickyEating') },
-    { iconName: 'clock', text: t('chatPage.sleepRegressionGeneral') },
-    { iconName: 'voice_presentation', text: t('chatPage.speechDelay') },
-    { iconName: 'calendar', text: t('chatPage.actionAddAppointment', { defaultValue: 'Add a doctor appointment for next Tuesday at 4pm' }) },
-    { iconName: 'checkmark', text: t('chatPage.actionLogMoment', { defaultValue: 'Log a new milestone for my child' }) },
-    { iconName: 'serial_tasks', text: t('chatPage.actionBedtimePlan', { defaultValue: 'Build a calmer bedtime routine' }) },
-    { iconName: 'calendar', text: t('chatPage.actionRemindVitamins', { defaultValue: 'Remind me to give vitamins every morning' }) },
+    { iconName: 'doodle_phone_smart', text: t('chatPage.screenTimeGeneral') },
+    { iconName: 'doodle_microscope', text: t('chatPage.pickyEating') },
+    { iconName: 'doodle_clock', text: t('chatPage.sleepRegressionGeneral') },
+    { iconName: 'doodle_speaker', text: t('chatPage.speechDelay') },
+    { iconName: 'doodle_calendar', text: t('chatPage.actionAddAppointment', { defaultValue: 'Add a doctor appointment for next Tuesday at 4pm' }) },
+    { iconName: 'doodle_tick', text: t('chatPage.actionLogMoment', { defaultValue: 'Log a new milestone for my child' }) },
+    { iconName: 'doodle_checklist', text: t('chatPage.actionBedtimePlan', { defaultValue: 'Build a calmer bedtime routine' }) },
+    { iconName: 'doodle_calendar', text: t('chatPage.actionRemindVitamins', { defaultValue: 'Remind me to give vitamins every morning' }) },
   ];
 }
 
@@ -361,6 +362,13 @@ export const ChatPanel = () => {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
+  // When true, the panel swaps to AuthChat in place instead of navigating to
+  // /login. Auto-clears once the user has a token.
+  const [showAuth, setShowAuth] = useState(false);
+
+  useEffect(() => {
+    if (token && showAuth) setShowAuth(false);
+  }, [token, showAuth]);
   const [guestUsedTurn, setGuestUsedTurn] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return sessionStorage.getItem('guestTurnUsed') === '1';
@@ -483,7 +491,7 @@ export const ChatPanel = () => {
         }
         posthog.capture('guest_send_after_wall', { message_length: message.length });
         sendingRef.current = false;
-        navigate('/login?next=/');
+        setShowAuth(true);
         return;
       }
 
@@ -853,8 +861,8 @@ export const ChatPanel = () => {
     } catch {
       // localStorage unavailable; non-fatal.
     }
-    navigate('/login?next=/');
-  }, [messages, navigate, posthog]);
+    setShowAuth(true);
+  }, [messages, posthog]);
 
   // Fire once when the conversion wall first appears for this session.
   useEffect(() => {
@@ -935,6 +943,13 @@ export const ChatPanel = () => {
   // user object flips onboarded=true and this branch unmounts, revealing
   // the real chat with their first question already sent (if they tapped
   // a suggestion chip).
+  // Guest tapped sign-in (or hit the post-turn wall): show AuthChat in place
+  // of the chat. After auth, the token effect above clears showAuth and the
+  // normal chat re-renders with the guest's local conversation preserved.
+  if (showAuth && !token) {
+    return <AuthChat onClose={() => setShowAuth(false)} />;
+  }
+
   if (token && user && !user.profile?.onboarded) {
     return (
       <OnboardingChat
