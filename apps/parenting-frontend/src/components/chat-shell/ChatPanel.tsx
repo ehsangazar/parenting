@@ -1090,12 +1090,12 @@ export const ChatPanel = () => {
                 {activeChild
                   ? t('chatPage.talkAboutChild', { name: activeChild.name })
                   : !token
-                  ? t('chatPage.welcomeTitle', 'Raised: your science-backed parenting guide')
+                  ? t('chatPage.welcomeTitle', 'The parenting copilot that carries the load')
                   : t('chatPage.askAnything', 'Ask any parenting question')}
               </h1>
               <p className="mt-3 text-[16px] leading-relaxed text-text-primary max-w-lg mx-auto">
                 {!token && !activeChild
-                  ? t('chatPage.welcomeSubtitle', 'From pregnancy through 18. Ask about sleep, milestones, tantrums, nutrition, or anything else on your mind. Every answer is backed by pediatric science and trusted sources.')
+                  ? t('chatPage.welcomeSubtitle', 'From pregnancy to 18. Ask anything on your mind, from sleep regressions to tantrums to picky eating. Every answer is backed by pediatric science and trusted sources, written for the moment you\'re actually in.')
                   : t('chatPage.evidenceBasedTagline', 'Raised answers in seconds with guidance backed by pediatric science, tailored to your child\'s age, with sources you can check.')}
               </p>
             </div>
