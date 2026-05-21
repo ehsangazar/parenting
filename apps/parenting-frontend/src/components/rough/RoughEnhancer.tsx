@@ -51,31 +51,65 @@ function getSeed(el: HTMLElement): number {
   return seed;
 }
 
-function drawButton(el: HTMLElement, svg: SVGSVGElement, visual: Visual) {
-  while (svg.firstChild) svg.removeChild(svg.firstChild);
-  const rect = el.getBoundingClientRect();
-  if (rect.width < 4 || rect.height < 4) return;
-  // Pin SVG dimensions explicitly: width/height: 100% can collapse inside <button>.
-  svg.setAttribute('width', String(rect.width));
-  svg.setAttribute('height', String(rect.height));
-  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
-  const inset = 2;
-  const w = rect.width - inset * 2;
-  const h = rect.height - inset * 2;
-  if (w <= 0 || h <= 0) return;
-  const r = parseRadius(el, rect.height);
-  const d = roundedRectPath(inset, inset, w, h, r);
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+type PathOptions = {
+  stroke: string;
+  fill: string | undefined;
+  fillStyle: 'solid';
+  strokeWidth: number;
+  roughness: number;
+  seed: number;
+};
+
+// Render a rough.js path into a detached SVG document and serialize it. The
+// resulting string drives a CSS `background-image` data URL, so we never insert
+// DOM nodes into React-owned subtrees — that was breaking React's reconciler
+// (`removeChild: node is not a child of this node`) when the lifting helper
+// moved text nodes into freshly-created span wrappers.
+function buildBackgroundImage(w: number, h: number, d: string, opts: PathOptions): string {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('xmlns', SVG_NS);
+  svg.setAttribute('width', String(w));
+  svg.setAttribute('height', String(h));
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
   const rc = rough.svg(svg);
   svg.appendChild(
     rc.path(d, {
-      stroke: visual.stroke,
-      strokeWidth: visual.stroke === 'transparent' ? 0 : 2,
-      roughness: 1.4,
-      fill: visual.fill === 'transparent' ? undefined : visual.fill,
-      fillStyle: 'solid',
-      seed: getSeed(el),
+      stroke: opts.stroke,
+      strokeWidth: opts.strokeWidth,
+      roughness: opts.roughness,
+      fill: opts.fill,
+      fillStyle: opts.fillStyle,
+      seed: opts.seed,
     }),
   );
+  const serialized = new XMLSerializer().serializeToString(svg);
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(serialized)}")`;
+}
+
+function paintButton(el: HTMLElement, visual: Visual) {
+  const rect = el.getBoundingClientRect();
+  if (rect.width < 4 || rect.height < 4) return;
+  const w = rect.width;
+  const h = rect.height;
+  const inset = 2;
+  const innerW = w - inset * 2;
+  const innerH = h - inset * 2;
+  if (innerW <= 0 || innerH <= 0) return;
+  const r = parseRadius(el, h);
+  const d = roundedRectPath(inset, inset, innerW, innerH, r);
+  el.style.backgroundImage = buildBackgroundImage(w, h, d, {
+    stroke: visual.stroke,
+    strokeWidth: visual.stroke === 'transparent' ? 0 : 2,
+    roughness: 1.4,
+    fill: visual.fill === 'transparent' ? undefined : visual.fill,
+    fillStyle: 'solid',
+    seed: getSeed(el),
+  });
+  el.style.backgroundRepeat = 'no-repeat';
+  el.style.backgroundSize = '100% 100%';
+  el.style.backgroundColor = 'transparent';
 }
 
 function enhanceButton(el: HTMLElement) {
@@ -84,71 +118,29 @@ function enhanceButton(el: HTMLElement) {
   if (!visual) return;
   el.dataset.roughEnhanced = 'true';
 
-  // Strip the original CSS visuals so the sketchy SVG is the only painted layer.
-  el.style.background = 'transparent';
-  el.style.backgroundImage = 'none';
+  // Strip the original CSS visuals so the sketchy background is the only
+  // painted surface; text colour is forced to the variant's foreground.
   el.style.border = 'none';
   el.style.boxShadow = 'none';
   el.style.color = visual.text;
   el.style.textTransform = 'none';
   el.style.letterSpacing = 'normal';
-  if (getComputedStyle(el).position === 'static') {
-    el.style.position = 'relative';
-  }
-  // Create an isolated stacking context so the SVG at z-index -1 lands below
-  // text nodes (which paint at stacking step 5) without bleeding behind unrelated
-  // siblings outside this element.
-  el.style.isolation = 'isolate';
 
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.style.position = 'absolute';
-  svg.style.inset = '0';
-  svg.style.width = '100%';
-  svg.style.height = '100%';
-  svg.style.pointerEvents = 'none';
-  svg.style.zIndex = '-1';
-  el.insertBefore(svg, el.firstChild);
-  liftChildrenAboveSvg(el, svg);
+  paintButton(el, visual);
 
   let raf = 0;
   const schedule = () => {
     if (raf) return;
     raf = requestAnimationFrame(() => {
       raf = 0;
-      drawButton(el, svg, visual);
+      paintButton(el, visual);
     });
   };
-  drawButton(el, svg, visual);
   const ro = new ResizeObserver(schedule);
   ro.observe(el);
 }
 
 const BTN_SELECTOR = '[class*="btn-duo-"]';
-
-// Ensures every child (including raw text nodes) paints above the absolute
-// SVG. Some browsers, especially with `<button>`, don't always honor a single
-// `isolation: isolate` + `z-index: -1` SVG when the host has text children
-// with no positioning. Wrapping text in a positioned span is bulletproof.
-function liftChildrenAboveSvg(el: HTMLElement, svg: SVGSVGElement) {
-  Array.from(el.childNodes).forEach((node) => {
-    if (node === svg) return;
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node as Text;
-      if (!text.nodeValue || !text.nodeValue.trim()) return;
-      const wrap = document.createElement('span');
-      wrap.style.position = 'relative';
-      wrap.style.zIndex = '1';
-      wrap.dataset.roughTextLift = 'true';
-      text.parentNode?.insertBefore(wrap, text);
-      wrap.appendChild(text);
-    } else if (node instanceof HTMLElement || node instanceof SVGElement) {
-      const child = node as HTMLElement;
-      if (!child.style.position) child.style.position = 'relative';
-      if (!child.style.zIndex) child.style.zIndex = '1';
-    }
-  });
-}
 
 // Card enhancement: any rounded container with a visible border that isn't a
 // form control, image, button, or tiny chrome element. Tailwind's rounded-*
@@ -224,32 +216,30 @@ function snapshotCardVisual(el: HTMLElement): CardVisual {
   return { stroke, fill, fillStyle: 'solid' };
 }
 
-function drawCard(el: HTMLElement, svg: SVGSVGElement, visual: CardVisual) {
-  while (svg.firstChild) svg.removeChild(svg.firstChild);
+function paintCard(el: HTMLElement, visual: CardVisual) {
   const rect = el.getBoundingClientRect();
   if (rect.width < 4 || rect.height < 4) return;
-  svg.setAttribute('width', String(rect.width));
-  svg.setAttribute('height', String(rect.height));
-  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
   const cs = getComputedStyle(el);
   const radiusPx = parseFloat(cs.borderTopLeftRadius) || 16;
+  const w = rect.width;
+  const h = rect.height;
   const inset = 2;
-  const w = rect.width - inset * 2;
-  const h = rect.height - inset * 2;
-  if (w <= 0 || h <= 0) return;
-  const r = Math.min(radiusPx, w / 2, h / 2);
-  const d = roundedRectPath(inset, inset, w, h, r);
-  const rc = rough.svg(svg);
-  svg.appendChild(
-    rc.path(d, {
-      stroke: visual.stroke,
-      strokeWidth: 1.8,
-      roughness: 1.6,
-      fill: visual.fill === 'transparent' ? undefined : visual.fill,
-      fillStyle: visual.fillStyle,
-      seed: getSeed(el),
-    }),
-  );
+  const innerW = w - inset * 2;
+  const innerH = h - inset * 2;
+  if (innerW <= 0 || innerH <= 0) return;
+  const r = Math.min(radiusPx, innerW / 2, innerH / 2);
+  const d = roundedRectPath(inset, inset, innerW, innerH, r);
+  el.style.backgroundImage = buildBackgroundImage(w, h, d, {
+    stroke: visual.stroke,
+    strokeWidth: 1.8,
+    roughness: 1.6,
+    fill: visual.fill === 'transparent' ? undefined : visual.fill,
+    fillStyle: visual.fillStyle,
+    seed: getSeed(el),
+  });
+  el.style.backgroundRepeat = 'no-repeat';
+  el.style.backgroundSize = '100% 100%';
+  el.style.backgroundColor = 'transparent';
 }
 
 function enhanceCard(el: HTMLElement) {
@@ -260,35 +250,19 @@ function enhanceCard(el: HTMLElement) {
   // Capture original colors before mutating the element's styles.
   const visual = snapshotCardVisual(el);
 
-  el.style.background = 'transparent';
-  el.style.backgroundImage = 'none';
   el.style.border = 'none';
   el.style.boxShadow = 'none';
-  if (getComputedStyle(el).position === 'static') {
-    el.style.position = 'relative';
-  }
-  el.style.isolation = 'isolate';
 
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.style.position = 'absolute';
-  svg.style.inset = '0';
-  svg.style.width = '100%';
-  svg.style.height = '100%';
-  svg.style.pointerEvents = 'none';
-  svg.style.zIndex = '-1';
-  el.insertBefore(svg, el.firstChild);
-  liftChildrenAboveSvg(el, svg);
+  paintCard(el, visual);
 
   let raf = 0;
   const schedule = () => {
     if (raf) return;
     raf = requestAnimationFrame(() => {
       raf = 0;
-      drawCard(el, svg, visual);
+      paintCard(el, visual);
     });
   };
-  drawCard(el, svg, visual);
   const ro = new ResizeObserver(schedule);
   ro.observe(el);
 }
