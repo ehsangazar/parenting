@@ -28,7 +28,7 @@ const VISUALS: Record<RoughButtonVariant, Visual> = {
   sky: { stroke: '#3A7299', fill: '#4A8AB4', text: '#FFFFFF' },
   peach: { stroke: '#864E29', fill: '#D87749', text: '#FFFFFF' },
   gold: { stroke: '#864E29', fill: '#D87749', text: '#FFFFFF' },
-  outline: { stroke: '#2F7D6A', fill: 'transparent', text: '#2F7D6A' },
+  outline: { stroke: '#2F7D6A', fill: 'rgba(47, 125, 106, 0.06)', text: '#2F7D6A' },
   ghost: { stroke: 'transparent', fill: 'transparent', text: '#2F7D6A' },
   'violet-pill': { stroke: '#864E29', fill: '#D87749', text: '#FFFFFF' },
   'surface-pill': { stroke: '#D7E5DA', fill: '#FFFFFF', text: '#2F7D6A' },

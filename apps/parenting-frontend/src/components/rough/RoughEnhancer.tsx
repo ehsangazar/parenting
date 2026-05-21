@@ -14,7 +14,7 @@ type Visual = {
 const VARIANT_KEYS: ReadonlyArray<readonly [string, Visual]> = [
   ['btn-duo-surface-pill', { stroke: '#D7E5DA', fill: '#FFFFFF', text: '#2F7D6A' }],
   ['btn-duo-violet-pill', { stroke: '#864E29', fill: '#D87749', text: '#FFFFFF' }],
-  ['btn-duo-outline', { stroke: '#2F7D6A', fill: 'transparent', text: '#2F7D6A' }],
+  ['btn-duo-outline', { stroke: '#2F7D6A', fill: 'rgba(47, 125, 106, 0.06)', text: '#2F7D6A' }],
   ['btn-duo-ghost', { stroke: 'transparent', fill: 'transparent', text: '#2F7D6A' }],
   ['btn-duo-gold', { stroke: '#864E29', fill: '#D87749', text: '#FFFFFF' }],
   ['btn-duo-sky', { stroke: '#3A7299', fill: '#4A8AB4', text: '#FFFFFF' }],
