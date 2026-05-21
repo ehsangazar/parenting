@@ -18,6 +18,7 @@ import {
 import { ModuleLessonsModal } from '../../components/academy/ModuleLessonsModal.js';
 import { PracticePledgeModal } from '../../components/academy/PracticePledgeModal.js';
 import { notifyGamificationChange } from '../../components/app/BalancePills.js';
+import { buildLessonCards } from '../../components/academy/buildLessonCards.js';
 
 type ModuleSummary = {
   id: string;
@@ -47,27 +48,6 @@ type Lesson = {
 };
 
 type ModuleState = 'complete' | 'current' | 'locked' | 'available';
-
-function buildLessonCards(lesson: {
-  content?: string | null;
-  mediaUrl?: string | null;
-  mediaType?: string | null;
-}): LessonCard[] {
-  const cards: LessonCard[] = [];
-  if (lesson.mediaUrl) {
-    cards.push({ kind: 'media', mediaUrl: lesson.mediaUrl, mediaType: lesson.mediaType });
-  }
-  const raw = (lesson.content ?? '').trim();
-  if (raw) {
-    const explicit = raw.split(/\n\s*---+\s*\n/);
-    const chunks = explicit.length > 1 ? explicit : raw.split(/\n\s*\n+/);
-    for (const chunk of chunks) {
-      const text = chunk.trim();
-      if (text) cards.push({ kind: 'text', text });
-    }
-  }
-  return cards;
-}
 
 function moduleTotalLessons(mod: ModuleSummary): number | null {
   const count = mod._count?.lessons;

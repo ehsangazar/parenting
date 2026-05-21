@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { learningApi } from '../../lib/appApi.js';
-import { LessonModal, type LessonCard } from './LessonModal.js';
+import { LessonModal } from './LessonModal.js';
 import { PracticePledgeModal } from './PracticePledgeModal.js';
 import { notifyGamificationChange } from '../app/BalancePills.js';
+import { buildLessonCards } from './buildLessonCards.js';
 
 type LessonViewerProps = {
   open: boolean;
@@ -26,27 +27,6 @@ type FetchedLesson = {
   mediaType?: string | null;
   progress?: { completedAt?: string | null }[];
 };
-
-function buildLessonCards(lesson: {
-  content?: string | null;
-  mediaUrl?: string | null;
-  mediaType?: string | null;
-}): LessonCard[] {
-  const cards: LessonCard[] = [];
-  if (lesson.mediaUrl) {
-    cards.push({ kind: 'media', mediaUrl: lesson.mediaUrl, mediaType: lesson.mediaType });
-  }
-  const raw = (lesson.content ?? '').trim();
-  if (raw) {
-    const explicit = raw.split(/\n\s*---+\s*\n/);
-    const chunks = explicit.length > 1 ? explicit : raw.split(/\n\s*\n+/);
-    for (const chunk of chunks) {
-      const text = chunk.trim();
-      if (text) cards.push({ kind: 'text', text });
-    }
-  }
-  return cards;
-}
 
 export const LessonViewer = ({
   open,
