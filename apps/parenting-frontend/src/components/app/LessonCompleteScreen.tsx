@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Coins } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
+import { Icon } from '../icons/index.js';
+import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { soundManager } from '../../lib/soundManager.js';
 import { RoughBox, RoughButton } from '../rough/index.js';
 
@@ -42,7 +43,7 @@ export const LessonCompleteScreen = ({ coinsAwarded, xpAwarded, onContinue }: Le
           initial={{ scale: 0, rotate: -20 }}
           animate={{ scale: 1, rotate: 0, transition: { type: 'spring', stiffness: 280, damping: 18, delay: 0.1 } }}
         >
-          <Coins size={80} weight="fill" className="text-secondary-500" />
+          <Icon name={appAssetIcons.gems} className="h-20 w-20 object-contain" alt="" />
         </motion.div>
 
         <div>
@@ -64,7 +65,7 @@ export const LessonCompleteScreen = ({ coinsAwarded, xpAwarded, onContinue }: Le
             className="px-6 py-4"
             innerClassName="flex items-center gap-2"
           >
-            <Coins size={28} weight="fill" className="text-secondary-500" />
+            <Icon name={appAssetIcons.gems} className="h-7 w-7 object-contain" alt="" />
             <span className="celebrate-stat text-2xl text-secondary-500">{coinsLabel}</span>
             <span className="text-base font-semibold text-secondary-fg">{t('learning.coinsEarned')}</span>
           </RoughBox>

@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Coins } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
+import { Icon } from '../icons/index.js';
+import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { soundManager } from '../../lib/soundManager.js';
 import { RoughBox, RoughButton } from '../rough/index.js';
 
@@ -89,7 +90,7 @@ export const StreakCelebrationModal = ({ streak, coinsBonus, onDismiss }: Streak
                   style={{ color: '#D77548' }}
                   innerClassName="inline-flex items-center gap-1.5"
                 >
-                  <Coins size={16} weight="fill" />
+                  <Icon name={appAssetIcons.gems} className="h-4 w-4 object-contain" alt="" />
                   {t('streakCelebration.coinsBonus', { amount: coinsLabel })}
                 </RoughBox>
               </div>

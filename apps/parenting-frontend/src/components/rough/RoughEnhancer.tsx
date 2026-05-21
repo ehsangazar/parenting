@@ -81,7 +81,6 @@ function enhanceButton(el: HTMLElement) {
   el.dataset.roughEnhanced = 'true';
 
   // Strip the original CSS visuals so the sketchy SVG is the only painted layer.
-  // `transition: none` prevents the original hover transitions from showing through.
   el.style.background = 'transparent';
   el.style.backgroundImage = 'none';
   el.style.border = 'none';
@@ -92,6 +91,10 @@ function enhanceButton(el: HTMLElement) {
   if (getComputedStyle(el).position === 'static') {
     el.style.position = 'relative';
   }
+  // Create an isolated stacking context so the SVG at z-index -1 lands below
+  // text nodes (which paint at stacking step 5) without bleeding behind unrelated
+  // siblings outside this element.
+  el.style.isolation = 'isolate';
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('aria-hidden', 'true');
@@ -100,17 +103,9 @@ function enhanceButton(el: HTMLElement) {
   svg.style.width = '100%';
   svg.style.height = '100%';
   svg.style.pointerEvents = 'none';
-  svg.style.zIndex = '0';
+  svg.style.zIndex = '-1';
   el.insertBefore(svg, el.firstChild);
-
-  // Bump existing children above the SVG so text/icons stay visible.
-  Array.from(el.childNodes).forEach((node) => {
-    if (node === svg) return;
-    if (node instanceof HTMLElement || node instanceof SVGElement) {
-      (node as HTMLElement).style.position = (node as HTMLElement).style.position || 'relative';
-      (node as HTMLElement).style.zIndex = (node as HTMLElement).style.zIndex || '1';
-    }
-  });
+  liftChildrenAboveSvg(el, svg);
 
   let raf = 0;
   const schedule = () => {
@@ -127,19 +122,46 @@ function enhanceButton(el: HTMLElement) {
 
 const BTN_SELECTOR = '[class*="btn-duo-"]';
 
-// Card enhancement: any rounded container with a visible border, big enough
-// to be a card and not a form control. Tag exclusions prevent touching inputs
-// and selects; button exclusion is handled separately via btn-duo.
-const CARD_SELECTOR =
-  '.duo-skill-card, [class*="rounded-2xl"], [class*="rounded-3xl"]';
-const CARD_TAG_BLOCKLIST = new Set([
-  'INPUT',
-  'TEXTAREA',
-  'SELECT',
-  'IMG',
-  'svg'.toUpperCase(),
-]);
-const CARD_MIN_SIZE = 60;
+// Ensures every child (including raw text nodes) paints above the absolute
+// SVG. Some browsers, especially with `<button>`, don't always honor a single
+// `isolation: isolate` + `z-index: -1` SVG when the host has text children
+// with no positioning. Wrapping text in a positioned span is bulletproof.
+function liftChildrenAboveSvg(el: HTMLElement, svg: SVGSVGElement) {
+  Array.from(el.childNodes).forEach((node) => {
+    if (node === svg) return;
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node as Text;
+      if (!text.nodeValue || !text.nodeValue.trim()) return;
+      const wrap = document.createElement('span');
+      wrap.style.position = 'relative';
+      wrap.style.zIndex = '1';
+      wrap.dataset.roughTextLift = 'true';
+      text.parentNode?.insertBefore(wrap, text);
+      wrap.appendChild(text);
+    } else if (node instanceof HTMLElement || node instanceof SVGElement) {
+      const child = node as HTMLElement;
+      if (!child.style.position) child.style.position = 'relative';
+      if (!child.style.zIndex) child.style.zIndex = '1';
+    }
+  });
+}
+
+// Card enhancement: any rounded container with a visible border that isn't a
+// form control, image, button, or tiny chrome element. Tailwind's rounded-*
+// scale ramps from sm → md → lg → xl → 2xl → 3xl → full; everything xl+ is
+// a card-ish container; rounded-full is matched for pill chips.
+const CARD_SELECTOR = [
+  '.duo-skill-card',
+  '[class*="rounded-2xl"]',
+  '[class*="rounded-3xl"]',
+  '[class*="rounded-xl"]',
+  '[class*="rounded-lg"]',
+  '[class*="rounded-md"]',
+  '[class*="rounded-full"]',
+].join(', ');
+const CARD_TAG_BLOCKLIST = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'IMG', 'PICTURE', 'VIDEO']);
+const CARD_MIN_WIDTH = 36;
+const CARD_MIN_HEIGHT = 18;
 
 function parseRgb(s: string): { r: number; g: number; b: number; a: number } | null {
   const m = /rgba?\(([^)]+)\)/i.exec(s);
@@ -154,40 +176,54 @@ function isCardLike(el: HTMLElement): boolean {
   if (el.matches?.(BTN_SELECTOR)) return false;
   if (el.dataset.roughSkip === 'true') return false;
   const rect = el.getBoundingClientRect();
-  if (rect.width < CARD_MIN_SIZE || rect.height < CARD_MIN_SIZE) return false;
+  if (rect.width < CARD_MIN_WIDTH || rect.height < CARD_MIN_HEIGHT) return false;
   const cs = getComputedStyle(el);
   const borderWidth = parseFloat(cs.borderTopWidth) || 0;
-  if (borderWidth < 0.5) return false;
+  // No border? Still sketchify if the element has a visible background fill
+  // (filled chips, gradient panels, etc).
+  if (borderWidth < 0.5) {
+    const bg = parseRgb(cs.backgroundColor);
+    if (!bg || bg.a < 0.05) return false;
+    const bgImage = cs.backgroundImage;
+    if (bgImage && bgImage !== 'none' && bgImage.includes('url(')) return false;
+  }
   return true;
 }
 
-function getCardVisual(el: HTMLElement): { stroke: string; fill: string; fillStyle: 'solid' } {
+type CardVisual = { stroke: string; fill: string; fillStyle: 'solid' };
+
+// Read border/background colors BEFORE we strip them. Falls back to using the
+// fill color as the stroke when there's no real border, so e.g. a bare
+// `rounded-xl bg-brand-blue` button gets a clean blue sketch instead of a
+// phantom outline coming from the user-agent default border-color.
+function snapshotCardVisual(el: HTMLElement): CardVisual {
   const cs = getComputedStyle(el);
-  const borderColor = cs.borderTopColor;
-  const bgColor = cs.backgroundColor;
+  const borderWidth = parseFloat(cs.borderTopWidth) || 0;
+  const parsedBorder = parseRgb(cs.borderTopColor);
+  const parsedBg = parseRgb(cs.backgroundColor);
+  const hasRealBorder = borderWidth >= 0.5 && parsedBorder && parsedBorder.a > 0.05;
 
-  let stroke = '#D7E5DA';
-  const parsedBorder = parseRgb(borderColor);
-  if (parsedBorder && parsedBorder.a > 0.05) {
-    stroke = `rgb(${parsedBorder.r}, ${parsedBorder.g}, ${parsedBorder.b})`;
-  }
-
-  let fill = '#FFFFFF';
-  const parsedBg = parseRgb(bgColor);
+  let fill = 'transparent';
   if (parsedBg && parsedBg.a > 0.05) {
     fill = `rgba(${parsedBg.r}, ${parsedBg.g}, ${parsedBg.b}, ${parsedBg.a})`;
+  }
+
+  let stroke: string;
+  if (hasRealBorder && parsedBorder) {
+    stroke = `rgb(${parsedBorder.r}, ${parsedBorder.g}, ${parsedBorder.b})`;
+  } else if (fill !== 'transparent') {
+    stroke = fill;
   } else {
-    fill = 'transparent';
+    stroke = '#D7E5DA';
   }
 
   return { stroke, fill, fillStyle: 'solid' };
 }
 
-function drawCard(el: HTMLElement, svg: SVGSVGElement) {
+function drawCard(el: HTMLElement, svg: SVGSVGElement, visual: CardVisual) {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const rect = el.getBoundingClientRect();
   if (rect.width < 4 || rect.height < 4) return;
-  const visual = getCardVisual(el);
   const cs = getComputedStyle(el);
   const radiusPx = parseFloat(cs.borderTopLeftRadius) || 16;
   const inset = 2;
@@ -214,6 +250,9 @@ function enhanceCard(el: HTMLElement) {
   if (!isCardLike(el)) return;
   el.dataset.roughEnhanced = 'card';
 
+  // Capture original colors before mutating the element's styles.
+  const visual = snapshotCardVisual(el);
+
   el.style.background = 'transparent';
   el.style.backgroundImage = 'none';
   el.style.border = 'none';
@@ -221,6 +260,7 @@ function enhanceCard(el: HTMLElement) {
   if (getComputedStyle(el).position === 'static') {
     el.style.position = 'relative';
   }
+  el.style.isolation = 'isolate';
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('aria-hidden', 'true');
@@ -229,27 +269,19 @@ function enhanceCard(el: HTMLElement) {
   svg.style.width = '100%';
   svg.style.height = '100%';
   svg.style.pointerEvents = 'none';
-  svg.style.zIndex = '0';
+  svg.style.zIndex = '-1';
   el.insertBefore(svg, el.firstChild);
-
-  Array.from(el.childNodes).forEach((node) => {
-    if (node === svg) return;
-    if (node instanceof HTMLElement || node instanceof SVGElement) {
-      const child = node as HTMLElement;
-      if (!child.style.position) child.style.position = 'relative';
-      if (!child.style.zIndex) child.style.zIndex = '1';
-    }
-  });
+  liftChildrenAboveSvg(el, svg);
 
   let raf = 0;
   const schedule = () => {
     if (raf) return;
     raf = requestAnimationFrame(() => {
       raf = 0;
-      drawCard(el, svg);
+      drawCard(el, svg, visual);
     });
   };
-  drawCard(el, svg);
+  drawCard(el, svg, visual);
   const ro = new ResizeObserver(schedule);
   ro.observe(el);
 }
