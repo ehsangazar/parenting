@@ -12,7 +12,6 @@ import type { Achievement } from './components/ui/AchievementUnlockModal.js';
 import { StreakCelebrationModal } from './components/ui/StreakCelebrationModal.js';
 import { InstallBanner } from './components/InstallBanner.js';
 import { PushOptInBanner } from './components/PushOptInBanner.js';
-import { LoginPage } from './pages/LoginPage.js';
 import { SurveyPage } from './pages/SurveyPage.js';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage.js';
 import { TermsOfServicePage } from './pages/TermsOfServicePage.js';
@@ -31,7 +30,6 @@ import { SettingsPage } from './pages/app/SettingsPage.js';
 import { CalendarPage } from './pages/app/CalendarPage.js';
 import { AcademyPage } from './pages/app/AcademyPage.js';
 import { CourseDetailPage } from './pages/app/CourseDetailPage.js';
-import { OnboardingPage } from './pages/onboarding/OnboardingPage.js';
 import { isPublicMarketingPath } from './lib/publicRoutes.js';
 
 declare global {
@@ -142,18 +140,15 @@ const RequireAuth = ({ children }: { children: ReactElement }) => {
   return children;
 };
 
+// Not-yet-onboarded users get sent to `/`, where ChatPanel renders the
+// chat-native onboarding bubbles. The standalone `/onboarding` page is gone.
 const RequireOnboarding = ({ children }: { children: ReactElement }) => {
   const { isOnboarded } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    if (!isOnboarded() && !location.pathname.startsWith('/onboarding')) {
-      navigate('/onboarding');
-    } else if (isOnboarded() && location.pathname.startsWith('/onboarding')) {
-      navigate('/');
-    }
-  }, [isOnboarded, navigate, location]);
+    if (!isOnboarded()) navigate('/', { replace: true });
+  }, [isOnboarded, navigate]);
 
   return children;
 };
@@ -258,11 +253,7 @@ export default function App() {
   }, [isInitialLoading]);
 
   useEffect(() => {
-    if (
-      token &&
-      !isPublicMarketingPath(location.pathname) &&
-      !location.pathname.startsWith('/onboarding')
-    ) {
+    if (token && !isPublicMarketingPath(location.pathname)) {
       localStorage.setItem('lastPath', location.pathname);
     }
   }, [location, token]);
@@ -314,6 +305,11 @@ export default function App() {
             chat panel gates send-actions through /login. */}
         <Route path="/" element={<ChatShell />}>
           <Route index element={<ChatPanel />} />
+          {/* Auth runs inline in ChatPanel via the chat-native AuthChat flow.
+              These paths share the same element as the index so navigating
+              between / and /login keeps ChatShell + ChatPanel mounted. */}
+          <Route path="login" element={<ChatPanel />} />
+          <Route path="register" element={<ChatPanel />} />
           <Route
             path="settings"
             element={
@@ -448,21 +444,11 @@ export default function App() {
         {/* Survey is a full-page funnel and shouldn't get the shell. */}
         <Route path="/survey" element={<SurveyPage />} />
 
-        {/* Auth pages */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<LoginPage initialMode="signup" />} />
-        <Route
-          path="/onboarding"
-          element={
-            <RequireAuth>
-              <RequireOnboarding>
-                <OnboardingPage />
-              </RequireOnboarding>
-            </RequireAuth>
-          }
-        />
-
-        {/* Legacy aliases — keep old links working by redirecting to the new home. */}
+        {/* /login and /register are nested under ChatShell above so the shell
+            stays mounted across the auth flow. */}
+        {/* Legacy aliases. Keep old links working by redirecting to the new home.
+            Onboarding now happens in-chat at `/`; the standalone page is gone. */}
+        <Route path="/onboarding" element={<Navigate to="/" replace />} />
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/app" element={<Navigate to="/" replace />} />
         <Route path="/app/*" element={<Navigate to="/" replace />} />
@@ -471,21 +457,12 @@ export default function App() {
         {/* Locale-prefixed routes — mirror the English structure. */}
         <Route path="/:lang" element={<LocaleLayout />}>
           <Route path="survey" element={<SurveyPage />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="register" element={<LoginPage initialMode="signup" />} />
-          <Route
-            path="onboarding"
-            element={
-              <RequireAuth>
-                <RequireOnboarding>
-                  <OnboardingPage />
-                </RequireOnboarding>
-              </RequireAuth>
-            }
-          />
+          <Route path="onboarding" element={<Navigate to="../" replace />} />
 
           <Route element={<ChatShell />}>
             <Route index element={<ChatPanel />} />
+            <Route path="login" element={<ChatPanel />} />
+            <Route path="register" element={<ChatPanel />} />
             <Route
               path="about"
               element={

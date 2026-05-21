@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { usePostHog } from '@posthog/react';
 import { Icon, type AnyIconName } from '../icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
@@ -363,41 +363,61 @@ export const ChatPanel = () => {
   const [streaming, setStreaming] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
-  // `/login` and `/register` redirect to `/?auth=login|signup`. Seed state
-  // synchronously from the URL so the first paint already shows AuthChat
-  // instead of flashing the chat behind it for one frame.
+  // Detect /login or /register (with or without a locale prefix) so navigating
+  // to those paths opens AuthChat without a redirect hop. Also still honor
+  // ?auth=login|signup so external links can deep-link into the flow.
+  const authFromPath = (() => {
+    const m = /\/(login|register)\/?$/.exec(location.pathname);
+    if (!m) return null;
+    return m[1] === 'register' ? 'signup' : 'login';
+  })();
   const initialAuthParam = searchParams.get('auth');
-  const [showAuth, setShowAuth] = useState(
-    initialAuthParam === 'login' || initialAuthParam === 'signup',
-  );
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>(
-    initialAuthParam === 'signup' ? 'signup' : 'login',
-  );
+  const initialAuth: 'login' | 'signup' | null =
+    authFromPath ??
+    (initialAuthParam === 'signup' || initialAuthParam === 'login' ? initialAuthParam : null);
 
-  // Subsequent ?auth= changes (e.g. user opens another redirect link while
-  // already on the chat) flip state without remounting.
+  const [showAuth, setShowAuth] = useState(initialAuth !== null);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>(initialAuth ?? 'login');
+
+  // Subsequent navigations to /login, /register or to a fresh ?auth= reopen
+  // the panel without forcing a remount.
   useEffect(() => {
-    const authParam = searchParams.get('auth');
-    if (authParam === 'login' || authParam === 'signup') {
-      setAuthMode(authParam);
+    const fromPath = (() => {
+      const m = /\/(login|register)\/?$/.exec(location.pathname);
+      if (!m) return null;
+      return m[1] === 'register' ? 'signup' : 'login';
+    })();
+    const fromParam = searchParams.get('auth');
+    const next = fromPath ?? (fromParam === 'signup' || fromParam === 'login' ? fromParam : null);
+    if (next) {
+      setAuthMode(next);
       setShowAuth(true);
     }
-  }, [searchParams]);
+  }, [searchParams, location.pathname]);
 
   useEffect(() => {
     if (token && showAuth) setShowAuth(false);
   }, [token, showAuth]);
 
-  // After auth completes (or the user closes the panel), strip the ?auth= so
-  // a refresh doesn't reopen it.
+  // After auth completes (or user closes the panel), strip the ?auth= and
+  // bounce off /login or /register back to / so a refresh doesn't reopen.
   useEffect(() => {
-    if (!showAuth && searchParams.get('auth')) {
+    if (showAuth) return;
+    const hasAuthParam = searchParams.get('auth');
+    const onAuthPath = /\/(login|register)\/?$/.test(location.pathname);
+    if (hasAuthParam) {
       const next = new URLSearchParams(searchParams);
       next.delete('auth');
       setSearchParams(next, { replace: true });
     }
-  }, [showAuth, searchParams, setSearchParams]);
+    if (onAuthPath) {
+      // Preserve a locale prefix if one was present.
+      const locale = /^\/(en|fa)\//.exec(location.pathname)?.[1];
+      navigate(locale ? `/${locale}` : '/', { replace: true });
+    }
+  }, [showAuth, searchParams, setSearchParams, location.pathname, navigate]);
   const [guestUsedTurn, setGuestUsedTurn] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return sessionStorage.getItem('guestTurnUsed') === '1';
