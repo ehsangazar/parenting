@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { usePostHog } from '@posthog/react';
 import { Icon, type AnyIconName } from '../icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
@@ -365,10 +365,32 @@ export const ChatPanel = () => {
   // When true, the panel swaps to AuthChat in place instead of navigating to
   // /login. Auto-clears once the user has a token.
   const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // `/login` and `/register` are redirects to `/?auth=login|signup`. Pick that
+  // up here so direct links + bookmarks open the inline auth flow.
+  useEffect(() => {
+    const authParam = searchParams.get('auth');
+    if (authParam === 'login' || authParam === 'signup') {
+      setAuthMode(authParam);
+      setShowAuth(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (token && showAuth) setShowAuth(false);
   }, [token, showAuth]);
+
+  // After auth completes (or the user closes the panel), strip the ?auth= so
+  // a refresh doesn't reopen it.
+  useEffect(() => {
+    if (!showAuth && searchParams.get('auth')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('auth');
+      setSearchParams(next, { replace: true });
+    }
+  }, [showAuth, searchParams, setSearchParams]);
   const [guestUsedTurn, setGuestUsedTurn] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return sessionStorage.getItem('guestTurnUsed') === '1';
@@ -947,7 +969,7 @@ export const ChatPanel = () => {
   // of the chat. After auth, the token effect above clears showAuth and the
   // normal chat re-renders with the guest's local conversation preserved.
   if (showAuth && !token) {
-    return <AuthChat onClose={() => setShowAuth(false)} />;
+    return <AuthChat initialMode={authMode} onClose={() => setShowAuth(false)} />;
   }
 
   if (token && user && !user.profile?.onboarded) {
