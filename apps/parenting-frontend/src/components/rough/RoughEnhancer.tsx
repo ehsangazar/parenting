@@ -55,6 +55,10 @@ function drawButton(el: HTMLElement, svg: SVGSVGElement, visual: Visual) {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const rect = el.getBoundingClientRect();
   if (rect.width < 4 || rect.height < 4) return;
+  // Pin SVG dimensions explicitly: width/height: 100% can collapse inside <button>.
+  svg.setAttribute('width', String(rect.width));
+  svg.setAttribute('height', String(rect.height));
+  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
   const inset = 2;
   const w = rect.width - inset * 2;
   const h = rect.height - inset * 2;
@@ -224,6 +228,9 @@ function drawCard(el: HTMLElement, svg: SVGSVGElement, visual: CardVisual) {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const rect = el.getBoundingClientRect();
   if (rect.width < 4 || rect.height < 4) return;
+  svg.setAttribute('width', String(rect.width));
+  svg.setAttribute('height', String(rect.height));
+  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
   const cs = getComputedStyle(el);
   const radiusPx = parseFloat(cs.borderTopLeftRadius) || 16;
   const inset = 2;

@@ -57,6 +57,9 @@ export const RoughBox = ({
     const svg = wrapper.querySelector<SVGSVGElement>(':scope > svg[data-rough-box]');
     if (!svg) return;
     while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('width', String(size.w));
+    svg.setAttribute('height', String(size.h));
+    svg.setAttribute('viewBox', `0 0 ${size.w} ${size.h}`);
     const rc = rough.svg(svg);
     const inset = Math.max(strokeWidth + 1, 3);
     const w = size.w - inset * 2;

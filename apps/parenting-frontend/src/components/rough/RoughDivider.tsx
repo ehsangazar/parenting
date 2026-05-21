@@ -32,6 +32,9 @@ export const RoughDivider = ({
     const svg = wrapper.querySelector<SVGSVGElement>(':scope > svg[data-rough-divider]');
     if (!svg || size.w < 4) return;
     while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('width', String(size.w));
+    svg.setAttribute('height', '12');
+    svg.setAttribute('viewBox', `0 0 ${size.w} 12`);
     const rc = rough.svg(svg);
     svg.appendChild(
       rc.line(4, 6, size.w - 4, 6, {

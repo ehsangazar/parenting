@@ -60,6 +60,9 @@ export const RoughProgress = ({
     const svg = wrapper.querySelector<SVGSVGElement>(':scope > svg[data-rough-progress]');
     if (!svg || size.w < 4) return;
     while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('width', String(size.w));
+    svg.setAttribute('height', String(height));
+    svg.setAttribute('viewBox', `0 0 ${size.w} ${height}`);
     const rc = rough.svg(svg);
     const inset = 2;
     const w = size.w - inset * 2;

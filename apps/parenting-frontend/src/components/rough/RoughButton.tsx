@@ -92,6 +92,13 @@ export const RoughButton = forwardRef<HTMLButtonElement, RoughButtonProps>(funct
     if (!svg || sizeBox.w < 4 || sizeBox.h < 4) return;
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
+    // Pin SVG to exact measured pixels. `<button>` is layout-replaced in some
+    // browsers, so width/height: 100% on an inner SVG can collapse to the SVG's
+    // intrinsic default (300x150). Explicit attrs + viewBox eliminate that.
+    svg.setAttribute('width', String(sizeBox.w));
+    svg.setAttribute('height', String(sizeBox.h));
+    svg.setAttribute('viewBox', `0 0 ${sizeBox.w} ${sizeBox.h}`);
+
     const rc = rough.svg(svg);
     const inset = 3;
     const w = sizeBox.w - inset * 2;
