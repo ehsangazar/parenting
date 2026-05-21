@@ -278,6 +278,11 @@ export function createChatApi(api: AxiosInstance) {
       (await api.get(`/api/conversations/${conversationId}/messages`)).data,
     deleteConversation: async (conversationId: string) =>
       (await api.delete(`/api/conversations/${conversationId}`)).data,
+    importGuestConversation: async (payload: {
+      messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+      locale?: string;
+    }): Promise<{ conversationId: string }> =>
+      (await api.post('/api/conversations/import-guest', payload)).data,
   };
 }
 

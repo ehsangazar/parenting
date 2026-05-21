@@ -4,6 +4,7 @@ import {
   chatQuerySchema,
   listConversationsQuerySchema,
   conversationIdParamSchema,
+  importGuestConversationSchema,
 } from "./assistant.schema.js";
 import * as svc from "./assistant.service.js";
 
@@ -73,6 +74,65 @@ export default async function assistantRoutes(app: FastifyInstance) {
     async (req) => {
       const { limit, offset } = listConversationsQuerySchema.parse(req.query);
       return svc.listConversations(req.user.sub, limit, offset);
+    },
+  );
+
+  // POST /chat/conversations/import-guest
+  // Seeds a new server-side conversation with a guest's pre-signup chat so they
+  // can pick up where they left off in `/chat`. Heavily capped on size in the
+  // schema; content goes through the same PII/blocklist scrubbing as a normal
+  // send because it originated from an unauthenticated channel.
+  app.post(
+    "/conversations/import-guest",
+    {
+      schema: {
+        tags: ["Assistant"],
+        summary: "Import a guest's pre-signup conversation into history",
+        security: bearerSecurity,
+        body: {
+          type: "object",
+          required: ["messages"],
+          properties: {
+            locale: { type: "string", minLength: 2, maxLength: 10 },
+            messages: {
+              type: "array",
+              minItems: 1,
+              maxItems: 20,
+              items: {
+                type: "object",
+                required: ["role", "content"],
+                properties: {
+                  role: { type: "string", enum: ["user", "assistant"] },
+                  content: { type: "string", minLength: 1, maxLength: 8000 },
+                },
+              },
+            },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: { conversationId: { type: "string" } },
+          },
+          413: {
+            type: "object",
+            properties: { error: { type: "string" } },
+          },
+        },
+      },
+      preHandler: [app.authenticate],
+    },
+    async (req, reply) => {
+      const body = importGuestConversationSchema.parse(req.body);
+      const result = await svc.importGuestConversation(
+        req.user.sub,
+        body.messages,
+        body.locale ?? null,
+      );
+      if ("error" in result) {
+        return reply.code(result.status as 413).send({ error: result.error });
+      }
+      return result;
     },
   );
 

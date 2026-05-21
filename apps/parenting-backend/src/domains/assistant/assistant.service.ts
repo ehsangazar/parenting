@@ -218,6 +218,46 @@ export async function runQuery(
   return { conversationId: conversationId! };
 }
 
+const MAX_GUEST_TOTAL_CHARS = 50_000;
+
+// Take a guest's pre-signup conversation (stashed client-side in localStorage)
+// and seed it into a fresh server-side Conversation so they keep their history
+// instead of restarting from scratch. Each message is sanitized the same way
+// runQuery sanitizes a new send, since the content originated from an
+// unauthenticated channel and shouldn't be trusted verbatim.
+export async function importGuestConversation(
+  userId: string,
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  locale: string | null,
+): Promise<{ conversationId: string } | { error: string; status: number }> {
+  const totalChars = messages.reduce((n, m) => n + m.content.length, 0);
+  if (totalChars > MAX_GUEST_TOTAL_CHARS) {
+    return { error: "Imported conversation too large", status: 413 };
+  }
+
+  const tenantId = await repo.findUserTenantId(userId);
+  const conversation = await repo.createConversation(userId, tenantId);
+
+  for (const msg of messages) {
+    const safeContent = applyBlocklist(redactPII(msg.content), BLOCKLIST);
+    await repo.createMessage({
+      id: nanoid(),
+      conversationId: conversation.id,
+      role: msg.role,
+      content: safeContent,
+      locale: locale ?? "en",
+    });
+  }
+
+  capturePosthog(userId, "guest_conversation_imported", {
+    messages_count: messages.length,
+    total_chars: totalChars,
+    locale: locale ?? null,
+  });
+
+  return { conversationId: conversation.id };
+}
+
 // Single-turn answer for logged-out visitors. No tools, no retrieval, no DB,
 // no memory: just a clean taste of Raised's voice so they can decide to sign
 // up. The route layer enforces a strict IP rate limit on top of this.

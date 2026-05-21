@@ -17,5 +17,19 @@ export const conversationIdParamSchema = z.object({
   id: z.string().min(1),
 });
 
+export const importGuestConversationSchema = z.object({
+  locale: z.string().min(2).max(10).optional(),
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().min(1).max(8000),
+      }),
+    )
+    .min(1)
+    .max(20),
+});
+
 export type ChatQueryInput = z.infer<typeof chatQuerySchema>;
 export type ListConversationsQuery = z.infer<typeof listConversationsQuerySchema>;
+export type ImportGuestConversationInput = z.infer<typeof importGuestConversationSchema>;

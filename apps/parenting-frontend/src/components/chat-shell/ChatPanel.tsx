@@ -921,46 +921,86 @@ export const ChatPanel = () => {
   }, [token, guestUsedTurn, posthog]);
 
   // After login, replay any pending draft saved before the login redirect AND
-  // rehydrate the local guest conversation so the visitor sees Q1/A1 above
-  // their new authenticated send. Guest messages live locally only; they are
-  // not migrated server-side.
+  // rehydrate the local guest conversation as a real server-side thread so the
+  // visitor can keep going from where they left off (including on refresh and
+  // in the conversation list). We defer this until onboarding finishes so the
+  // OnboardingChat flow isn't competing with a rehydrate that the user can't
+  // see anyway.
   useEffect(() => {
     if (!token) return;
+    if (!user) return;
+    if (!user.profile?.onboarded) return;
 
-    let restored: ChatMessage[] = [];
-    try {
-      const raw = localStorage.getItem('guestConversation');
-      if (raw) {
-        const parsed = JSON.parse(raw) as Array<{ role: 'user' | 'assistant'; content: string }>;
-        restored = parsed.map((m, i) => ({ id: `guest-${i}-${Date.now()}`, role: m.role, content: m.content }));
-        localStorage.removeItem('guestConversation');
+    let cancelled = false;
+    (async () => {
+      let restored: ChatMessage[] = [];
+      let rawGuest: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+      try {
+        const raw = localStorage.getItem('guestConversation');
+        if (raw) {
+          rawGuest = JSON.parse(raw) as Array<{ role: 'user' | 'assistant'; content: string }>;
+          restored = rawGuest.map((m, i) => ({
+            id: `guest-${i}-${Date.now()}`,
+            role: m.role,
+            content: m.content,
+          }));
+        }
+      } catch {
+        // ignore malformed payload
       }
-    } catch {
-      // ignore malformed payload
-    }
-    if (restored.length > 0) {
-      setMessages(restored);
-      posthog.capture('guest_conversation_rehydrated_after_signin', {
-        messages_count: restored.length,
-      });
-    }
-    try {
-      sessionStorage.removeItem('guestTurnUsed');
-    } catch {
-      // sessionStorage unavailable; non-fatal.
-    }
-    setGuestUsedTurn(false);
 
-    const pending = localStorage.getItem('pendingChatMessage');
-    if (pending) {
-      localStorage.removeItem('pendingChatMessage');
-      posthog.capture('pending_message_replayed_after_signin', {
-        message_length: pending.length,
-      });
-      void handleSend(pending);
-    }
+      if (restored.length > 0) {
+        // Surface bubbles immediately so the user doesn't see an empty chat
+        // while the import POST is in flight.
+        if (!cancelled) setMessages(restored);
+        posthog.capture('guest_conversation_rehydrated_after_signin', {
+          messages_count: restored.length,
+        });
+
+        try {
+          const res = await chatApi.importGuestConversation({
+            messages: rawGuest,
+            locale: i18n.language,
+          });
+          if (cancelled) return;
+          setActiveConversationId(res.conversationId);
+          localStorage.removeItem('guestConversation');
+          posthog.capture('guest_conversation_imported', {
+            messages_count: rawGuest.length,
+            conversation_id: res.conversationId,
+          });
+        } catch (err) {
+          // Import failed (network/server). Keep the localStorage entry so the
+          // next mount can retry; the in-memory rehydrate still lets the user
+          // see their history this session.
+          posthog.capture('guest_conversation_import_failed', {
+            message: (err as Error)?.message?.slice(0, 200) ?? 'unknown',
+          });
+        }
+      }
+
+      try {
+        sessionStorage.removeItem('guestTurnUsed');
+      } catch {
+        // sessionStorage unavailable; non-fatal.
+      }
+      if (!cancelled) setGuestUsedTurn(false);
+
+      const pending = localStorage.getItem('pendingChatMessage');
+      if (pending) {
+        localStorage.removeItem('pendingChatMessage');
+        posthog.capture('pending_message_replayed_after_signin', {
+          message_length: pending.length,
+        });
+        if (!cancelled) void handleSend(pending);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, user?.profile?.onboarded]);
 
   const suggested = useMemo(
     () => pickRandom(getSuggestedPool(t, activeChild?.name ?? null, activeChild?.age ?? null, !token), 4),
