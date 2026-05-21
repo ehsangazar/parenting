@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react-swc';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -104,6 +105,24 @@ export default defineConfig({
         navigateFallback: 'index.html',
       },
     }),
+    // Sourcemap upload reads SENTRY_ORG, SENTRY_PROJECT, SENTRY_URL,
+    // SENTRY_AUTH_TOKEN, and SENTRY_RELEASE from the environment at build
+    // time (set on Coolify with is_buildtime: true). SENTRY_RELEASE is set
+    // per-deploy to the commit SHA by the deploy workflow. Without the auth
+    // token the plugin emits sourcemaps but skips upload silently, so local
+    // builds still work. sourcemaps.filesToDeleteAfterUpload keeps the maps
+    // out of the public bundle.
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      url: process.env.SENTRY_URL,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: { name: process.env.SENTRY_RELEASE },
+      sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
+      telemetry: false,
+      silent: true,
+      disable: !process.env.SENTRY_AUTH_TOKEN,
+    }),
   ],
   resolve: {
     alias: {
@@ -113,6 +132,7 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', 'react-router-dom'],
   },
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         // Function form: route any nested import to a single home so shared deps

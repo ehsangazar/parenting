@@ -20,6 +20,31 @@ jobs:
       SITE_URL: https://parenting-frontend.gazar.dev/
 
     steps:
+      - name: Set SENTRY_RELEASE on Coolify
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          APP_UUID: ${{ env.COOLIFY_APP_UUID }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          payload=$(printf '{"key":"SENTRY_RELEASE","value":"%s","is_buildtime":true,"is_runtime":true,"is_preview":false}' "${RELEASE_SHA}")
+          code=$(curl -sS -o /tmp/envresp.txt -w '%{http_code}' \
+            -X PATCH "${COOLIFY_HOST}/api/v1/applications/${APP_UUID}/envs" \
+            -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "${payload}")
+          if [ "${code}" -ge 200 ] && [ "${code}" -lt 300 ]; then
+            echo "SENTRY_RELEASE updated (${code})"
+          else
+            echo "PATCH returned ${code}; trying POST"
+            cat /tmp/envresp.txt; echo
+            curl --fail-with-body -sS \
+              -X POST "${COOLIFY_HOST}/api/v1/applications/${APP_UUID}/envs" \
+              -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "${payload}"
+            echo
+          fi
+
       - name: Trigger Coolify deploy
         id: trigger
         env:
