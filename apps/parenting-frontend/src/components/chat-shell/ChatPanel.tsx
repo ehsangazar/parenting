@@ -362,14 +362,21 @@ export const ChatPanel = () => {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
-  // When true, the panel swaps to AuthChat in place instead of navigating to
-  // /login. Auto-clears once the user has a token.
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // `/login` and `/register` are redirects to `/?auth=login|signup`. Pick that
-  // up here so direct links + bookmarks open the inline auth flow.
+  // `/login` and `/register` redirect to `/?auth=login|signup`. Seed state
+  // synchronously from the URL so the first paint already shows AuthChat
+  // instead of flashing the chat behind it for one frame.
+  const initialAuthParam = searchParams.get('auth');
+  const [showAuth, setShowAuth] = useState(
+    initialAuthParam === 'login' || initialAuthParam === 'signup',
+  );
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>(
+    initialAuthParam === 'signup' ? 'signup' : 'login',
+  );
+
+  // Subsequent ?auth= changes (e.g. user opens another redirect link while
+  // already on the chat) flip state without remounting.
   useEffect(() => {
     const authParam = searchParams.get('auth');
     if (authParam === 'login' || authParam === 'signup') {
