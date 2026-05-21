@@ -641,6 +641,24 @@ export const ChatPanel = () => {
           sessionStorage.setItem('guestTurnUsed', '1');
           setGuestUsedTurn(true);
           posthog.capture('guest_answer_completed');
+          // Persist the conversation now (not only on the explicit "Sign in"
+          // click) so it survives any path to AuthChat: URL bar, /login link,
+          // the auto-bounce after a second guest send, or a tab reload.
+          // setMessages is used as a read in a side-effect callback so we get
+          // the final post-stream message list without racing.
+          setMessages((prev) => {
+            try {
+              const guestMessages = prev
+                .filter((m) => m.role !== 'system')
+                .map((m) => ({ role: m.role, content: m.content }));
+              if (guestMessages.length > 0) {
+                localStorage.setItem('guestConversation', JSON.stringify(guestMessages));
+              }
+            } catch {
+              // localStorage unavailable; non-fatal.
+            }
+            return prev;
+          });
         }
       } catch (err: unknown) {
         if ((err as Error)?.name !== 'AbortError' && !hasContent) {
