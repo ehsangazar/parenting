@@ -1190,7 +1190,7 @@ export const ChatPanel = () => {
                 className="inline-flex min-h-[44px] flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-2.5 text-[14px] font-bold text-white shadow-sm transition-colors hover:bg-accent-blueHover"
               >
                 <Icon name={uiIcons.user} className="h-4 w-4 object-contain brightness-0 invert" alt="" />
-                {t('chatPage.guestWallCta', 'Sign in to continue')}
+                {t('chatPage.guestWallCta', 'Continue')}
               </button>
             </div>
           ) : (

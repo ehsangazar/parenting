@@ -209,12 +209,15 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
     if (!onClose) navigate(nextMode === 'signup' ? '/register' : '/login');
   };
 
-  const introBubble =
-    isGuestReturn && mode === 'login'
-      ? t('authChat.guestReturnIntro', "Welcome back! I've kept your draft safe. Sign in and we'll pick up where you left off.")
-      : mode === 'login'
-        ? t('authChat.intro', "Hi! I'm Raised. Sign in and we'll keep the conversation going.")
-        : t('authChat.signupIntro', "Hi! I'm Raised. Create an account so I can remember our chats.");
+  const introBubble = isGuestReturn
+    ? t(
+        'authChat.guestReturnIntro',
+        "Welcome back! I've kept your draft safe. Let's pick up where you left off.",
+      )
+    : t(
+        'authChat.introNeutral',
+        "Hi! I'm Raised. Let's set things up so I can remember our chats.",
+      );
 
   return (
     <div className="relative flex h-full min-h-screen flex-col bg-background text-text-primary">
@@ -247,9 +250,7 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
         <div className="mx-auto mt-auto flex w-full max-w-2xl flex-col gap-3">
           <AssistantBubble>{introBubble}</AssistantBubble>
           <AssistantBubble>
-            {mode === 'login'
-              ? t('authChat.askMethod', 'How would you like to sign in?')
-              : t('authChat.askMethodSignup', 'How would you like to sign up?')}
+            {t('authChat.askIntent', 'Are you signing back in, or creating an account?')}
           </AssistantBubble>
 
           {step === 'method' ? (
@@ -263,22 +264,30 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
               )}
               <ChipGroup
                 options={[
-                  { id: 'email', label: t('authChat.useEmail', 'Use email & password') },
+                  { id: 'signin', label: t('authChat.chipSignIn', 'I have an account') },
+                  { id: 'signup', label: t('authChat.chipSignUp', "I'm new here") },
                 ]}
-                onSelect={() => {
+                onSelect={(opt) => {
+                  setMode(opt.id === 'signup' ? 'signup' : 'login');
                   setMethod('email');
                   setStep('email');
                 }}
               />
             </div>
           ) : (
-            <UserBubble>{t('authChat.choseEmail', 'Email & password')}</UserBubble>
+            <UserBubble>
+              {mode === 'signup'
+                ? t('authChat.choseSignUp', "I'm creating a new account")
+                : t('authChat.choseSignIn', 'I have an account')}
+            </UserBubble>
           )}
 
           {(step === 'email' || (method === 'email' && step !== 'method')) && (
             <>
               <AssistantBubble>
-                {t('authChat.askEmail', "What's your email?")}
+                {mode === 'signup'
+                  ? t('authChat.askEmailSignup', "Great! What's your email?")
+                  : t('authChat.askEmail', "Welcome back! What's your email?")}
               </AssistantBubble>
               {step === 'email' ? (
                 <div className="mt-1 flex flex-col gap-2 sm:flex-row">
