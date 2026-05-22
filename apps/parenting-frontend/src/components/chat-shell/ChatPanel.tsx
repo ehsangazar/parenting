@@ -1269,7 +1269,7 @@ export const ChatPanel = () => {
                     type="button"
                     onClick={() => handleSend()}
                     disabled={!input.trim()}
-                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-brand-blue px-4 text-[14px] font-bold text-white shadow-sm transition-colors hover:bg-accent-blueHover disabled:cursor-not-allowed disabled:bg-border-dark disabled:text-text-secondary"
+                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-brand-blue px-4 text-[14px] font-bold text-white shadow-sm transition-colors hover:bg-accent-blueHover disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-blue"
                   >
                     {t('chatPage.send')}
                     <Icon name={uiIcons.send} className="h-4 w-4 object-contain brightness-0 invert" alt="" />
