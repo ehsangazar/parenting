@@ -32,7 +32,7 @@ export default async function familyRoutes(app: FastifyInstance) {
         properties: { name: { type: "string", minLength: 1, maxLength: 100 } },
       },
       response: {
-        200: { type: "object", properties: { family: { type: "object" } } },
+        200: { type: "object", properties: { family: { type: "object", additionalProperties: true } } },
         401: { description: "Unauthorized", type: "object" },
       },
     },
@@ -72,7 +72,7 @@ export default async function familyRoutes(app: FastifyInstance) {
         properties: { id: { type: "string" } },
       },
       response: {
-        200: { type: "object", properties: { family: { type: "object" } } },
+        200: { type: "object", properties: { family: { type: "object", additionalProperties: true } } },
         401: { description: "Unauthorized", type: "object" },
         404: { description: "Family not found", type: "object" },
       },
@@ -104,7 +104,7 @@ export default async function familyRoutes(app: FastifyInstance) {
         },
       },
       response: {
-        200: { type: "object", properties: { family: { type: "object" } } },
+        200: { type: "object", properties: { family: { type: "object", additionalProperties: true } } },
         401: { description: "Unauthorized", type: "object" },
         404: { description: "Family not found", type: "object" },
       },
@@ -365,7 +365,7 @@ export default async function familyRoutes(app: FastifyInstance) {
         },
       },
       response: {
-        200: { type: "object", properties: { child: { type: "object" } } },
+        200: { type: "object", properties: { child: { type: "object", additionalProperties: true } } },
         401: { description: "Unauthorized", type: "object" },
         404: { description: "Family not found", type: "object" },
       },
@@ -503,7 +503,7 @@ export default async function familyRoutes(app: FastifyInstance) {
         200: {
           type: "object",
           properties: {
-            child: { type: "object" },
+            child: { type: "object", additionalProperties: true },
             age: { type: ["number", "null"] },
             profile: { type: "string" },
           },
@@ -545,7 +545,7 @@ export default async function familyRoutes(app: FastifyInstance) {
           type: "object",
           properties: {
             ok: { type: "boolean" },
-            family: { type: "object" },
+            family: { type: "object", additionalProperties: true },
           },
         },
         400: { description: "Invite invalid or already used", type: "object" },
@@ -658,7 +658,7 @@ export default async function familyRoutes(app: FastifyInstance) {
         },
       },
       response: {
-        200: { type: "object", properties: { event: { type: "object" } } },
+        200: { type: "object", properties: { event: { type: "object", additionalProperties: true } } },
         400: { description: "Bad request", type: "object" },
         401: { description: "Unauthorized", type: "object" },
         404: { description: "Family not found", type: "object" },
@@ -725,7 +725,7 @@ export default async function familyRoutes(app: FastifyInstance) {
         },
       },
       response: {
-        200: { type: "object", properties: { event: { type: "object" } } },
+        200: { type: "object", properties: { event: { type: "object", additionalProperties: true } } },
         400: { description: "Bad request", type: "object" },
         401: { description: "Unauthorized", type: "object" },
         404: { description: "Not found", type: "object" },
