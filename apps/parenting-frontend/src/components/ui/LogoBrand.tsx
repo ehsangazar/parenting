@@ -63,7 +63,7 @@ export const LogoBrand = ({
       }}
     >
       <img
-        src="/logo.jpg"
+        src="/logo.png"
         alt="Raised"
         className={`${logoSize} flex-shrink-0 rounded-full object-contain transition-opacity duration-150 ${href || onClick ? 'group-hover:opacity-90' : ''}`}
       />

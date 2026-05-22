@@ -95,7 +95,7 @@ export const InstallBanner = () => {
       <div className="relative overflow-hidden rounded-2xl border-2 border-border bg-surface shadow-xl animate-slide-up">
         <div className="h-1 w-full bg-primary-400" />
         <div className="flex items-start gap-3 p-4">
-          <img src="/logo.jpg" alt="Raised" className="h-12 w-12 flex-shrink-0 rounded-xl object-contain shadow-sm" />
+          <img src="/logo.png" alt="Raised" className="h-12 w-12 flex-shrink-0 rounded-xl object-contain shadow-sm" />
 
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-text-primary leading-tight">{t('installBanner.title')}</p>

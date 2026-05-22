@@ -74,7 +74,7 @@ export const ArticleDetailPage = ({ variant = 'public' }: ArticleDetailPageProps
       'name': t('articleDetail.editorialName'),
       'logo': {
         '@type': 'ImageObject',
-        'url': 'https://raised.info/logo.jpg'
+        'url': 'https://raised.info/logo.png'
       }
     },
     'publisher': {
@@ -82,7 +82,7 @@ export const ArticleDetailPage = ({ variant = 'public' }: ArticleDetailPageProps
       'name': 'Raised',
       'logo': {
         '@type': 'ImageObject',
-        'url': 'https://raised.info/logo.jpg'
+        'url': 'https://raised.info/logo.png'
       }
     },
     'mainEntityOfPage': {
