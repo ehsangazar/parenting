@@ -346,22 +346,29 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
                   {CONCERNS.map((c) => {
                     const selected = concerns.includes(c.id);
                     return (
-                      <button
+                      <RoughBox
                         key={c.id}
+                        as="button"
                         type="button"
+                        skipEnhancer
+                        ariaPressed={selected}
                         onClick={() =>
                           setConcerns((prev) =>
                             prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id],
                           )
                         }
-                        className={`rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors ${
-                          selected
-                            ? 'border-primary-500 bg-primary-500 text-white'
-                            : 'border-border bg-surface text-text-primary hover:border-primary-400'
-                        }`}
+                        stroke={selected ? '#194038' : '#D7E5DA'}
+                        fill={selected ? '#2F7D6A' : '#FFFFFF'}
+                        strokeWidth={selected ? 2.2 : 1.6}
+                        radius={9999}
+                        seedKey={`concern-${c.id}-${selected ? 'on' : 'off'}`}
+                        className="px-4 py-2 text-[14px] font-semibold cursor-pointer transition-transform active:scale-95"
+                        innerClassName="flex items-center gap-1.5"
+                        style={{ color: selected ? '#FFFFFF' : '#2F2A26' }}
                       >
+                        {selected ? <span aria-hidden>✓</span> : null}
                         {c.label}
-                      </button>
+                      </RoughBox>
                     );
                   })}
                 </div>
