@@ -98,6 +98,7 @@ export function ScaleQuestion({
                 onClick={() => onChange(num)}
                 onMouseEnter={() => setHoveredValue(num)}
                 onMouseLeave={() => setHoveredValue(null)}
+                data-rough-skip="true"
                 className={`
                   relative flex-1 min-w-0 flex items-center justify-center w-8 h-8 rounded-full font-semibold text-sm cursor-pointer tabular-nums leading-none
                   transition-colors duration-200 ease-out

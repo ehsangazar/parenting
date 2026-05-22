@@ -49,6 +49,7 @@ export function CheckboxQuestion({
           return (
             <label
               key={option}
+              data-rough-skip="true"
               className={`
                 group relative flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border-2 cursor-pointer min-w-0
                 transition-all duration-200

@@ -81,7 +81,9 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
   const handleNew = () => {
     setActiveConversationId(null);
     requestNewConversation();
-    if (window.location.pathname !== '/') {
+    // Also navigate when only the search string is non-empty (e.g. coming from
+    // /login -> /?auth=login) so AuthChat closes via the URL effect.
+    if (window.location.pathname !== '/' || window.location.search) {
       navigate('/');
     }
     onClose?.();
@@ -89,7 +91,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
 
   const handleSelect = (id: string) => {
     setActiveConversationId(id);
-    if (window.location.pathname !== '/') {
+    if (window.location.pathname !== '/' || window.location.search) {
       navigate('/');
     }
     onClose?.();
@@ -161,6 +163,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
           type="button"
           onClick={handleNew}
           aria-pressed={isNewConversationActive}
+          data-rough-skip="true"
           className={clsx(
             'flex w-full items-center gap-2 rounded-xl border px-3 py-3 text-[14px] font-semibold transition-colors',
             isNewConversationActive
@@ -212,6 +215,7 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
           return (
             <div
               key={conv.id}
+              data-rough-skip="true"
               className={clsx(
                 'mx-1 mb-1 flex items-start gap-1 rounded-xl border transition-colors',
                 isSelected

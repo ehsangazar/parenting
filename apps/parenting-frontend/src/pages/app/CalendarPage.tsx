@@ -8,7 +8,7 @@ import { useAppContext } from '../../components/app/AppContext.js';
 import { calendarApi, familiesApi } from '../../lib/appApi.js';
 import { PageContainer } from '../../components/app/PageContainer.js';
 import { Drawer } from '../../components/Drawer.js';
-import { Icon, type IconName } from '../../components/icons/index.js';
+import { Icon, type AnyIconName } from '../../components/icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
 import { PushPromoCard } from '../../components/PushPromoCard.js';
@@ -566,12 +566,13 @@ const EventFormDrawer = ({ open, onClose, mode, event, childOptions, onSaved }: 
   return (
     <Drawer open={open} onClose={onClose} title={title}>
       <div className="space-y-4">
-        <div role="tablist" aria-label={t('calendar.form.tabs', 'Event input mode')} className="flex gap-1 rounded-xl bg-surface-light p-1">
+        <div role="tablist" aria-label={t('calendar.form.tabs', 'Event input mode')} data-rough-skip="true" className="flex gap-1 rounded-xl bg-surface-light p-1">
           <button
             type="button"
             role="tab"
             aria-selected={tab === 'ai'}
             onClick={() => setTab('ai')}
+            data-rough-skip="true"
             className={clsx(
               'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold transition-colors',
               tab === 'ai' ? 'bg-surface text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary',
@@ -585,6 +586,7 @@ const EventFormDrawer = ({ open, onClose, mode, event, childOptions, onSaved }: 
             role="tab"
             aria-selected={tab === 'form'}
             onClick={() => setTab('form')}
+            data-rough-skip="true"
             className={clsx(
               'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold transition-colors',
               tab === 'form' ? 'bg-surface text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary',
@@ -938,7 +940,7 @@ const EventRow = ({ event, locale, onSelect, onConfirm, onDismiss, busy }: Event
               EVENT_TYPE_TONE[event.eventType] ?? EVENT_TYPE_TONE.other,
             )}
           >
-            <Icon name={appAssetIcons.calendar as IconName} className="h-5 w-5 object-contain" alt="" />
+            <Icon name={appAssetIcons.calendar as AnyIconName} className="h-5 w-5 object-contain" alt="" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">

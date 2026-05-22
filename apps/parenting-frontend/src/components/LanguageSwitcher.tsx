@@ -55,7 +55,7 @@ export const LanguageSwitcher = ({ variant = 'full', className = '' }: Props) =>
       <p className="mb-1.5 px-1 text-[12px] font-bold uppercase tracking-wider text-text-secondary">
         {t('settings.language', 'Language')}
       </p>
-      <div className="flex gap-1 rounded-xl border border-border bg-surface-light p-1">
+      <div data-rough-skip="true" className="flex gap-1 rounded-xl border border-border bg-surface-light p-1">
         {SUPPORTED_LOCALES.map((locale) => {
           const meta = LOCALE_META[locale] ?? { flag: '🌐', native: locale, short: locale.toUpperCase() };
           const isActive = locale === current;
@@ -67,6 +67,7 @@ export const LanguageSwitcher = ({ variant = 'full', className = '' }: Props) =>
               onClick={() => handleSelect(locale)}
               aria-pressed={isActive}
               disabled={isSaving}
+              data-rough-skip="true"
               className={clsx(
                 'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-[13px] font-bold transition-all min-h-[36px]',
                 isActive

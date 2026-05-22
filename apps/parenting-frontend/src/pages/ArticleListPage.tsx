@@ -129,6 +129,7 @@ export const ArticleListPage = () => {
               <div className="space-y-1">
                 <button
                   onClick={() => handleCategoryClick(null)}
+                  data-rough-skip="true"
                   className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     !selectedCategoryId ? 'bg-primary-100 text-primary-700 shadow-sm' : 'text-text-secondary hover:bg-primary-50'
                   }`}
@@ -139,6 +140,7 @@ export const ArticleListPage = () => {
                   <div key={cat.id} className="space-y-1">
                     <button
                       onClick={() => handleCategoryClick(cat.id)}
+                      data-rough-skip="true"
                       className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                         selectedCategoryId === cat.id ? 'bg-primary-100 text-primary-700 shadow-sm' : 'text-text-secondary hover:bg-primary-50'
                       }`}
@@ -151,6 +153,7 @@ export const ArticleListPage = () => {
                           <button
                             key={child.id}
                             onClick={() => handleCategoryClick(child.id)}
+                            data-rough-skip="true"
                             className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                               selectedCategoryId === child.id ? 'text-primary-600' : 'text-text-tertiary hover:text-primary-500'
                             }`}
