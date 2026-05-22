@@ -21,8 +21,13 @@ export const api = createApiClient({
   getToken: () => useAuth.getState().token,
   getLocale: () => i18n.language ?? 'en',
   onError: (error, status) => {
-    const isServerOrNetworkError = !status || status >= 500;
-    if (isServerOrNetworkError) Sentry.captureException(error);
+    // Pure network errors (offline, WiFi blip, tab throttled, request
+    // cancelled) and timeouts aren't actionable from frontend Sentry —
+    // backend outages surface via uptime monitoring + 5xx responses.
+    // Capturing them only floods GlitchTip with noise.
+    const code = (error as { code?: string } | null | undefined)?.code;
+    if (code === 'ERR_NETWORK' || code === 'ECONNABORTED' || code === 'ERR_CANCELED') return;
+    if (!status || status >= 500) Sentry.captureException(error);
   },
 });
 
