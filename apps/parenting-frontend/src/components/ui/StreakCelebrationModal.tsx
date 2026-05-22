@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '../icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { soundManager } from '../../lib/soundManager.js';
-import { RoughBox, RoughButton } from '../rough/index.js';
+import { RoughBox, RoughButton, RoughHighlight } from '../rough/index.js';
 
 type StreakCelebrationModalProps = {
   streak: number;
@@ -74,7 +74,19 @@ export const StreakCelebrationModal = ({ streak, coinsBonus, onDismiss }: Streak
               🔥
             </motion.div>
 
-            <h2 className="celebrate-headline mb-1 text-2xl">{title}</h2>
+            <h2 className="celebrate-headline mb-1 text-2xl">
+              <RoughHighlight
+                type="circle"
+                color="#D77548"
+                strokeWidth={2.2}
+                padding={[6, 12]}
+                animationDuration={900}
+                delay={500}
+                redrawKey={streak}
+              >
+                {title}
+              </RoughHighlight>
+            </h2>
             <p className="text-sm text-text-secondary">{t('streakCelebration.keepGoingMessage', { count: streak })}</p>
 
             {coinsBonus > 0 && (

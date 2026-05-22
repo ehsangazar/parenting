@@ -242,13 +242,35 @@ function paintCard(el: HTMLElement, visual: CardVisual) {
   el.style.backgroundColor = 'transparent';
 }
 
+// Repaint hooks keyed off the enhanced element, so the mutation observer can
+// re-snapshot when a card's className flips (e.g. a chip toggling its selected
+// state from white → brand-blue). Without this, we'd be stuck with whatever
+// fill we captured at first mount.
+const CARD_REPAINTERS = new WeakMap<HTMLElement, () => void>();
+
+function resnapshotCardVisual(el: HTMLElement): CardVisual {
+  // Clear our own overrides so getComputedStyle reflects the current
+  // class-driven colors, then re-apply them after reading.
+  const prevBg = el.style.backgroundColor;
+  const prevBgImage = el.style.backgroundImage;
+  const prevBorder = el.style.border;
+  el.style.backgroundColor = '';
+  el.style.backgroundImage = '';
+  el.style.border = '';
+  const visual = snapshotCardVisual(el);
+  el.style.backgroundColor = prevBg;
+  el.style.backgroundImage = prevBgImage;
+  el.style.border = prevBorder;
+  return visual;
+}
+
 function enhanceCard(el: HTMLElement) {
-  if (el.dataset.roughEnhanced === 'true') return;
+  if (el.dataset.roughEnhanced === 'card') return;
   if (!isCardLike(el)) return;
   el.dataset.roughEnhanced = 'card';
 
   // Capture original colors before mutating the element's styles.
-  const visual = snapshotCardVisual(el);
+  let visual = snapshotCardVisual(el);
 
   el.style.border = 'none';
   el.style.boxShadow = 'none';
@@ -265,6 +287,13 @@ function enhanceCard(el: HTMLElement) {
   };
   const ro = new ResizeObserver(schedule);
   ro.observe(el);
+
+  CARD_REPAINTERS.set(el, () => {
+    visual = resnapshotCardVisual(el);
+    el.style.border = 'none';
+    el.style.boxShadow = 'none';
+    paintCard(el, visual);
+  });
 }
 
 function enhanceAllUnder(root: ParentNode) {
@@ -286,9 +315,15 @@ export const RoughEnhancer = () => {
         });
         if (m.type === 'attributes' && m.target instanceof HTMLElement) {
           const el = m.target;
-          if (el.dataset.roughEnhanced) continue;
-          if (el.matches?.(BTN_SELECTOR)) enhanceButton(el);
-          else if (el.matches?.(CARD_SELECTOR)) enhanceCard(el);
+          if (!el.dataset.roughEnhanced) {
+            if (el.matches?.(BTN_SELECTOR)) enhanceButton(el);
+            else if (el.matches?.(CARD_SELECTOR)) enhanceCard(el);
+          } else if (el.dataset.roughEnhanced === 'card') {
+            // Class flipped on an already-enhanced card (e.g. selected chip).
+            // Re-snapshot so the new background/border take effect instead of
+            // being permanently masked by our first-render overrides.
+            CARD_REPAINTERS.get(el)?.();
+          }
         }
       }
     });

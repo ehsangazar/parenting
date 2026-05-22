@@ -3,3 +3,4 @@ export { RoughButton, type RoughButtonProps, type RoughButtonVariant, type Rough
 export { RoughProgress, type RoughProgressProps } from './RoughProgress.js';
 export { RoughDivider, type RoughDividerProps } from './RoughDivider.js';
 export { RoughEnhancer } from './RoughEnhancer.js';
+export { RoughHighlight } from './RoughHighlight.js';

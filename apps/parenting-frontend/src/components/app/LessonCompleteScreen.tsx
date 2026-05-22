@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '../icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { soundManager } from '../../lib/soundManager.js';
-import { RoughBox, RoughButton } from '../rough/index.js';
+import { RoughBox, RoughButton, RoughHighlight } from '../rough/index.js';
 
 type LessonCompleteScreenProps = {
   coinsAwarded: number;
@@ -47,7 +47,18 @@ export const LessonCompleteScreen = ({ coinsAwarded, xpAwarded, onContinue }: Le
         </motion.div>
 
         <div>
-          <h2 className="celebrate-headline text-2xl">{t('learning.lessonComplete')}</h2>
+          <h2 className="celebrate-headline text-2xl">
+            <RoughHighlight
+              type="underline"
+              color="#2F7D6A"
+              strokeWidth={2.4}
+              padding={[2, 4]}
+              animationDuration={750}
+              delay={350}
+            >
+              {t('learning.lessonComplete')}
+            </RoughHighlight>
+          </h2>
           <p className="mt-1 text-sm text-text-secondary">{t('learning.lessonCompleteSubtitle')}</p>
         </div>
 

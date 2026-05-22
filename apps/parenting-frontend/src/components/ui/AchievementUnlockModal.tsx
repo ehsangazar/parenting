@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { soundManager } from '../../lib/soundManager.js';
-import { RoughBox, RoughButton } from '../rough/index.js';
+import { RoughBox, RoughButton, RoughHighlight } from '../rough/index.js';
 
 export type Achievement = {
   key: string;
@@ -136,7 +136,19 @@ export const AchievementUnlockModal = ({ achievements, onDismiss }: AchievementU
               {current.icon}
             </motion.div>
 
-            <h2 className="celebrate-headline mb-1 text-2xl">{current.title}</h2>
+            <h2 className="celebrate-headline mb-1 text-2xl">
+              <RoughHighlight
+                type="circle"
+                color="#D88BA0"
+                strokeWidth={2.2}
+                padding={[6, 10]}
+                animationDuration={900}
+                delay={450}
+                redrawKey={current.key}
+              >
+                {current.title}
+              </RoughHighlight>
+            </h2>
 
             <div className="mt-3 flex justify-center gap-3">
               {current.xpReward > 0 && (
