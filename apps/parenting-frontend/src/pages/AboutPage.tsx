@@ -28,7 +28,7 @@ export const AboutPage = () => {
 
   const STATS = [
     { value: '90%',   label: t('aboutPage.stat1Label'), source: t('aboutPage.stat1Source') },
-    { value: '250M+', label: t('aboutPage.stat2Label'), source: t('aboutPage.stat2Source') },
+    { value: '84%',   label: t('aboutPage.stat2Label'), source: t('aboutPage.stat2Source') },
     { value: '1 in 3', label: t('aboutPage.stat3Label'), source: t('aboutPage.stat3Source') },
     { value: '£10+',  label: t('aboutPage.stat4Label'), source: t('aboutPage.stat4Source') },
   ];

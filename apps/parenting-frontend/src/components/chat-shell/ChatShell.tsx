@@ -19,11 +19,21 @@ const STORAGE_KEY = 'active_family_id';
  * usually the chat), and feature shortcuts (right). Mobile collapses the
  * side columns into drawers.
  */
+// Public landing paths where the marketing layout renders inside the shell
+// outlet. The shell hides its sidebars and mobile top bar so MarketingHome
+// can claim the full viewport.
+const MARKETING_ROOT_PATHS = new Set<string>(['/', '/en', '/fa']);
+const isMarketingRoot = (pathname: string): boolean => {
+  const normalized = pathname.replace(/\/$/, '') || '/';
+  return MARKETING_ROOT_PATHS.has(normalized);
+};
+
 export const ChatShell = () => {
   const { t } = useTranslation();
   const { token } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const renderMarketingFullBleed = !token && isMarketingRoot(location.pathname);
   const [families, setFamilies] = useState<Family[]>([]);
   const [activeFamilyId, setActiveFamilyId] = useState<string | null>(
     typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null,
@@ -86,6 +96,25 @@ export const ChatShell = () => {
     }),
     [activeConversationId, newConversationNonce],
   );
+
+  if (renderMarketingFullBleed) {
+    return (
+      <AppContext.Provider
+        value={{
+          families,
+          activeFamilyId,
+          activeFamily,
+          setActiveFamilyId: handleFamilyChange,
+          refreshFamilies,
+          loadingFamilies,
+        }}
+      >
+        <ChatShellContext.Provider value={shellContext}>
+          <Outlet />
+        </ChatShellContext.Provider>
+      </AppContext.Provider>
+    );
+  }
 
   return (
     <AppContext.Provider

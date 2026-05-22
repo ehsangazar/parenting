@@ -25,6 +25,7 @@ import { ArticleDetailPage } from './pages/ArticleDetailPage.js';
 import { CookieConsentBanner } from './components/CookieConsentBanner.js';
 import { ChatShell } from './components/chat-shell/ChatShell.js';
 import { ChatPanel } from './components/chat-shell/ChatPanel.js';
+import { MarketingHome } from './pages/MarketingHome.js';
 import { FeaturePageFrame } from './components/chat-shell/FeaturePageFrame.js';
 import { ResetPasswordPage } from './pages/ResetPasswordPage.js';
 import { SettingsPage } from './pages/app/SettingsPage.js';
@@ -152,6 +153,14 @@ const RequireOnboarding = ({ children }: { children: ReactElement }) => {
   }, [isOnboarded, navigate]);
 
   return children;
+};
+
+// Logged-out visitors at / land on the v2 marketing home; logged-in users
+// land in the chat. ChatShell hides its sidebars when MarketingHome is
+// rendering, so the marketing page reads full-bleed.
+const RootIndexGate = () => {
+  const { token } = useAuth();
+  return token ? <ChatPanel /> : <MarketingHome />;
 };
 
 const ScrollToTop = () => {
@@ -305,7 +314,7 @@ export default function App() {
         {/* Chat-first root layout. Logged-out visitors land here too; the
             chat panel gates send-actions through /login. */}
         <Route path="/" element={<ChatShell />}>
-          <Route index element={<ChatPanel />} />
+          <Route index element={<RootIndexGate />} />
           {/* Auth runs inline in ChatPanel via the chat-native AuthChat flow.
               These paths share the same element as the index so navigating
               between / and /login keeps ChatShell + ChatPanel mounted. */}
@@ -466,7 +475,7 @@ export default function App() {
           <Route path="onboarding" element={<Navigate to="../" replace />} />
 
           <Route element={<ChatShell />}>
-            <Route index element={<ChatPanel />} />
+            <Route index element={<RootIndexGate />} />
             <Route path="login" element={<ChatPanel />} />
             <Route path="register" element={<ChatPanel />} />
             <Route

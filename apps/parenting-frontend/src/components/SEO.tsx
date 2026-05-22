@@ -11,8 +11,8 @@ interface SEOProps {
   children?: React.ReactNode;
 }
 
-const DEFAULT_TITLE = 'Raised — Science-backed Parenting';
-const DEFAULT_DESCRIPTION = 'Your family hub for science-backed parenting guidance. AI assistant, family calendar, moments vault, and more.';
+const DEFAULT_TITLE = 'Raised — The trusted parenting adviser for your whole family';
+const DEFAULT_DESCRIPTION = 'Evidence-based parenting answers that actually fit your kid. Smarter than ChatGPT for parenting. Built by parents, reviewed by experts, private by default.';
 const SITE_URL = 'https://raised.info';
 const DEFAULT_OG_IMAGE = '/og-image.jpg';
 
