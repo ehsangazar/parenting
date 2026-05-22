@@ -26,6 +26,7 @@ function readChecked(cardId: string): Record<string, boolean> {
 
 export function ChecklistCard({ id, data, actions, handlers }: Props) {
   const [checked, setChecked] = useState<Record<string, boolean>>(() => readChecked(id));
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     try {
@@ -41,6 +42,30 @@ export function ChecklistCard({ id, data, actions, handlers }: Props) {
 
   const doneCount = data.items.filter((i) => checked[i.id]).length;
   const allDone = doneCount === data.items.length && data.items.length > 0;
+  const anyDone = doneCount > 0;
+
+  const submitLabel = allDone
+    ? "I'm all done, what's next?"
+    : anyDone
+    ? `I tried ${doneCount} of ${data.items.length} steps`
+    : 'Mark as complete';
+
+  const submitMessage = allDone
+    ? `I completed every step of "${data.title}". What should we try next?`
+    : anyDone
+    ? `I tried ${doneCount} of ${data.items.length} steps in "${data.title}". Can we tweak the ones I skipped?`
+    : `I'm done with the "${data.title}" checklist. What's next?`;
+
+  const handleSubmit = () => {
+    if (submitted) return;
+    setSubmitted(true);
+    handlers.onSend(submitMessage);
+  };
+
+  const handleReset = () => {
+    setChecked({});
+    setSubmitted(false);
+  };
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-3.5">
@@ -111,6 +136,35 @@ export function ChecklistCard({ id, data, actions, handlers }: Props) {
       {actions && actions.length > 0 && (
         <CardActionsRow actions={actions} handlers={handlers} />
       )}
+      {allDone && !submitted && (
+        <div className="mt-3 rounded-xl border border-primary-200 bg-primary-50 px-3 py-2 text-[13px] font-semibold text-primary-700">
+          All steps done. Tap below and we'll wrap up.
+        </div>
+      )}
+      {submitted && (
+        <div className="mt-3 rounded-xl border border-border bg-surface-light px-3 py-2 text-[12px] text-text-secondary">
+          Sent to chat. Tap reset to run this checklist again.
+        </div>
+      )}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitted}
+          className="inline-flex h-9 min-h-0 items-center gap-1.5 rounded-full border border-transparent bg-brand-blue px-3.5 text-[13px] font-bold text-white transition-colors hover:bg-accent-blueHover disabled:opacity-50"
+        >
+          {submitted ? 'Sent' : submitLabel}
+        </button>
+        {(anyDone || submitted) && (
+          <button
+            type="button"
+            onClick={handleReset}
+            className="inline-flex h-9 min-h-0 items-center gap-1.5 rounded-full border border-border bg-transparent px-3.5 text-[13px] font-bold text-text-secondary transition-colors hover:bg-surface-light"
+          >
+            Reset
+          </button>
+        )}
+      </div>
     </div>
   );
 }
