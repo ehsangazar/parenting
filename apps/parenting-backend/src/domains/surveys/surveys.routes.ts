@@ -28,7 +28,14 @@ export default async function surveysRoutes(app: FastifyInstance) {
         data: { responses: responses as never },
       });
 
-      const email = typeof responses.email === "string" ? responses.email.trim() : "";
+      const pickEmail = (): string => {
+        for (const k of ["q23_email", "email", "Email"]) {
+          const v = responses[k];
+          if (typeof v === "string" && v.trim()) return v.trim();
+        }
+        return "";
+      };
+      const email = pickEmail();
       if (email) {
         const theirOneQuestion =
           typeof responses.q21_expertQuestion === "string"
