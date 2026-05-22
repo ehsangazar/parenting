@@ -40,7 +40,9 @@ export function ChecklistCard({ id, data, actions, handlers }: Props) {
     setChecked((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
   };
 
-  const doneCount = data.items.filter((i) => checked[i.id]).length;
+  const doneItems = data.items.filter((i) => checked[i.id]);
+  const skippedItems = data.items.filter((i) => !checked[i.id]);
+  const doneCount = doneItems.length;
   const allDone = doneCount === data.items.length && data.items.length > 0;
   const anyDone = doneCount > 0;
 
@@ -50,11 +52,14 @@ export function ChecklistCard({ id, data, actions, handlers }: Props) {
     ? `I tried ${doneCount} of ${data.items.length} steps`
     : 'Mark as complete';
 
+  const formatList = (items: typeof data.items) =>
+    items.map((i) => `"${i.label}"`).join(', ');
+
   const submitMessage = allDone
-    ? `I completed every step of "${data.title}". What should we try next?`
+    ? `I completed every step of the "${data.title}" checklist. Don't render a new checklist; tell me one thing to try next and ask one short question to refine it.`
     : anyDone
-    ? `I tried ${doneCount} of ${data.items.length} steps in "${data.title}". Can we tweak the ones I skipped?`
-    : `I'm done with the "${data.title}" checklist. What's next?`;
+    ? `Re: the "${data.title}" checklist you already rendered. I managed: ${formatList(doneItems)}. I skipped: ${formatList(skippedItems)}. Don't render a new checklist. In plain text, suggest a small tweak for each skipped step (one short bullet each) and ask which to try first.`
+    : `Re: the "${data.title}" checklist you already rendered. I haven't tried any steps yet. Don't render a new checklist; ask me what's blocking me from starting.`;
 
   const handleSubmit = () => {
     if (submitted) return;
