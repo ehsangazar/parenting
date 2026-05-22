@@ -6,6 +6,7 @@ import { usePostHog } from '@posthog/react';
 import { api } from '../../lib/api.js';
 import { familiesApi } from '../../lib/appApi.js';
 import { useAuth } from '../../state/auth.js';
+import { useAppContext } from '../app/AppContext.js';
 import { RoughBox } from '../rough/index.js';
 
 type Step = 'name' | 'role' | 'kids' | 'concerns' | 'partner' | 'suggestions';
@@ -21,6 +22,7 @@ type OnboardingChatProps = {
 export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
   const { t } = useTranslation();
   const { setUser } = useAuth();
+  const { refreshFamilies, setActiveFamilyId } = useAppContext();
   const posthog = usePostHog();
 
   useEffect(() => {
@@ -151,6 +153,14 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
             t('onboardingChat.partnerInviteFailed', "We saved everything else, but couldn't send the partner invite. Try again from Settings."),
           );
         }
+      }
+
+      // Without this, ChatShell's families list is still the empty snapshot
+      // from initial load, so ChatPanel can't find an activeFamily and the
+      // child chips don't appear until a manual refresh.
+      if (family) {
+        setActiveFamilyId(family.id);
+        await refreshFamilies();
       }
 
       // Person-level properties so funnels and cohorts can filter on these.
