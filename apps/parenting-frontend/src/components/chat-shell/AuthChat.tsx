@@ -11,7 +11,16 @@ import { Icon } from '../icons/index.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
 
 type Method = 'google' | 'email';
-type Step = 'method' | 'email' | 'password' | 'submitting';
+type Step =
+  | 'method'
+  | 'email'
+  | 'password'
+  | 'submitting'
+  | 'forgot_email'
+  | 'forgot_sending'
+  | 'forgot_sent';
+
+type LastError = 'login_invalid' | 'signup_exists' | null;
 
 type AuthChatProps = {
   initialMode?: 'login' | 'signup';
@@ -36,6 +45,7 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [lastError, setLastError] = useState<LastError>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -73,10 +83,10 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
       });
     });
     return () => cancelAnimationFrame(id);
-  }, [step, method, mode]);
+  }, [step, method, mode, lastError]);
 
   useEffect(() => {
-    if (step === 'email') emailInputRef.current?.focus();
+    if (step === 'email' || step === 'forgot_email') emailInputRef.current?.focus();
     if (step === 'password') passwordInputRef.current?.focus();
   }, [step]);
 
@@ -152,10 +162,39 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
     return raw.charAt(0).toUpperCase() + raw.slice(1);
   };
 
+  // Switch between login and signup without wiping typed values. If an email
+  // is already entered, jump straight to the password step in the new mode
+  // (because we know the user has committed to this email). Otherwise reset
+  // to the method chooser, which is the natural entry point.
+  const switchMode = useCallback(
+    (target: 'login' | 'signup') => {
+      if (target === mode) return;
+      setMode(target);
+      setLastError(null);
+      setMethod('email');
+      if (email.trim()) {
+        setStep('password');
+      } else {
+        setStep('method');
+        setMethod(null);
+      }
+      // Standalone routes track mode in the URL; embedded mode is purely
+      // in-state because the parent owns the route.
+      if (!onClose) navigate(target === 'signup' ? '/register' : '/login');
+    },
+    [mode, email, onClose, navigate],
+  );
+
+  const goToChangeEmail = () => {
+    setLastError(null);
+    setStep('email');
+  };
+
   const submit = async () => {
     if (!email.trim() || !password) return;
     setIsSubmitting(true);
     setStep('submitting');
+    setLastError(null);
     const trimmedEmail = email.trim();
     try {
       // Signup creates the account, then we immediately chain into login so
@@ -202,22 +241,44 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (!status || status >= 500) Sentry.captureException(err);
-      const fallback = mode === 'login' ? t('auth.errorSignInFailed') : t('auth.errorSignUpFailed');
-      toast.error(parseApiError(err, fallback));
+      // Surface a chat-native recovery option for the two common mistakes
+      // (wrong mode, wrong credentials) instead of just a generic toast.
+      if (mode === 'login' && status === 401) {
+        setLastError('login_invalid');
+      } else if (mode === 'signup' && status === 409) {
+        setLastError('signup_exists');
+      } else {
+        const fallback =
+          mode === 'login' ? t('auth.errorSignInFailed') : t('auth.errorSignUpFailed');
+        toast.error(parseApiError(err, fallback));
+      }
       setStep('password');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const toggleMode = () => {
-    const nextMode = mode === 'login' ? 'signup' : 'login';
-    setMode(nextMode);
-    setStep('method');
-    setMethod(null);
-    // When embedded, just flip state. When standalone, also update the URL
-    // so the route reflects which mode the user is in.
-    if (!onClose) navigate(nextMode === 'signup' ? '/register' : '/login');
+  // Forgot-password: in-chat sub-flow that hits POST /api/identity/reset-request.
+  // The backend always returns ok to prevent email enumeration, so the UI is
+  // intentionally optimistic and tells the user to check their inbox.
+  const startForgotFlow = () => {
+    setLastError(null);
+    setStep('forgot_email');
+  };
+
+  const submitForgot = async () => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) return;
+    setStep('forgot_sending');
+    try {
+      await api.post('/api/identity/reset-request', { email: trimmedEmail });
+      setStep('forgot_sent');
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (!status || status >= 500) Sentry.captureException(err);
+      toast.error(parseApiError(err, t('auth.errorResetFailed', 'Could not send reset link. Try again.')));
+      setStep('forgot_email');
+    }
   };
 
   const introBubble = isGuestReturn
@@ -229,6 +290,8 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
         'authChat.introNeutral',
         "Hi! I'm Raised. Let's set things up so I can remember our chats.",
       );
+
+  const isForgotFlow = step === 'forgot_email' || step === 'forgot_sending' || step === 'forgot_sent';
 
   return (
     <div className="relative flex h-full min-h-screen flex-col bg-background text-text-primary">
@@ -245,13 +308,15 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
         >
           <Icon name={uiIcons.close} className="h-5 w-5 object-contain" alt="" aria-hidden />
         </button>
-        <button
-          type="button"
-          onClick={toggleMode}
-          className="rounded-full border border-border bg-surface px-4 py-2 text-[13px] font-semibold text-text-primary hover:border-brand-blue/40"
-        >
-          {mode === 'login' ? t('common.signUp', 'Sign up') : t('home.nav.signIn', 'Sign in')}
-        </button>
+        {!isForgotFlow && (
+          <button
+            type="button"
+            onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
+            className="rounded-full border border-border bg-surface px-4 py-2 text-[13px] font-semibold text-text-primary hover:border-brand-blue/40"
+          >
+            {mode === 'login' ? t('common.signUp', 'Sign up') : t('home.nav.signIn', 'Sign in')}
+          </button>
+        )}
       </header>
 
       <div
@@ -260,11 +325,14 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
       >
         <div className="mx-auto mt-auto flex w-full max-w-2xl flex-col gap-3">
           <AssistantBubble>{introBubble}</AssistantBubble>
-          <AssistantBubble>
-            {t('authChat.askIntent', 'Are you signing back in, or creating an account?')}
-          </AssistantBubble>
 
-          {step === 'method' ? (
+          {!isForgotFlow && (
+            <AssistantBubble>
+              {t('authChat.askIntent', 'Are you signing back in, or creating an account?')}
+            </AssistantBubble>
+          )}
+
+          {step === 'method' && (
             <div className="flex flex-col gap-2">
               {googleClientId && (
                 <div
@@ -285,7 +353,9 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
                 }}
               />
             </div>
-          ) : (
+          )}
+
+          {!isForgotFlow && step !== 'method' && (
             <UserBubble>
               {mode === 'signup'
                 ? t('authChat.choseSignUp', "I'm creating a new account")
@@ -293,7 +363,7 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
             </UserBubble>
           )}
 
-          {(step === 'email' || (method === 'email' && step !== 'method')) && (
+          {!isForgotFlow && (step === 'email' || (method === 'email' && step !== 'method')) && (
             <>
               <AssistantBubble>
                 {mode === 'signup'
@@ -301,38 +371,41 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
                   : t('authChat.askEmail', "Welcome back! What's your email?")}
               </AssistantBubble>
               {step === 'email' ? (
-                <div className="mt-1 flex flex-col gap-2 sm:flex-row">
-                  <input
-                    ref={emailInputRef}
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && email.trim()) {
-                        e.preventDefault();
-                        setStep('password');
-                      }
-                    }}
-                    placeholder={t('auth.emailPlaceholder', 'you@example.com')}
-                    className="flex-1 rounded-2xl border border-border bg-surface px-4 py-3 text-[15px] outline-none focus:border-brand-blue"
-                  />
-                  <button
-                    type="button"
-                    disabled={!email.trim()}
-                    onClick={() => setStep('password')}
-                    className="rounded-2xl bg-brand-blue px-5 py-3 text-[15px] font-bold text-white transition-opacity disabled:opacity-40"
-                  >
-                    {t('common.continue', 'Continue')}
-                  </button>
-                </div>
+                <>
+                  <div className="mt-1 flex flex-col gap-2 sm:flex-row">
+                    <input
+                      ref={emailInputRef}
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && email.trim()) {
+                          e.preventDefault();
+                          setStep('password');
+                        }
+                      }}
+                      placeholder={t('auth.emailPlaceholder', 'you@example.com')}
+                      className="flex-1 rounded-2xl border border-border bg-surface px-4 py-3 text-[15px] outline-none focus:border-brand-blue"
+                    />
+                    <button
+                      type="button"
+                      disabled={!email.trim()}
+                      onClick={() => setStep('password')}
+                      className="rounded-2xl bg-brand-blue px-5 py-3 text-[15px] font-bold text-white transition-opacity disabled:opacity-40"
+                    >
+                      {t('common.continue', 'Continue')}
+                    </button>
+                  </div>
+                  <SwitchModeLink mode={mode} onSwitch={switchMode} />
+                </>
               ) : email ? (
                 <UserBubble>{email}</UserBubble>
               ) : null}
             </>
           )}
 
-          {(step === 'password' || step === 'submitting') && (
+          {!isForgotFlow && (step === 'password' || step === 'submitting') && (
             <>
               <AssistantBubble>
                 {mode === 'login'
@@ -368,17 +441,25 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
                         : t('auth.titleSignUp', 'Sign up')}
                     </button>
                   </div>
-                  {mode === 'login' && (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                     <button
                       type="button"
-                      onClick={() =>
-                        toast.message(t('auth.resetPasswordContactSupport', 'Contact support to reset your password.'))
-                      }
-                      className="self-start text-[12px] font-semibold text-brand-blue hover:underline"
+                      onClick={goToChangeEmail}
+                      className="text-[12px] font-semibold text-text-secondary hover:text-text-primary hover:underline"
                     >
-                      {t('auth.forgotShort', 'Forgot?')}
+                      {t('authChat.changeEmail', 'Change email')}
                     </button>
-                  )}
+                    {mode === 'login' && (
+                      <button
+                        type="button"
+                        onClick={startForgotFlow}
+                        className="text-[12px] font-semibold text-brand-blue hover:underline"
+                      >
+                        {t('auth.forgotShort', 'Forgot?')}
+                      </button>
+                    )}
+                    <SwitchModeLink mode={mode} onSwitch={switchMode} compact />
+                  </div>
                 </div>
               ) : (
                 <UserBubble>{'•'.repeat(Math.min(password.length, 12))}</UserBubble>
@@ -392,6 +473,117 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
                 ? t('authChat.signingIn', 'Signing you in…')
                 : t('authChat.creatingAccount', 'Creating your account…')}
             </AssistantBubble>
+          )}
+
+          {lastError === 'login_invalid' && (
+            <>
+              <AssistantBubble>
+                {t(
+                  'authChat.loginInvalid',
+                  "I couldn't sign you in with that email and password. If you're new here, I can create an account instead.",
+                )}
+              </AssistantBubble>
+              <ChipGroup
+                options={[
+                  { id: 'signup', label: t('authChat.chipSwitchToSignup', 'Create an account instead') },
+                  { id: 'forgot', label: t('authChat.chipForgot', 'I forgot my password') },
+                ]}
+                onSelect={(opt) => {
+                  if (opt.id === 'signup') switchMode('signup');
+                  else startForgotFlow();
+                }}
+              />
+            </>
+          )}
+
+          {lastError === 'signup_exists' && (
+            <>
+              <AssistantBubble>
+                {t(
+                  'authChat.signupExists',
+                  "Looks like you already have an account with that email. Want to sign in instead?",
+                )}
+              </AssistantBubble>
+              <ChipGroup
+                options={[
+                  { id: 'signin', label: t('authChat.chipSwitchToSignin', 'Sign in instead') },
+                ]}
+                onSelect={() => switchMode('login')}
+              />
+            </>
+          )}
+
+          {/* Forgot-password sub-flow */}
+          {isForgotFlow && (
+            <>
+              <AssistantBubble>
+                {t(
+                  'authChat.forgotIntro',
+                  "No worries. What email should I send the reset link to?",
+                )}
+              </AssistantBubble>
+              {step === 'forgot_email' && (
+                <>
+                  <div className="mt-1 flex flex-col gap-2 sm:flex-row">
+                    <input
+                      ref={emailInputRef}
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && email.trim()) {
+                          e.preventDefault();
+                          void submitForgot();
+                        }
+                      }}
+                      placeholder={t('auth.emailPlaceholder', 'you@example.com')}
+                      className="flex-1 rounded-2xl border border-border bg-surface px-4 py-3 text-[15px] outline-none focus:border-brand-blue"
+                    />
+                    <button
+                      type="button"
+                      disabled={!email.trim()}
+                      onClick={() => void submitForgot()}
+                      className="rounded-2xl bg-brand-blue px-5 py-3 text-[15px] font-bold text-white transition-opacity disabled:opacity-40"
+                    >
+                      {t('auth.sendResetLink', 'Send reset link')}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStep('password')}
+                    className="self-start text-[12px] font-semibold text-text-secondary hover:text-text-primary hover:underline"
+                  >
+                    {t('authChat.backToSignIn', 'Back to sign in')}
+                  </button>
+                </>
+              )}
+              {step === 'forgot_sending' && (
+                <AssistantBubble>
+                  {t('authChat.forgotSending', 'Sending the reset link…')}
+                </AssistantBubble>
+              )}
+              {step === 'forgot_sent' && (
+                <>
+                  <UserBubble>{email}</UserBubble>
+                  <AssistantBubble>
+                    {t(
+                      'authChat.forgotSent',
+                      "Check your inbox. If we have an account for that email, a reset link is on its way. The link expires in 30 minutes.",
+                    )}
+                  </AssistantBubble>
+                  <ChipGroup
+                    options={[
+                      { id: 'signin', label: t('authChat.backToSignIn', 'Back to sign in') },
+                    ]}
+                    onSelect={() => {
+                      setStep('password');
+                      setLastError(null);
+                    }}
+                  />
+                </>
+              )}
+            </>
           )}
 
           <p className="mt-6 text-center text-[11px] leading-relaxed text-text-tertiary">
@@ -444,3 +636,33 @@ const ChipGroup = ({
     ))}
   </div>
 );
+
+const SwitchModeLink = ({
+  mode,
+  onSwitch,
+  compact = false,
+}: {
+  mode: 'login' | 'signup';
+  onSwitch: (target: 'login' | 'signup') => void;
+  compact?: boolean;
+}) => {
+  const { t } = useTranslation();
+  const target: 'login' | 'signup' = mode === 'login' ? 'signup' : 'login';
+  const label =
+    mode === 'login'
+      ? t('authChat.switchToSignup', "I'm new here, sign me up instead")
+      : t('authChat.switchToSignin', 'I already have an account');
+  return (
+    <button
+      type="button"
+      onClick={() => onSwitch(target)}
+      className={
+        compact
+          ? 'text-[12px] font-semibold text-text-secondary hover:text-text-primary hover:underline'
+          : 'self-start text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:underline'
+      }
+    >
+      {label}
+    </button>
+  );
+};

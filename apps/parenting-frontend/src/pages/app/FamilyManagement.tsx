@@ -6,7 +6,7 @@ import { usePostHog } from '@posthog/react';
 import { useAuth } from '../../state/auth.js';
 import { useAppContext, type Family } from '../../components/app/AppContext.js';
 import { familiesApi } from '../../lib/appApi.js';
-import { Icon, type IconName } from '../../components/icons/index.js';
+import { Icon, type AnyIconName } from '../../components/icons/index.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
 
 type FamilyMember = {
@@ -34,7 +34,7 @@ type FamilyWithDetails = Family & {
   children?: FamilyChild[];
 };
 
-const IconBox = ({ name, tone = 'neutral' }: { name: IconName; tone?: 'neutral' | 'brand' | 'danger' }) => {
+const IconBox = ({ name, tone = 'neutral' }: { name: AnyIconName; tone?: 'neutral' | 'brand' | 'danger' }) => {
   const toneClass =
     tone === 'brand' ? 'bg-primary-100 text-primary-fg'
     : tone === 'danger' ? 'bg-red-500/10 text-red-500'

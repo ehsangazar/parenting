@@ -10,7 +10,7 @@ import { profileApi } from '../../lib/appApi.js';
 import axios, { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
-import { Icon, type IconName } from '../../components/icons/index.js';
+import { Icon, type AnyIconName } from '../../components/icons/index.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
 import { useSoundManager } from '../../lib/useSoundManager.js';
 import { DEFAULT_AVATAR_URL } from '../../lib/defaultAvatar.js';
@@ -80,7 +80,7 @@ const Toggle = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   </button>
 );
 
-const IconBox = ({ name, tone = 'neutral' }: { name: IconName; tone?: 'neutral' | 'brand' | 'danger' }) => {
+const IconBox = ({ name, tone = 'neutral' }: { name: AnyIconName; tone?: 'neutral' | 'brand' | 'danger' }) => {
   const toneClass =
     tone === 'brand' ? 'bg-primary-100 text-primary-fg'
     : tone === 'danger' ? 'bg-red-500/10 text-red-500'
@@ -101,7 +101,7 @@ const Group = ({ label, children }: { label: string; children: React.ReactNode }
   </section>
 );
 
-const InfoRow = ({ icon, label, value }: { icon: IconName; label: string; value: string }) => (
+const InfoRow = ({ icon, label, value }: { icon: AnyIconName; label: string; value: string }) => (
   <div className="flex items-center gap-3 px-4 py-4">
     <IconBox name={icon} />
     <p className="flex-1 text-[14px] font-semibold text-text-secondary">{label}</p>

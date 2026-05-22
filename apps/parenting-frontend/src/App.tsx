@@ -26,6 +26,7 @@ import { CookieConsentBanner } from './components/CookieConsentBanner.js';
 import { ChatShell } from './components/chat-shell/ChatShell.js';
 import { ChatPanel } from './components/chat-shell/ChatPanel.js';
 import { FeaturePageFrame } from './components/chat-shell/FeaturePageFrame.js';
+import { ResetPasswordPage } from './pages/ResetPasswordPage.js';
 import { SettingsPage } from './pages/app/SettingsPage.js';
 import { CalendarPage } from './pages/app/CalendarPage.js';
 import { AcademyPage } from './pages/app/AcademyPage.js';
@@ -444,6 +445,10 @@ export default function App() {
         {/* Survey is a full-page funnel and shouldn't get the shell. */}
         <Route path="/survey" element={<SurveyPage />} />
 
+        {/* Password reset arrives from an emailed link; render outside the
+            ChatShell so the focus is the reset form. */}
+        <Route path="/reset" element={<ResetPasswordPage />} />
+
         {/* /login and /register are nested under ChatShell above so the shell
             stays mounted across the auth flow. */}
         {/* Legacy aliases. Keep old links working by redirecting to the new home.
@@ -457,6 +462,7 @@ export default function App() {
         {/* Locale-prefixed routes — mirror the English structure. */}
         <Route path="/:lang" element={<LocaleLayout />}>
           <Route path="survey" element={<SurveyPage />} />
+          <Route path="reset" element={<ResetPasswordPage />} />
           <Route path="onboarding" element={<Navigate to="../" replace />} />
 
           <Route element={<ChatShell />}>

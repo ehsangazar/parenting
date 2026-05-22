@@ -2,10 +2,10 @@ import { useNotificationStore, NotificationType } from '../../state/notification
 import { formatDistanceToNow } from 'date-fns';
 
 import { uiIcons } from '../../lib/iconSemantics.js';
-import type { IconName } from '../icons/index.js';
+import type { AnyIconName } from '../icons/index.js';
 import { Icon } from '../icons/index.js';
 
-const typeIcons: Record<NotificationType, IconName> = {
+const typeIcons: Record<NotificationType, AnyIconName> = {
   info: uiIcons.info,
   success: uiIcons.checkOk,
   warning: uiIcons.alertTriangle,

@@ -58,34 +58,34 @@ export const BalancePills = ({ className }: { className?: string }) => {
   if (!token || !profile) return null;
 
   return (
-    <div className={clsx('flex items-center gap-1.5', className)}>
+    <div className={clsx('flex items-center gap-2', className)}>
       {profile.streak.current > 0 && (
         <span
           data-rough-skip="true"
-          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-extrabold text-gamification-streak"
+          className="inline-flex items-center gap-1.5 px-2 py-1 text-[14px] font-extrabold text-gamification-streak"
           title={t('balance.streakTitle', '{{n}}-day streak', { n: profile.streak.current })}
         >
-          <Icon name={uiIcons.flame} className="h-3 w-3 object-contain" alt="" />
+          <Icon name={uiIcons.flame} className="h-4 w-4 object-contain" alt="" />
           {profile.streak.current}
         </span>
       )}
       <span
         data-rough-skip="true"
-        className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-extrabold text-brand-blue"
+        className="inline-flex items-center gap-1.5 px-2 py-1 text-[14px] font-extrabold text-brand-blue"
         title={t('balance.insightTitle', '{{n}} Insight (Level {{level}})', {
           n: profile.insight.total,
           level: profile.insight.level,
         })}
       >
-        <Icon name={uiIcons.sparkles} className="h-3 w-3 object-contain" alt="" />
+        <Icon name={uiIcons.sparkles} className="h-4 w-4 object-contain" alt="" />
         {profile.insight.total}
       </span>
       <span
         data-rough-skip="true"
-        className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-extrabold text-secondary-fg"
+        className="inline-flex items-center gap-1.5 px-2 py-1 text-[14px] font-extrabold text-secondary-fg"
         title={t('balance.coinsTitle', '{{n}} coins', { n: profile.coins.balance })}
       >
-        <Icon name={appAssetIcons.gems} className="h-3 w-3 object-contain" alt="" />
+        <Icon name={appAssetIcons.gems} className="h-4 w-4 object-contain" alt="" />
         {formatCompactNumber(profile.coins.balance)}
       </span>
     </div>

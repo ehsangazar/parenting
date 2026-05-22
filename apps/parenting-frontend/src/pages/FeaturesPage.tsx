@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/icons/index.js';
-import type { IconName } from '../components/icons/index.js';
+import type { AnyIconName } from '../components/icons/index.js';
 import { uiIcons } from '../lib/iconSemantics.js';
 import { SEO } from '../components/SEO.js';
 import { useLocalePath } from '../hooks/useLocalePath.js';
@@ -11,13 +11,13 @@ export const FeaturesPage = () => {
   const { t } = useTranslation();
   const { localePath } = useLocalePath();
 
-  const FEATURES: { icon: IconName; titleKey: string; bodyKey: string; detailKey: string }[] = [
-    { icon: 'idea',          titleKey: 'home.features.f1Title', bodyKey: 'home.features.f1Body', detailKey: 'featuresPage.f1Detail' },
-    { icon: 'calendar',      titleKey: 'home.features.f2Title', bodyKey: 'home.features.f2Body', detailKey: 'featuresPage.f2Detail' },
-    { icon: 'reading_ebook', titleKey: 'home.features.f3Title', bodyKey: 'home.features.f3Body', detailKey: 'featuresPage.f3Detail' },
-    { icon: 'camera',        titleKey: 'home.features.f4Title', bodyKey: 'home.features.f4Body', detailKey: 'featuresPage.f4Detail' },
-    { icon: 'organization',  titleKey: 'home.features.f5Title', bodyKey: 'home.features.f5Body', detailKey: 'featuresPage.f5Detail' },
-    { icon: 'like',          titleKey: 'home.features.f6Title', bodyKey: 'home.features.f6Body', detailKey: 'featuresPage.f6Detail' },
+  const FEATURES: { icon: AnyIconName; titleKey: string; bodyKey: string; detailKey: string }[] = [
+    { icon: uiIcons.sparkles, titleKey: 'home.features.f1Title', bodyKey: 'home.features.f1Body', detailKey: 'featuresPage.f1Detail' },
+    { icon: uiIcons.calendar, titleKey: 'home.features.f2Title', bodyKey: 'home.features.f2Body', detailKey: 'featuresPage.f2Detail' },
+    { icon: uiIcons.bookOpen, titleKey: 'home.features.f3Title', bodyKey: 'home.features.f3Body', detailKey: 'featuresPage.f3Detail' },
+    { icon: uiIcons.camera,   titleKey: 'home.features.f4Title', bodyKey: 'home.features.f4Body', detailKey: 'featuresPage.f4Detail' },
+    { icon: uiIcons.users,    titleKey: 'home.features.f5Title', bodyKey: 'home.features.f5Body', detailKey: 'featuresPage.f5Detail' },
+    { icon: uiIcons.heart,    titleKey: 'home.features.f6Title', bodyKey: 'home.features.f6Body', detailKey: 'featuresPage.f6Detail' },
   ];
 
   const TRUST = [

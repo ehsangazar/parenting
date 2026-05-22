@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 
-import type { IconName } from '../icons/index.js';
+import type { AnyIconName } from '../icons/index.js';
 import { Icon } from '../icons/index.js';
 
 import { ActionLink } from './ActionLink.js';
@@ -8,7 +8,7 @@ import { ActionLink } from './ActionLink.js';
 export type SectionHeaderProps = {
   title: string;
   action?: { label: string; to?: string; onClick?: () => void };
-  iconName?: IconName;
+  iconName?: AnyIconName;
   className?: string;
 };
 

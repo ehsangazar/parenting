@@ -1,44 +1,13 @@
-import type { IconName } from '../components/icons/index.js';
+import type { AnyIconName } from '../components/icons/index.js';
 
-/** Curated asset icon names used across the app (all must exist in iconMap). */
+/** Product feature icons (must reference keys defined in iconMap or Lucide). */
 export const appAssetIcons = {
-  home: 'home',
-  academy: 'e-learning-svgrepo-com',
-  village: 'organization',
-  resources: 'knowledge-svgrepo-com',
-  aiGuide: 'assistant',
-  profile: 'contacts',
-  moments: 'camera',
-  calendar: 'calendar',
-  insights: 'chart-growth-invest-svgrepo-com',
-  settings: 'settings',
-  collapseSidebar: 'left',
-  streak: 'positive_dynamic',
-  points: 'check-money-order-svgrepo-com',
-  gems: 'bag-cash-currency-svgrepo-com',
-  heart: 'like',
-  paths: 'reading-svgrepo-com',
-  podium: 'podium_without_speaker',
-  mistakes: 'feedback',
-  wordList: 'alphabetical_sorting_az',
-  stories: 'reading_ebook',
-  courseA: 'video-courses-svgrepo-com',
-  courseB: 'book-svgrepo-com',
-  courseC: 'school-svgrepo-com',
-  practice: 'quiz-svgrepo-com',
-  questXp: 'rating',
-  questAccuracy: 'podium_with_speaker',
-  questStreak: 'positive_dynamic',
-  speak: 'voice_presentation',
-  listen: 'headset',
-  safety: 'safe',
-  promoMascot: 'barista-svgrepo-com',
-  weeklyActivity: 'branch-growth-invest-svgrepo-com',
-  phaseProgress: 'chart-diagram-pie-svgrepo-com',
-  villageSection: 'organization',
-  atAGlance: 'webinar-svgrepo-com',
-  /** Streak frozen / shielded state (replaces shield emoji in stat UI). */
-  freezeStreak: 'data_protection',
-  /** Developmental leaps section. */
-  leaps: 'advance',
-} as const satisfies Record<string, IconName>;
+  academy: 'doodle_pencil_ruler',
+  aiGuide: 'doodle_bot',
+  calendar: 'doodle_calendar',
+  courseB: 'doodle_book',
+  gems: 'doodle_diamond',
+  heart: 'doodle_heart',
+  phaseProgress: 'doodle_dashboard',
+  questStreak: 'doodle_fire',
+} as const satisfies Record<string, AnyIconName>;

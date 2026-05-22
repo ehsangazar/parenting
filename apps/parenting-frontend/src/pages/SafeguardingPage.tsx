@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Icon, type IconName } from '../components/icons/index.js';
+import { Icon, type AnyIconName } from '../components/icons/index.js';
 import { uiIcons } from '../lib/iconSemantics.js';
 import { SEO } from '../components/SEO.js';
 
@@ -16,7 +16,7 @@ const PriorityCard = ({
   body,
   color,
 }: {
-  iconName: IconName;
+  iconName: AnyIconName;
   title: string;
   body: string;
   color: string;

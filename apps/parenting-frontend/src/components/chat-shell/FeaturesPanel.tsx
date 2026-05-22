@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { clsx } from 'clsx';
 import { useAuth } from '../../state/auth.js';
-import { Icon, type IconName } from '../icons/index.js';
+import { Icon, type AnyIconName } from '../icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
 import { BalancePills } from '../app/BalancePills.js';
@@ -12,7 +12,7 @@ type Feature = {
   to: string;
   tKey: string;
   fallback: string;
-  iconName: IconName;
+  iconName: AnyIconName;
   accent: string;
 };
 
@@ -89,6 +89,7 @@ export const FeaturesPanel = ({ onClose }: { onClose?: () => void }) => {
             key={feature.to}
             to={feature.to}
             onClick={(e) => handleClick(e, feature.to)}
+            data-rough-skip="true"
             className={({ isActive }) =>
               clsx(
                 'flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors',

@@ -1,15 +1,10 @@
 import { clsx } from 'clsx';
-import type React from 'react';
-import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 
-import type { IconName } from '../icons/index.js';
+import type { AnyIconName } from '../icons/index.js';
 import { Icon } from '../icons/index.js';
 
 export type StatPillProps = {
-  iconName?: IconName;
-  PhosphorIcon?: React.ForwardRefExoticComponent<PhosphorIconProps & React.RefAttributes<SVGSVGElement>>;
-  /** When using PhosphorIcon, tints icon + value with this Tailwind colour when active. */
-  phosphorClassName?: string;
+  iconName?: AnyIconName;
   value: number | string;
   label?: string;
   showLabel?: boolean;
@@ -20,8 +15,6 @@ export type StatPillProps = {
 
 export const StatPill = ({
   iconName,
-  PhosphorIcon,
-  phosphorClassName,
   value,
   label,
   showLabel = false,
@@ -29,24 +22,10 @@ export const StatPill = ({
   onClick,
   className,
 }: StatPillProps) => {
-  const accent = phosphorClassName && PhosphorIcon;
   const content = (
     <>
       <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-        {PhosphorIcon ? (
-          <PhosphorIcon
-            size={26}
-            weight={active ? 'fill' : 'regular'}
-            className={clsx(
-              accent && active
-                ? phosphorClassName
-                : active
-                  ? 'text-text-primary'
-                  : 'text-text-tertiary',
-            )}
-            aria-hidden="true"
-          />
-        ) : iconName ? (
+        {iconName ? (
           <Icon
             name={iconName}
             className={clsx(
@@ -61,11 +40,7 @@ export const StatPill = ({
         <span
           className={clsx(
             'font-game text-sm font-bold tabular-nums',
-            accent && active
-              ? phosphorClassName
-              : active
-                ? 'text-text-primary'
-                : 'text-text-tertiary',
+            active ? 'text-text-primary' : 'text-text-tertiary',
           )}
         >
           {value}

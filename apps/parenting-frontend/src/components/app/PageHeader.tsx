@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Icon, type IconName } from '../icons/index.js';
+import { Icon, type AnyIconName } from '../icons/index.js';
 
 type PageHeaderProps = {
   title: string;
@@ -8,7 +8,7 @@ type PageHeaderProps = {
   /** Override icon visibility. When omitted, icon shows if `iconName` is set. */
   showIcon?: boolean;
   /** Raster asset from `src/components/icons/assets`. */
-  iconName?: IconName;
+  iconName?: AnyIconName;
   children?: React.ReactNode;
   className?: string;
 };
