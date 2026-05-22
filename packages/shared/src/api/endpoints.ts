@@ -66,7 +66,11 @@ export function createLearningApi(api: AxiosInstance) {
     getLesson: async (courseId: string, moduleId: string, lessonId: string) =>
       (await api.get(`/api/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`)).data,
     completeLesson: async (courseId: string, moduleId: string, lessonId: string) =>
-      (await api.post(`/api/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}/complete`)).data,
+      (await api.post(`/api/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}/complete`)).data as {
+        coinsAwarded?: number;
+        insightAwarded?: number;
+        nextLesson?: { id: string; title: string } | null;
+      },
     getResumeTarget: async () => (await api.get('/api/resume')).data as {
       target: {
         courseId: string;

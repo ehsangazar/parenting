@@ -99,6 +99,11 @@ export const CourseDetailPage = () => {
   const [cardIndex, setCardIndex] = useState(0);
   const [completing, setCompleting] = useState(false);
   const [pledgeFor, setPledgeFor] = useState<{ id: string; title: string } | null>(null);
+  const [completion, setCompletion] = useState<{
+    nextLesson: { id: string; title: string } | null;
+    coinsAwarded: number;
+    insightAwarded: number;
+  } | null>(null);
 
   const cards = useMemo<LessonCard[]>(
     () => (activeLesson ? buildLessonCards(activeLesson) : []),
@@ -269,8 +274,8 @@ export const CourseDetailPage = () => {
         activeModule.id,
         activeLesson.id,
       );
-      const coins = (result as { coinsAwarded?: number })?.coinsAwarded ?? 0;
-      const insight = (result as { insightAwarded?: number })?.insightAwarded ?? 0;
+      const coins = result?.coinsAwarded ?? 0;
+      const insight = result?.insightAwarded ?? 0;
       posthog.capture('lesson_completed', {
         lesson_id: activeLesson.id,
         lesson_title: activeLesson.title,
@@ -306,6 +311,11 @@ export const CourseDetailPage = () => {
           ),
         })),
       );
+      setCompletion({
+        nextLesson: result?.nextLesson ?? null,
+        coinsAwarded: coins,
+        insightAwarded: insight,
+      });
       // Bridge from "I read this" to "I tried this": prompt for a one-line
       // pledge to put the technique into practice with the child. This is
       // what turns Academy from edutainment into actual behaviour change.
@@ -322,7 +332,28 @@ export const CourseDetailPage = () => {
     } finally {
       setCompleting(false);
     }
-  }, [activeLesson, activeModule, courseId, t]);
+  }, [activeLesson, activeModule, courseId, posthog, t]);
+
+  const advanceToNextLesson = useCallback(() => {
+    if (!completion?.nextLesson) return;
+    const nextId = completion.nextLesson.id;
+    const next = lessons.find((l) => l.id === nextId);
+    if (!next) return;
+    setCompletion(null);
+    setCardIndex(0);
+    setActiveLesson(next);
+    posthog.capture('lesson_started', {
+      lesson_id: next.id,
+      lesson_title: next.title,
+      course_id: courseId,
+      source: 'completion_continue',
+    });
+  }, [completion, lessons, posthog, courseId]);
+
+  const closeActiveLesson = useCallback(() => {
+    setActiveLesson(null);
+    setCompletion(null);
+  }, []);
 
   if (!token) {
     return (
@@ -437,20 +468,30 @@ export const CourseDetailPage = () => {
       )}
 
       <LessonModal
-        open={!!activeLesson}
+        open={!!activeLesson && !pledgeFor}
         title={activeLesson?.title || t('academy.untitledLesson', 'Untitled lesson')}
         cards={cards}
         cardIndex={cardIndex}
         onPrev={goPrev}
         onNext={goNext}
-        onClose={() => setActiveLesson(null)}
+        onClose={closeActiveLesson}
         onComplete={handleComplete}
         completing={completing}
         isComplete={activeLesson ? isLessonComplete(activeLesson) : false}
+        completionScreen={
+          completion
+            ? {
+                nextLessonTitle: completion.nextLesson?.title,
+                onNextLesson: completion.nextLesson ? advanceToNextLesson : undefined,
+                coinsAwarded: completion.coinsAwarded,
+                insightAwarded: completion.insightAwarded,
+              }
+            : undefined
+        }
         headerExtra={
           <button
             type="button"
-            onClick={() => setActiveLesson(null)}
+            onClick={closeActiveLesson}
             className="hidden text-[12px] font-semibold text-text-secondary hover:text-text-primary sm:inline-flex sm:items-center sm:gap-1"
           >
             <Icon

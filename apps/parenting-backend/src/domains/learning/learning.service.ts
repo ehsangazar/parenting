@@ -240,12 +240,23 @@ export async function completeLesson(
     console.error("Failed to award coins/insight for lesson completion", e);
   }
 
+  // Surface the next incomplete lesson in the same module so the client can
+  // offer one-tap continuation without a follow-up request.
+  const nextLessonRow = await repo.findFirstIncompleteLessonInModule(
+    userId,
+    lesson.moduleId,
+  );
+  const nextLesson = nextLessonRow
+    ? { id: nextLessonRow.id, title: nextLessonRow.title }
+    : null;
+
   return {
     progress,
     coinsAwarded: POINTS.COINS_COMPLETE_LESSON,
     insightAwarded: POINTS.INSIGHT_COMPLETE_LESSON,
     newlyUnlockedAchievements: [],
     completedQuestLabels: [],
+    nextLesson,
   };
 }
 

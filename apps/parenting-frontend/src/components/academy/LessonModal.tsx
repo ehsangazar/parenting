@@ -53,6 +53,17 @@ export type LessonCard =
   | { kind: 'media'; mediaUrl: string; mediaType?: string | null }
   | { kind: 'text'; text: string };
 
+export type LessonCompletionScreen = {
+  /** Title of the next lesson to advance into. Omit to hide the next-lesson CTA. */
+  nextLessonTitle?: string | null;
+  /** Click handler for "Next lesson". Required to show the CTA. */
+  onNextLesson?: () => void;
+  /** Coins awarded for this lesson (for the celebration line). */
+  coinsAwarded?: number;
+  /** Insight awarded for this lesson. */
+  insightAwarded?: number;
+};
+
 type LessonModalProps = {
   open: boolean;
   title: string;
@@ -65,6 +76,9 @@ type LessonModalProps = {
   completing?: boolean;
   isComplete?: boolean;
   headerExtra?: React.ReactNode;
+  /** When provided, the body and footer are replaced with a celebration
+   *  screen that prompts the user to continue to the next lesson. */
+  completionScreen?: LessonCompletionScreen;
 };
 
 export const LessonModal = ({
@@ -79,6 +93,7 @@ export const LessonModal = ({
   completing,
   isComplete,
   headerExtra,
+  completionScreen,
 }: LessonModalProps) => {
   const { t } = useTranslation();
   const touchStartX = useRef<number | null>(null);
@@ -157,6 +172,93 @@ export const LessonModal = ({
               </button>
             </header>
 
+            {completionScreen ? (
+              <>
+                <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-5 overflow-y-auto px-6 py-8 text-center">
+                  <span
+                    className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 text-primary-fg"
+                    aria-hidden="true"
+                  >
+                    <Icon
+                      name={uiIcons.circleCheck}
+                      className="h-10 w-10 object-contain"
+                      alt=""
+                    />
+                  </span>
+                  <div>
+                    <h3 className="text-[22px] font-extrabold leading-tight text-text-primary">
+                      {t('academy.lesson.completeHeadline', 'Lesson complete!')}
+                    </h3>
+                    {(completionScreen.insightAwarded || completionScreen.coinsAwarded) ? (
+                      <p className="mt-2 text-[14px] font-semibold text-text-secondary">
+                        {completionScreen.insightAwarded && completionScreen.coinsAwarded
+                          ? t(
+                              'academy.lesson.rewardLine',
+                              '+{{insight}} Insight, +{{coins}} coins',
+                              {
+                                insight: completionScreen.insightAwarded,
+                                coins: completionScreen.coinsAwarded,
+                              },
+                            )
+                          : completionScreen.coinsAwarded
+                            ? t('academy.lesson.rewardCoins', '+{{coins}} coins', {
+                                coins: completionScreen.coinsAwarded,
+                              })
+                            : t('academy.lesson.rewardInsight', '+{{insight}} Insight', {
+                                insight: completionScreen.insightAwarded,
+                              })}
+                      </p>
+                    ) : null}
+                  </div>
+                  {completionScreen.nextLessonTitle && completionScreen.onNextLesson ? (
+                    <div className="w-full max-w-sm rounded-2xl border border-primary-200 bg-primary-50 px-4 py-3 text-left">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-primary-fg/70">
+                        {t('academy.lesson.upNext', 'Up next')}
+                      </p>
+                      <p className="mt-1 text-[15px] font-extrabold leading-snug text-text-primary">
+                        {completionScreen.nextLessonTitle}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-[14px] font-semibold text-text-secondary">
+                      {t(
+                        'academy.lesson.moduleDone',
+                        "You've finished every lesson in this module.",
+                      )}
+                    </p>
+                  )}
+                </div>
+                <footer className="flex-shrink-0 space-y-2 border-t border-border-light px-4 py-3 sm:px-6">
+                  {completionScreen.nextLessonTitle && completionScreen.onNextLesson ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={completionScreen.onNextLesson}
+                        className="w-full rounded-xl bg-brand-blue px-4 py-3 text-[14px] font-bold text-white hover:brightness-110"
+                      >
+                        {t('academy.lesson.nextLesson', 'Next lesson')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-full rounded-xl bg-surface-light px-4 py-3 text-[14px] font-semibold text-text-secondary hover:text-text-primary"
+                      >
+                        {t('academy.lesson.backToCourse', 'Back to course')}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="w-full rounded-xl bg-brand-blue px-4 py-3 text-[14px] font-bold text-white hover:brightness-110"
+                    >
+                      {t('academy.lesson.backToCourse', 'Back to course')}
+                    </button>
+                  )}
+                </footer>
+              </>
+            ) : (
+            <>
             <div
               className="relative flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 sm:px-6"
               onTouchStart={handleTouchStart}
@@ -373,6 +475,8 @@ export const LessonModal = ({
                 </button>
               )}
             </footer>
+            </>
+            )}
           </motion.div>
         </motion.div>
       )}
