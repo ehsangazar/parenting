@@ -365,59 +365,44 @@ export const ChatPanel = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
 
-  // Detect /login or /register (with or without a locale prefix) so navigating
-  // to those paths opens AuthChat without a redirect hop. Also still honor
-  // ?auth=login|signup so external links can deep-link into the flow.
-  const authFromPath = (() => {
+  // Derive AuthChat visibility from the URL (path + ?auth=) rather than
+  // mirroring it into useState. The previous useState/useEffect setup raced:
+  // when navigating from / to /login, an effect read the stale showAuth=false
+  // from the prior render and bounced the URL back to / before the effect
+  // that sets showAuth=true could commit.
+  const authFromUrl = useMemo<'login' | 'signup' | null>(() => {
     const m = /\/(login|register)\/?$/.exec(location.pathname);
-    if (!m) return null;
-    return m[1] === 'register' ? 'signup' : 'login';
-  })();
-  const initialAuthParam = searchParams.get('auth');
-  const initialAuth: 'login' | 'signup' | null =
-    authFromPath ??
-    (initialAuthParam === 'signup' || initialAuthParam === 'login' ? initialAuthParam : null);
-
-  const [showAuth, setShowAuth] = useState(initialAuth !== null);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>(initialAuth ?? 'login');
-
-  // Subsequent navigations to /login, /register or to a fresh ?auth= reopen
-  // the panel without forcing a remount.
-  useEffect(() => {
-    const fromPath = (() => {
-      const m = /\/(login|register)\/?$/.exec(location.pathname);
-      if (!m) return null;
-      return m[1] === 'register' ? 'signup' : 'login';
-    })();
+    if (m) return m[1] === 'register' ? 'signup' : 'login';
     const fromParam = searchParams.get('auth');
-    const next = fromPath ?? (fromParam === 'signup' || fromParam === 'login' ? fromParam : null);
-    if (next) {
-      setAuthMode(next);
-      setShowAuth(true);
-    }
-  }, [searchParams, location.pathname]);
+    if (fromParam === 'signup' || fromParam === 'login') return fromParam;
+    return null;
+  }, [location.pathname, searchParams]);
 
-  useEffect(() => {
-    if (token && showAuth) setShowAuth(false);
-  }, [token, showAuth]);
+  const showAuth = !token && authFromUrl !== null;
+  const authMode: 'login' | 'signup' = authFromUrl ?? 'login';
 
-  // After auth completes (or user closes the panel), strip the ?auth= and
-  // bounce off /login or /register back to / so a refresh doesn't reopen.
-  useEffect(() => {
-    if (showAuth) return;
+  const closeAuth = useCallback(() => {
     const hasAuthParam = searchParams.get('auth');
     const onAuthPath = /\/(login|register)\/?$/.test(location.pathname);
     if (hasAuthParam) {
-      const next = new URLSearchParams(searchParams);
-      next.delete('auth');
-      setSearchParams(next, { replace: true });
+      const sp = new URLSearchParams(searchParams);
+      sp.delete('auth');
+      setSearchParams(sp, { replace: true });
     }
     if (onAuthPath) {
-      // Preserve a locale prefix if one was present.
       const locale = /^\/(en|fa)\//.exec(location.pathname)?.[1];
       navigate(locale ? `/${locale}` : '/', { replace: true });
     }
-  }, [showAuth, searchParams, setSearchParams, location.pathname, navigate]);
+  }, [searchParams, setSearchParams, location.pathname, navigate]);
+
+  const openAuth = useCallback(
+    (mode: 'login' | 'signup' = 'login') => {
+      const locale = /^\/(en|fa)\//.exec(location.pathname)?.[1];
+      const prefix = locale ? `/${locale}` : '';
+      navigate(`${prefix}/${mode === 'signup' ? 'register' : 'login'}`);
+    },
+    [location.pathname, navigate],
+  );
   const [guestUsedTurn, setGuestUsedTurn] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return sessionStorage.getItem('guestTurnUsed') === '1';
@@ -540,7 +525,7 @@ export const ChatPanel = () => {
         }
         posthog.capture('guest_send_after_wall', { message_length: message.length });
         sendingRef.current = false;
-        setShowAuth(true);
+        openAuth('login');
         return;
       }
 
@@ -912,7 +897,7 @@ export const ChatPanel = () => {
       setLoadingStatus(null);
       sendingRef.current = false;
     }
-  }, [input, activeConversationId, activeChild, token, guestUsedTurn, navigate, t, i18n.language, setActiveConversationId, refreshChildren, CHILD_MUTATION_TOOLS]);
+  }, [input, activeConversationId, activeChild, token, guestUsedTurn, navigate, t, i18n.language, setActiveConversationId, refreshChildren, CHILD_MUTATION_TOOLS, openAuth]);
 
   const gotoSignIn = useCallback(() => {
     try {
@@ -928,8 +913,8 @@ export const ChatPanel = () => {
     } catch {
       // localStorage unavailable; non-fatal.
     }
-    setShowAuth(true);
-  }, [messages, posthog]);
+    openAuth('login');
+  }, [messages, posthog, openAuth]);
 
   // Fire once when the conversion wall first appears for this session.
   useEffect(() => {
@@ -1054,7 +1039,7 @@ export const ChatPanel = () => {
   // of the chat. After auth, the token effect above clears showAuth and the
   // normal chat re-renders with the guest's local conversation preserved.
   if (showAuth && !token) {
-    return <AuthChat initialMode={authMode} onClose={() => setShowAuth(false)} />;
+    return <AuthChat initialMode={authMode} onClose={closeAuth} />;
   }
 
   if (token && user && !user.profile?.onboarded) {
