@@ -21,6 +21,7 @@ import assistantRoutes from "./domains/assistant/assistant.routes.js";
 import billingRoutes from "./domains/billing/billing.routes.js";
 import adminRoutes from "./domains/admin/admin.routes.js";
 import notificationsRoutes from "./domains/notifications/notifications.routes.js";
+import surveysRoutes from "./domains/surveys/surveys.routes.js";
 import { startReminderScheduler } from "./shared/reminders/index.js";
 
 const app = fastify({
@@ -100,6 +101,7 @@ await app.register(assistantRoutes, { prefix: "/api" });
 await app.register(billingRoutes, { prefix: "/api" });
 await app.register(adminRoutes, { prefix: "/api/admin" });
 await app.register(notificationsRoutes, { prefix: "/api/notifications" });
+await app.register(surveysRoutes, { prefix: "/api" });
 
 app.get("/health", async () => ({ ok: true }));
 

@@ -3,6 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { env } from "../../config/env.js";
 import { sendWelcomeEmail, sendResetEmail } from "../../shared/mailer/index.js";
 import { createUploadUrl, getSignedViewUrl, extractS3Key } from "../../shared/storage/index.js";
+import { notifyLoopLead } from "../../shared/loop/index.js";
 import * as repo from "./identity.repository.js";
 import type { PublicUser, SignupResult, LoginResult } from "./identity.types.js";
 import type { updateProfileSchema } from "./identity.schema.js";
@@ -34,6 +35,19 @@ export const signup = async (email: string, password: string): Promise<SignupRes
 
   await sendWelcomeEmail(email);
   await repo.createAuditLog({ userId: user.id, action: "signup", resourceType: "user", resourceId: user.id });
+
+  notifyLoopLead({
+    productSlug: "raised",
+    email: user.email,
+    source: "signup_email",
+    customFields: { userId: user.id },
+    interaction: {
+      kind: "note",
+      subject: "Signed up (email/password)",
+      externalId: `raised-signup:${user.id}`,
+      occurredAt: new Date().toISOString(),
+    },
+  }).catch(() => {});
 
   // TODO: emit UserSignedUp domain event so the family domain can create the default family
   return { ok: true, user };
@@ -67,6 +81,20 @@ export const googleAuth = async (idToken: string): Promise<PublicUser | null> =>
   }
 
   const user = await repo.createUser({ email: payload.email, googleId: payload.sub ?? undefined });
+
+  notifyLoopLead({
+    productSlug: "raised",
+    email: user.email,
+    name: payload.name ?? undefined,
+    source: "signup_google",
+    customFields: { userId: user.id, googleSub: payload.sub ?? null },
+    interaction: {
+      kind: "note",
+      subject: "Signed up (Google)",
+      externalId: `raised-signup:${user.id}`,
+      occurredAt: new Date().toISOString(),
+    },
+  }).catch(() => {});
 
   // TODO: emit UserSignedUp domain event so the family domain can create the default family
   return user;

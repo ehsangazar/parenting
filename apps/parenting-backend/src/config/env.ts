@@ -63,6 +63,10 @@ const envSchema = z.object({
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional(),
+
+  // Loop CRM (fire-and-forget lead notifications)
+  LOOP_WEBHOOK_URL: z.string().url().optional(),
+  LOOP_WEBHOOK_SECRET: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
