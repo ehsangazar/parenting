@@ -71,11 +71,39 @@ export const HistorySidebar = ({ onClose }: { onClose?: () => void }) => {
   }, [loadConversations, newConversationNonce]);
 
   // Re-poll periodically so the freshly-created assistant reply shows up.
-  // Anything more efficient would need a backend event stream.
+  // Anything more efficient would need a backend event stream. The interval
+  // is paused while the tab is hidden — backgrounded fetches were a steady
+  // source of "Network Error" noise (browser throttles requests on hidden
+  // tabs) and there's no point refreshing UI the user can't see. On regain,
+  // refresh once immediately to catch up.
   useEffect(() => {
     if (!token) return undefined;
-    const id = setInterval(loadConversations, 15000);
-    return () => clearInterval(id);
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+
+    const start = () => {
+      if (intervalId) return;
+      intervalId = setInterval(loadConversations, 15000);
+    };
+    const stop = () => {
+      if (!intervalId) return;
+      clearInterval(intervalId);
+      intervalId = undefined;
+    };
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        loadConversations();
+        start();
+      }
+    };
+
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      stop();
+    };
   }, [loadConversations, token]);
 
   const handleNew = () => {
