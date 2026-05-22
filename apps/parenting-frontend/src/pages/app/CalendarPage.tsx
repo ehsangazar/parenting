@@ -8,6 +8,7 @@ import { useAppContext } from '../../components/app/AppContext.js';
 import { calendarApi, familiesApi } from '../../lib/appApi.js';
 import { PageContainer } from '../../components/app/PageContainer.js';
 import { Drawer } from '../../components/Drawer.js';
+import { ConfirmDialog } from '../../components/ui/index.js';
 import { Icon, type AnyIconName } from '../../components/icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
@@ -375,6 +376,7 @@ const EventFormDrawer = ({ open, onClose, mode, event, childOptions, onSaved }: 
   const [form, setForm] = useState<FormState>(() => blankForm(defaultChildId));
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [tab, setTab] = useState<DrawerTab>('ai');
   const [aiText, setAiText] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
@@ -539,16 +541,18 @@ const EventFormDrawer = ({ open, onClose, mode, event, childOptions, onSaved }: 
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!activeFamily || !event) return;
-    const ok = window.confirm(
-      t('calendar.confirmDelete', 'Delete this event? This cannot be undone.'),
-    );
-    if (!ok) return;
+    setConfirmDeleteOpen(true);
+  };
+
+  const performDelete = async () => {
+    if (!activeFamily || !event) return;
     setDeleting(true);
     try {
       await calendarApi.deleteEvent(activeFamily.id, event.id);
       toast.success(t('calendar.toast.deleted', 'Event deleted.'));
+      setConfirmDeleteOpen(false);
       onSaved();
       onClose();
     } catch {
@@ -564,6 +568,7 @@ const EventFormDrawer = ({ open, onClose, mode, event, childOptions, onSaved }: 
       : t('calendar.form.newTitle', 'New event');
 
   return (
+    <>
     <Drawer open={open} onClose={onClose} title={title}>
       <div className="space-y-4">
         <div role="tablist" aria-label={t('calendar.form.tabs', 'Event input mode')} data-rough-skip="true" className="flex gap-1 rounded-xl bg-surface-light p-1">
@@ -621,9 +626,21 @@ const EventFormDrawer = ({ open, onClose, mode, event, childOptions, onSaved }: 
                       <p className="text-[12px] text-text-secondary">{event.location}</p>
                     )}
                   </div>
-                  {activeFamily && (
-                    <AddToCalendarMenu event={event} familyId={activeFamily.id} />
-                  )}
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    {activeFamily && (
+                      <AddToCalendarMenu event={event} familyId={activeFamily.id} />
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={deleting || saving}
+                      className="rounded-xl border border-red-500/40 px-3 py-2 text-[13px] font-bold text-red-500 hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      {deleting
+                        ? t('common.deleting', 'Deleting...')
+                        : t('calendar.form.deleteEvent', 'Delete event')}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -900,6 +917,22 @@ const EventFormDrawer = ({ open, onClose, mode, event, childOptions, onSaved }: 
         )}
       </div>
     </Drawer>
+    <ConfirmDialog
+      open={confirmDeleteOpen}
+      title={t('calendar.confirmDelete.title', 'Delete this event?')}
+      message={t(
+        'calendar.confirmDelete.body',
+        'This cannot be undone. The event will be removed from your family calendar.',
+      )}
+      confirmLabel={t('common.delete', 'Delete')}
+      variant="danger"
+      busy={deleting}
+      onConfirm={performDelete}
+      onCancel={() => {
+        if (!deleting) setConfirmDeleteOpen(false);
+      }}
+    />
+    </>
   );
 };
 

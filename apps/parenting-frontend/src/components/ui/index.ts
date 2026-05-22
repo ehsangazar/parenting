@@ -4,6 +4,8 @@ export { Avatar } from './Avatar.js';
 export type { AvatarProps, AvatarSize } from './Avatar.js';
 export { Badge } from './Badge.js';
 export type { BadgeProps, BadgeVariant } from './Badge.js';
+export { ConfirmDialog } from './ConfirmDialog.js';
+export type { ConfirmDialogProps, ConfirmDialogVariant } from './ConfirmDialog.js';
 export { DuoButton } from './DuoButton.js';
 export type { DuoButtonProps, DuoButtonSize, DuoButtonVariant } from './DuoButton.js';
 export { DuoCard } from './DuoCard.js';
