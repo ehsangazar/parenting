@@ -20,6 +20,14 @@ export type RoughBoxProps = {
   tabIndex?: number;
   ariaLabel?: string;
   innerClassName?: string;
+  /** Render with `data-rough-skip="true"` so the global RoughEnhancer leaves
+   * this node alone. Use when the component already paints its own sketch
+   * (e.g. inside RoughBox) to avoid double-stroke / double-fill artefacts. */
+  skipEnhancer?: boolean;
+  /** Optional explicit type passthrough for `<button>` (avoids form submit). */
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  ariaPressed?: boolean;
 };
 
 const DEFAULT_STROKE = '#D7E5DA';
@@ -43,6 +51,10 @@ export const RoughBox = ({
   tabIndex,
   ariaLabel,
   innerClassName = '',
+  skipEnhancer = false,
+  type,
+  disabled,
+  ariaPressed,
 }: RoughBoxProps) => {
   const [ref, size] = useElementSize<HTMLDivElement>();
   const computedSeed = useMemo(() => {
@@ -84,11 +96,15 @@ export const RoughBox = ({
     <As
       ref={ref}
       onClick={onClick}
-      role={role ?? (onClick ? 'button' : undefined)}
-      tabIndex={onClick ? (tabIndex ?? 0) : tabIndex}
+      role={role ?? (onClick && As !== 'button' ? 'button' : undefined)}
+      tabIndex={onClick && As !== 'button' ? (tabIndex ?? 0) : tabIndex}
       aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
+      type={As === 'button' ? (type ?? 'button') : undefined}
+      disabled={As === 'button' ? disabled : undefined}
+      data-rough-skip={skipEnhancer ? 'true' : undefined}
       onKeyDown={
-        onClick
+        onClick && As !== 'button'
           ? (e: React.KeyboardEvent) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();

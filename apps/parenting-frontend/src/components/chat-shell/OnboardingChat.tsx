@@ -6,6 +6,7 @@ import { usePostHog } from '@posthog/react';
 import { api } from '../../lib/api.js';
 import { familiesApi } from '../../lib/appApi.js';
 import { useAuth } from '../../state/auth.js';
+import { RoughBox } from '../rough/index.js';
 
 type Step = 'name' | 'role' | 'kids' | 'concerns' | 'partner' | 'suggestions';
 
@@ -355,8 +356,8 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
                         }
                         className={`rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors ${
                           selected
-                            ? 'border-brand-blue bg-brand-blue text-white'
-                            : 'border-border bg-surface text-text-primary hover:border-brand-blue/40'
+                            ? 'border-primary-500 bg-primary-500 text-white'
+                            : 'border-border bg-surface text-text-primary hover:border-primary-400'
                         }`}
                       >
                         {c.label}
@@ -525,14 +526,21 @@ const ChipGroup = ({
 }) => (
   <div className="flex flex-wrap gap-2">
     {options.map((opt) => (
-      <button
+      <RoughBox
         key={opt.id}
+        as="button"
         type="button"
+        skipEnhancer
         onClick={() => onSelect(opt)}
-        className="rounded-full border border-border bg-surface px-4 py-2 text-[14px] font-semibold text-text-primary transition-colors hover:border-brand-blue/40 hover:bg-brand-blue/5"
+        stroke="#D7E5DA"
+        fill="#FFFFFF"
+        strokeWidth={1.6}
+        radius={9999}
+        seedKey={`chip-${opt.id}`}
+        className="px-4 py-2 text-[14px] font-semibold cursor-pointer text-text-primary transition-transform hover:scale-[1.02] active:scale-95"
       >
         {opt.label}
-      </button>
+      </RoughBox>
     ))}
   </div>
 );
