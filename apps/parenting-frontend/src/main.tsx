@@ -11,8 +11,8 @@ import './i18n.js';
 import './index.css';
 
 // GlitchTip is Sentry-protocol compatible but doesn't support sessions or replay,
-// so we only enable tracing + error capture. Init only when a DSN is configured.
-if (import.meta.env.VITE_SENTRY_DSN) {
+// so we only enable tracing + error capture. Production-only so dev noise stays out.
+if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
   Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
     integrations: [Sentry.browserTracingIntegration()],
