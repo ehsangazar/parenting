@@ -1107,6 +1107,27 @@ model MarketingLead {
   @@index([resourceId])
 }
 
+// ─── Parenting Guidelines (authoritative sources) ────────────────────────────
+
+model ParentingGuideline {
+  id           String   @id @default(cuid())
+  authority    String
+  topic        String
+  title        String
+  content      String
+  sourceUrl    String?
+  ageMinMonths Int?
+  ageMaxMonths Int?
+  countries    Json
+  locale       String   @default("en")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([authority])
+  @@index([topic])
+  @@index([authority, topic])
+}
+
 // ─── i18n Translations ────────────────────────────────────────────────────────
 
 model ArticleTranslation {

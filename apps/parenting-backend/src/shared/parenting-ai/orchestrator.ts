@@ -103,6 +103,7 @@ function buildSystemPrompt(
   childInfo: Array<{ name: string; age?: number }>,
   hasFamily: boolean,
   practiceSection: string,
+  userCountry: string | null,
 ): string {
   const childSummary = childInfo.length
     ? childInfo.map((c) => `${c.name}${c.age != null ? ` (age ${c.age})` : ""}`).join(", ")
@@ -117,7 +118,7 @@ When the user says relative time ("tomorrow", "next Tuesday", "in two weeks", "t
 You have access to tools that let you act on the user's account (search knowledge, manage children, schedule events, log moments, update profile, recall/save memory, suggest pages). Use tools whenever they help. Do not invent data: if you need to know something about the user's family, call the appropriate tool.
 
 CRITICAL TOOL POLICY:
-- For ANY parenting question (sleep, feeding, behaviour, development, safety, health), call knowledge_search_expert first, optionally knowledge_search_community, and consider knowledge_search_articles for linkable resources.
+- For ANY parenting question (sleep, feeding, behaviour, development, safety, health), call knowledge_search_expert AND guideline_search in parallel. Optionally add knowledge_search_community and knowledge_search_articles for linkable resources.
 - For action requests (add child, schedule event, log milestone, update profile, etc.), call the matching tool. If you lack an id, call the corresponding _list tool first.
 - DESTRUCTIVE tools (children_delete, calendar_delete_event) MUST be preceded by ui_request_confirmation in a prior turn. Do NOT ask in plain text; call ui_request_confirmation with a clear confirmMessage like "Yes, delete Mira". Only when the user's next message is an unambiguous yes (or matches the confirmMessage), call the destructive tool with confirmed: true.
 - When the user asks for a routine, plan, or step-by-step list (bedtime routine, weaning plan, screen-time rules, packing list), call ui_show_checklist to render an interactive checklist instead of writing bullet points in your reply. The card is self-contained: it has its own tick boxes, a "Mark as complete" submit button, and a reset control. Do NOT tell the user to find the checklist in a "checklist section", "saved items", or any other place; that section does not exist. After rendering, the card is the only place it lives. End your reply with ONE short concrete follow-up in plain text (e.g., "Tap the button at the bottom once you've tried it and I'll suggest tweaks," or "Want me to add this as a recurring morning event?"). Keep it under one sentence.
@@ -133,6 +134,13 @@ EMPATHY-FIRST RULE:
 FAMILY CONTEXT: ${hasFamily ? "User has a family on file." : "User does NOT have a family yet. They must create one in Settings before you can add children or events."}
 KNOWN CHILDREN: ${childSummary}.
 LONG-TERM FACTS: ${longTermFacts.slice(0, 8).join(" | ") || "none"}
+USER COUNTRY: ${userCountry ?? "not set"}
+
+GUIDELINE CITATIONS:
+- When guideline_search returns results, weave the authority name naturally into your answer (e.g. "According to the NHS..." or "The AAP recommends...").
+- If the guideline has a sourceUrl, mention the source name but do NOT paste raw URLs into your reply.
+- Prioritise the user's country authority when multiple guidelines cover the same topic.${userCountry ? `\n- This user is in ${userCountry}, so prefer ${userCountry === "GB" ? "NHS and NICE" : userCountry === "US" ? "AAP and CDC" : "WHO"} guidance when available, but include others for context.` : ""}
+- If no guidelines match, still answer from knowledge_search_expert. Do NOT refuse to answer just because guidelines are missing.
 
 ${practiceSection || "RECENT PRACTICE: none yet."}
 
@@ -202,7 +210,7 @@ export async function orchestrateFlow(opts: OrchestratorOptions) {
 
   onStatus("loading_context");
 
-  const [sessionMem, longTermMem, family, recentReflections, pendingPractices] =
+  const [sessionMem, longTermMem, family, recentReflections, pendingPractices, userRecord] =
     await Promise.all([
       getSessionMemory(conversationId),
       getLongTermMemory(userId),
@@ -213,7 +221,11 @@ export async function orchestrateFlow(opts: OrchestratorOptions) {
       }),
       listRecentReflections(userId, 5).catch(() => []),
       listPendingPractices(userId).catch(() => []),
+      prisma.user.findUnique({ where: { id: userId }, select: { profile: true } }),
     ]);
+
+  const userProfile = userRecord?.profile as Record<string, unknown> | null;
+  const userCountry = typeof userProfile?.country === "string" ? userProfile.country : null;
 
   const ctx: ToolContext = {
     userId,
@@ -236,6 +248,7 @@ export async function orchestrateFlow(opts: OrchestratorOptions) {
         overdueHours: p.overdueHours,
       })),
     ),
+    userCountry,
   );
 
   onStatus("generating_response");

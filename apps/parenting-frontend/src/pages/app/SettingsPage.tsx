@@ -142,9 +142,17 @@ export const SettingsPage = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [country, setCountry] = useState<string>(
+    () => (user?.profile as Record<string, unknown> | undefined)?.country as string ?? '',
+  );
+  const [savingCountry, setSavingCountry] = useState(false);
 
   useEffect(() => {
-    if (user) setNotificationPrefs(readNotificationPrefs(user.profile));
+    if (user) {
+      setNotificationPrefs(readNotificationPrefs(user.profile));
+      const p = user.profile as Record<string, unknown> | undefined;
+      if (p?.country && typeof p.country === 'string') setCountry(p.country);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -296,6 +304,21 @@ export const SettingsPage = () => {
       toast.error(t('errors.generic'));
     } finally {
       setChangingLocale(false);
+    }
+  };
+
+  const handleCountryChange = async (code: string) => {
+    if (code === country || savingCountry) return;
+    setSavingCountry(true);
+    try {
+      setCountry(code);
+      const res = await profileApi.update({ country: code });
+      setUser(res.user);
+      toast.success(t('settings.changesSaved'));
+    } catch {
+      toast.error(t('errors.generic'));
+    } finally {
+      setSavingCountry(false);
     }
   };
 
@@ -483,6 +506,48 @@ export const SettingsPage = () => {
                 );
               })}
             </div>
+          </div>
+
+          <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center">
+            <IconBox name={uiIcons.mapPin} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-semibold text-text-primary">{t('settingsPage.country', 'Country')}</p>
+              <p className="mt-0.5 text-[13px] text-text-secondary">{t('settingsPage.countryDesc', 'Used to tailor health guidance to your region')}</p>
+            </div>
+            <select
+              value={country}
+              onChange={(e) => handleCountryChange(e.target.value)}
+              disabled={savingCountry}
+              className="rounded-xl border border-border bg-surface-light px-3 py-2 text-[13px] font-bold text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-400/40"
+            >
+              <option value="">{t('settingsPage.countryAuto', 'Auto-detect')}</option>
+              <option value="GB">🇬🇧 United Kingdom</option>
+              <option value="US">🇺🇸 United States</option>
+              <option value="AU">🇦🇺 Australia</option>
+              <option value="CA">🇨🇦 Canada</option>
+              <option value="NZ">🇳🇿 New Zealand</option>
+              <option value="IE">🇮🇪 Ireland</option>
+              <option value="DE">🇩🇪 Germany</option>
+              <option value="FR">🇫🇷 France</option>
+              <option value="NL">🇳🇱 Netherlands</option>
+              <option value="SE">🇸🇪 Sweden</option>
+              <option value="NO">🇳🇴 Norway</option>
+              <option value="DK">🇩🇰 Denmark</option>
+              <option value="IN">🇮🇳 India</option>
+              <option value="PK">🇵🇰 Pakistan</option>
+              <option value="BD">🇧🇩 Bangladesh</option>
+              <option value="NG">🇳🇬 Nigeria</option>
+              <option value="KE">🇰🇪 Kenya</option>
+              <option value="GH">🇬🇭 Ghana</option>
+              <option value="ZA">🇿🇦 South Africa</option>
+              <option value="AE">🇦🇪 UAE</option>
+              <option value="SA">🇸🇦 Saudi Arabia</option>
+              <option value="IR">🇮🇷 Iran</option>
+              <option value="SG">🇸🇬 Singapore</option>
+              <option value="MY">🇲🇾 Malaysia</option>
+              <option value="PH">🇵🇭 Philippines</option>
+              <option value="BR">🇧🇷 Brazil</option>
+            </select>
           </div>
 
           <div className="flex items-center gap-3 px-4 py-4">

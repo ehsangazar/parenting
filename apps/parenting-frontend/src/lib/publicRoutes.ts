@@ -1,6 +1,6 @@
 /** Paths where we skip the branded splash and do not treat as "deep" app routes for lastPath. */
 const MARKETING_PATH_EXACT = new Set([
-  '/',
+  '/welcome',
   '/home',
   '/login',
   '/register',

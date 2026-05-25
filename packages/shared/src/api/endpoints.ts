@@ -319,6 +319,7 @@ export function createProfileApi(api: AxiosInstance) {
       locale?: string;
       notificationPrefs?: NotificationPrefs;
       timeZone?: string;
+      country?: string;
     }) => (await api.put('/api/identity/me', data)).data,
     getAvatarUploadUrl: async (contentType: string, contentLength: number) =>
       (await api.get('/api/identity/me/avatar-upload-url', { params: { contentType, contentLength } })).data,

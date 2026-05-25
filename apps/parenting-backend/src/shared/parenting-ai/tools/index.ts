@@ -1,4 +1,5 @@
 import { knowledgeTools } from "./knowledge.js";
+import { guidelinesTools } from "./guidelines.js";
 import { lessonsTools } from "./lessons.js";
 import { childrenTools } from "./children.js";
 import { familyTools } from "./family.js";
@@ -13,6 +14,7 @@ import type { ChatCompletionTool } from "openai/resources/chat/completions.js";
 
 export const TOOL_REGISTRY: ToolDefinition[] = [
   ...knowledgeTools,
+  ...guidelinesTools,
   ...lessonsTools,
   ...childrenTools,
   ...familyTools,

@@ -58,6 +58,7 @@ export const updateProfileSchema = z.object({
   locale: z.string().optional(),
   notificationPrefs: notificationPrefsSchema.optional(),
   timeZone: z.string().max(100).optional(),
+  country: z.string().length(2).toUpperCase().optional(),
 });
 
 export const consentSchema = z.object({

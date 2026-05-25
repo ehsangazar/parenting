@@ -28,6 +28,10 @@ const update: ToolDefinition = {
         items: { type: "string" },
         description: "Optional list of parenting interests.",
       },
+      country: {
+        type: "string",
+        description: "ISO 3166-1 alpha-2 country code, e.g. 'GB', 'US', 'AU'.",
+      },
     },
     additionalProperties: false,
   },
@@ -39,6 +43,7 @@ const update: ToolDefinition = {
       interests: Array.isArray(args.interests)
         ? (args.interests as unknown[]).map(String)
         : undefined,
+      country: args.country !== undefined ? String(args.country) : undefined,
     } as Parameters<typeof identitySvc.updateMe>[1]);
     return { ok: true, summary: "Profile updated.", data: { profile: updated } };
   },

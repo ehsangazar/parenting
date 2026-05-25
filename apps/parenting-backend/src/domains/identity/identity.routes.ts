@@ -94,6 +94,7 @@ export default async function identityRoutes(app: FastifyInstance) {
     }
 
     const token = app.jwt.sign({ sub: result.user.id, role: result.user.role }, { expiresIn: "365d" });
+    svc.backfillCountry(result.user.id, req.ip).catch(() => {});
     return reply.send({ token });
   });
 
@@ -121,6 +122,7 @@ export default async function identityRoutes(app: FastifyInstance) {
     if (!result.ok) return reply.unauthorized("Invalid credentials");
 
     const token = app.jwt.sign({ sub: result.user.id, role: result.user.role }, { expiresIn: "365d" });
+    svc.backfillCountry(result.user.id, req.ip).catch(() => {});
     return reply.send({ token });
   });
 
@@ -158,6 +160,7 @@ export default async function identityRoutes(app: FastifyInstance) {
     }
 
     const token = app.jwt.sign({ sub: user.id, role: user.role }, { expiresIn: "365d" });
+    svc.backfillCountry(user.id, req.ip).catch(() => {});
     return reply.send({ token });
   });
 

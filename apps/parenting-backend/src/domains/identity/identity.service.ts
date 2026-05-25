@@ -4,6 +4,7 @@ import { env } from "../../config/env.js";
 import { sendWelcomeEmail, sendResetEmail } from "../../shared/mailer/index.js";
 import { createUploadUrl, getSignedViewUrl, extractS3Key } from "../../shared/storage/index.js";
 import { notifyLoopLead } from "../../shared/loop/index.js";
+import { detectCountryFromIp } from "../../shared/geolocation/index.js";
 import * as repo from "./identity.repository.js";
 import type { PublicUser, SignupResult, LoginResult } from "./identity.types.js";
 import type { updateProfileSchema } from "./identity.schema.js";
@@ -177,6 +178,7 @@ export const updateMe = async (
     ...(body.interests !== undefined && { interests: body.interests }),
     ...(body.notificationPrefs !== undefined && { notificationPrefs: body.notificationPrefs }),
     ...(body.timeZone !== undefined && { timeZone: body.timeZone }),
+    ...(body.country !== undefined && { country: body.country }),
   };
 
   const updated = await repo.updateUser(userId, {
@@ -206,3 +208,15 @@ export const recordConsent = (
   version: string,
   locale: string,
 ) => repo.createConsent({ userId, type, version, locale });
+
+export const backfillCountry = async (userId: string, ip: string): Promise<void> => {
+  const user = await repo.findUserById(userId);
+  if (!user) return;
+  const profile = (user.profile && typeof user.profile === "object" && !Array.isArray(user.profile))
+    ? (user.profile as Record<string, unknown>)
+    : {};
+  if (profile.country) return;
+  const geo = await detectCountryFromIp(ip);
+  if (!geo) return;
+  await repo.updateUser(userId, { profile: { ...profile, country: geo.country } });
+};

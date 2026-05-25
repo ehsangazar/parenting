@@ -154,13 +154,10 @@ const RequireOnboarding = ({ children }: { children: ReactElement }) => {
   return children;
 };
 
-// Logged-out visitors at / land on the v2 marketing home; logged-in users
-// land in the chat. ChatShell hides its sidebars when MarketingHome is
-// rendering, so the marketing page reads full-bleed.
-const RootIndexGate = () => {
-  const { token } = useAuth();
-  return token ? <ChatPanel /> : <MarketingHome />;
-};
+// Chat-first: both logged-in and logged-out users land on the chat.
+// The chat panel gates send-actions through /login for unauthenticated users.
+// Marketing home is still accessible at /welcome.
+const RootIndexGate = () => <ChatPanel />;
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -372,6 +369,9 @@ export default function App() {
               </RequireAuth>
             }
           />
+
+          {/* Marketing home accessible at /welcome for direct linking and SEO. */}
+          <Route path="welcome" element={<MarketingHome />} />
 
           {/* Marketing & legal pages, same shell so the user keeps history
               and feature shortcuts visible while reading. */}

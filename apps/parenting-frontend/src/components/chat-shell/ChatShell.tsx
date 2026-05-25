@@ -22,7 +22,7 @@ const STORAGE_KEY = 'active_family_id';
 // Public landing paths where the marketing layout renders inside the shell
 // outlet. The shell hides its sidebars and mobile top bar so MarketingHome
 // can claim the full viewport.
-const MARKETING_ROOT_PATHS = new Set<string>(['/', '/en', '/fa']);
+const MARKETING_ROOT_PATHS = new Set<string>(['/welcome', '/en', '/fa']);
 const isMarketingRoot = (pathname: string): boolean => {
   const normalized = pathname.replace(/\/$/, '') || '/';
   return MARKETING_ROOT_PATHS.has(normalized);
