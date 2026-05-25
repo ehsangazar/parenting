@@ -203,7 +203,21 @@
       "screens": "Screens",
       "milestones": "Milestones",
       "school": "School",
-      "stress": "My stress"
+      "stress": "My stress",
+      "pregnancy": "Pregnancy",
+      "birthPrep": "Birth prep",
+      "nutrition": "Nutrition",
+      "feeding": "Feeding",
+      "colic": "Colic & crying",
+      "speech": "Speech",
+      "potty": "Potty training",
+      "schoolReadiness": "Starting school",
+      "friendships": "Friendships",
+      "homework": "Homework",
+      "behaviour": "Behaviour",
+      "mentalHealth": "Mental health",
+      "independence": "Independence",
+      "socialMedia": "Social media"
     },
     "suggestions": {
       "generic": {

@@ -72,18 +72,6 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
     [t],
   );
 
-  const CONCERNS = useMemo(
-    () => [
-      { id: 'sleep', label: t('onboardingChat.concerns.sleep', 'Sleep') },
-      { id: 'behavior', label: t('onboardingChat.concerns.tantrums', 'Tantrums') },
-      { id: 'screens', label: t('onboardingChat.concerns.screens', 'Screens') },
-      { id: 'milestones', label: t('onboardingChat.concerns.milestones', 'Milestones') },
-      { id: 'school', label: t('onboardingChat.concerns.school', 'School') },
-      { id: 'wellness', label: t('onboardingChat.concerns.stress', 'My stress') },
-    ],
-    [t],
-  );
-
   const [step, setStep] = useState<Step>('name');
   const [name, setName] = useState('');
   const [role, setRole] = useState<{ id: string; label: string } | null>(null);
@@ -92,6 +80,8 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
   const [newKidName, setNewKidName] = useState('');
   const [newKidAge, setNewKidAge] = useState(AGE_OPTIONS[1].label);
   const [concerns, setConcerns] = useState<string[]>([]);
+
+  const CONCERNS = useMemo(() => buildConcerns(kids, t), [kids, t]);
   const [partnerEmail, setPartnerEmail] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -648,6 +638,74 @@ function ageYearsToBirthdayIso(years: number): string | null {
   const wholeYears = Math.round(years);
   const d = new Date(now.getFullYear() - wholeYears, now.getMonth(), now.getDate());
   return d.toISOString().slice(0, 10);
+}
+
+type ConcernOption = { id: string; label: string };
+
+function buildConcerns(kids: Kid[], t: TFunction): ConcernOption[] {
+  const always: ConcernOption = { id: 'wellness', label: t('onboardingChat.concerns.stress', 'My stress') };
+
+  if (kids.length === 0) {
+    return [
+      { id: 'sleep', label: t('onboardingChat.concerns.sleep', 'Sleep') },
+      { id: 'tantrums', label: t('onboardingChat.concerns.tantrums', 'Tantrums') },
+      { id: 'screens', label: t('onboardingChat.concerns.screens', 'Screens') },
+      { id: 'milestones', label: t('onboardingChat.concerns.milestones', 'Milestones') },
+      { id: 'school', label: t('onboardingChat.concerns.school', 'School') },
+      always,
+    ];
+  }
+
+  const buckets = new Set(kids.map((k) => ageBucket(k.ageYears)));
+  const seen = new Set<string>();
+  const result: ConcernOption[] = [];
+  const add = (opt: ConcernOption) => {
+    if (seen.has(opt.id)) return;
+    seen.add(opt.id);
+    result.push(opt);
+  };
+
+  if (buckets.has('expecting')) {
+    add({ id: 'pregnancy', label: t('onboardingChat.concerns.pregnancy', 'Pregnancy') });
+    add({ id: 'birth-prep', label: t('onboardingChat.concerns.birthPrep', 'Birth prep') });
+    add({ id: 'nutrition', label: t('onboardingChat.concerns.nutrition', 'Nutrition') });
+  }
+  if (buckets.has('baby')) {
+    add({ id: 'sleep', label: t('onboardingChat.concerns.sleep', 'Sleep') });
+    add({ id: 'feeding', label: t('onboardingChat.concerns.feeding', 'Feeding') });
+    add({ id: 'milestones', label: t('onboardingChat.concerns.milestones', 'Milestones') });
+    add({ id: 'colic', label: t('onboardingChat.concerns.colic', 'Colic & crying') });
+  }
+  if (buckets.has('toddler')) {
+    add({ id: 'sleep', label: t('onboardingChat.concerns.sleep', 'Sleep') });
+    add({ id: 'tantrums', label: t('onboardingChat.concerns.tantrums', 'Tantrums') });
+    add({ id: 'feeding', label: t('onboardingChat.concerns.feeding', 'Feeding') });
+    add({ id: 'speech', label: t('onboardingChat.concerns.speech', 'Speech') });
+    add({ id: 'potty', label: t('onboardingChat.concerns.potty', 'Potty training') });
+  }
+  if (buckets.has('preschool')) {
+    add({ id: 'tantrums', label: t('onboardingChat.concerns.tantrums', 'Tantrums') });
+    add({ id: 'screens', label: t('onboardingChat.concerns.screens', 'Screens') });
+    add({ id: 'school-readiness', label: t('onboardingChat.concerns.schoolReadiness', 'Starting school') });
+    add({ id: 'friendships', label: t('onboardingChat.concerns.friendships', 'Friendships') });
+  }
+  if (buckets.has('school')) {
+    add({ id: 'school', label: t('onboardingChat.concerns.school', 'School') });
+    add({ id: 'screens', label: t('onboardingChat.concerns.screens', 'Screens') });
+    add({ id: 'homework', label: t('onboardingChat.concerns.homework', 'Homework') });
+    add({ id: 'friendships', label: t('onboardingChat.concerns.friendships', 'Friendships') });
+    add({ id: 'behaviour', label: t('onboardingChat.concerns.behaviour', 'Behaviour') });
+  }
+  if (buckets.has('teen')) {
+    add({ id: 'screens', label: t('onboardingChat.concerns.screens', 'Screens') });
+    add({ id: 'mental-health', label: t('onboardingChat.concerns.mentalHealth', 'Mental health') });
+    add({ id: 'school', label: t('onboardingChat.concerns.school', 'School') });
+    add({ id: 'independence', label: t('onboardingChat.concerns.independence', 'Independence') });
+    add({ id: 'social-media', label: t('onboardingChat.concerns.socialMedia', 'Social media') });
+  }
+
+  add(always);
+  return result;
 }
 
 function buildSuggestions(kids: Kid[], t: TFunction): string[] {
