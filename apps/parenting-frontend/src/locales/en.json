@@ -1146,17 +1146,6 @@
     "unsupported": "This browser doesn't support push notifications.",
     "genericError": "Something went wrong. Please try again."
   },
-  "installBanner": {
-    "title": "Add Raised to your home screen",
-    "androidDescription": "You're on Android in {{browser}}. Install for a faster, app-like experience.",
-    "androidMenuHint": "If no prompt appears later, open your browser menu and tap Install app or Add to Home screen.",
-    "installButton": "Install app",
-    "iosSafariInstructions": "In Safari, tap Share then Add to Home Screen.",
-    "iosOtherInstructions": "You're on iPhone/iPad in {{browser}}. Open this page in Safari, then tap Share and Add to Home Screen.",
-    "dontShowAgain": "Don't show again",
-    "share": "Share",
-    "addToHomeScreen": "Add to Home Screen"
-  },
   "leadCapture": {
     "defaultTitle": "Get your free guide",
     "defaultDescription": "Join our village and receive science-backed maps for your parenting journey, straight to your inbox.",
