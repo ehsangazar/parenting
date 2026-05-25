@@ -138,14 +138,28 @@ export const ChatShell = () => {
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {/* Mobile top bar */}
             <div className="lg:hidden flex items-center justify-between border-b border-border bg-surface px-3 py-2">
-              <button
-                type="button"
-                onClick={() => setHistoryOpen(true)}
-                aria-label={t('chatShell.openHistory', 'Open history')}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary hover:bg-surface-light"
-              >
-                <Icon name={uiIcons.menu} className="h-5 w-5 object-contain" alt="" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setHistoryOpen(true)}
+                  aria-label={t('chatShell.openHistory', 'Open history')}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary hover:bg-surface-light"
+                >
+                  <Icon name={uiIcons.menu} className="h-5 w-5 object-contain" alt="" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveConversationId(null);
+                    setNewConversationNonce((n) => n + 1);
+                    if (location.pathname !== '/' || location.search) navigate('/');
+                  }}
+                  aria-label={t('chatShell.newChat', 'New chat')}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary hover:bg-surface-light"
+                >
+                  <Icon name={uiIcons.plus} className="h-5 w-5 object-contain" alt="" />
+                </button>
+              </div>
               <BalancePills />
               <button
                 type="button"
