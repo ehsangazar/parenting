@@ -155,7 +155,7 @@ const CARD_SELECTOR = [
   '[class*="rounded-md"]',
   '[class*="rounded-full"]',
 ].join(', ');
-const CARD_TAG_BLOCKLIST = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'IMG', 'PICTURE', 'VIDEO']);
+const CARD_TAG_BLOCKLIST = new Set(['BUTTON', 'INPUT', 'TEXTAREA', 'SELECT', 'IMG', 'PICTURE', 'VIDEO']);
 const CARD_MIN_WIDTH = 36;
 const CARD_MIN_HEIGHT = 18;
 

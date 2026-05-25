@@ -146,17 +146,7 @@ export const ChatShell = () => {
               >
                 <Icon name={uiIcons.menu} className="h-5 w-5 object-contain" alt="" />
               </button>
-              <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => navigate('/')}
-                  aria-label={t('chatShell.backToChat', 'Back to chat')}
-                  className="flex min-h-[40px] items-center rounded-lg px-2 text-[15px] font-extrabold tracking-tight text-text-primary hover:bg-surface-light"
-                >
-                  {t('common.appName', 'Raised')}
-                </button>
-                <BalancePills />
-              </div>
+              <BalancePills />
               <button
                 type="button"
                 onClick={() => setFeaturesOpen(true)}
