@@ -110,8 +110,19 @@ export const requestPasswordReset = async (
   return signToken({ sub: user.id, kind: "reset" }, { expiresIn: "30m" });
 };
 
-export const sendPasswordResetEmail = (email: string, link: string) =>
-  sendResetEmail(email, link);
+export const sendPasswordResetEmail = async (email: string, link: string) => {
+  await sendResetEmail(email, link);
+  notifyLoopLead({
+    productSlug: "raised",
+    email,
+    interaction: {
+      kind: "note",
+      subject: "Requested password reset",
+      externalId: `raised-reset-req:${email}:${Date.now()}`,
+      occurredAt: new Date().toISOString(),
+    },
+  }).catch(() => {});
+};
 
 export const resetPassword = async (userId: string, newPassword: string) => {
   const passwordHash = await hashPassword(newPassword);
@@ -187,6 +198,26 @@ export const updateMe = async (
   });
 
   await repo.createAuditLog({ userId, action: "update", resourceType: "user", resourceId: userId });
+
+  if (body.onboarded && !currentProfile.onboarded) {
+    notifyLoopLead({
+      productSlug: "raised",
+      email: updated.email,
+      name: typeof updatedProfile.name === "string" ? updatedProfile.name : undefined,
+      country: typeof updatedProfile.country === "string" ? updatedProfile.country : undefined,
+      interaction: {
+        kind: "note",
+        subject: "Completed onboarding",
+        body: [
+          updatedProfile.roleInHousehold && `Role: ${updatedProfile.roleInHousehold}`,
+          Array.isArray(updatedProfile.interests) && updatedProfile.interests.length > 0 && `Interests: ${(updatedProfile.interests as string[]).join(", ")}`,
+        ].filter(Boolean).join("\n") || undefined,
+        externalId: `raised-onboarded:${userId}`,
+        occurredAt: new Date().toISOString(),
+      },
+    }).catch(() => {});
+  }
+
   return { ...updated, profile: await signProfileAvatarUrl(updated.profile) };
 };
 

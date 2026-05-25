@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { env } from "../../config/env.js";
+import { notifyLoopLead } from "../loop/index.js";
 
 const transporter = (() => {
   if (env.SMTP_ENDPOINT && env.SMTP_PORT && env.SMTP_ACCESS_KEY && env.SMTP_ACCESS_KEY_SECRET) {
@@ -19,6 +20,17 @@ const transporter = (() => {
 const sendMail = async (opts: { to: string; subject: string; html: string }) => {
   if (!transporter || !env.EMAIL_FROM) return;
   await transporter.sendMail({ from: env.EMAIL_FROM, ...opts });
+
+  notifyLoopLead({
+    productSlug: "raised",
+    email: opts.to,
+    interaction: {
+      kind: "email_sent",
+      subject: opts.subject,
+      externalId: `raised-email:${Date.now()}:${opts.to}`,
+      occurredAt: new Date().toISOString(),
+    },
+  }).catch(() => {});
 };
 
 export const sendWelcomeEmail = (to: string) =>
