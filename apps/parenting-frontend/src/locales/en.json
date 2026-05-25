@@ -160,6 +160,7 @@
     "askName": "What should I call you?",
     "namePlaceholder": "Your name",
     "askRole": "Nice to meet you, {{name}}. Which best fits you?",
+    "askCountry": "Where are you based? This helps me give you the right health guidance.",
     "askKids": "Tell me about your kids. Add as many as you like.",
     "kidNamePlaceholder": "Child's name",
     "kidAgeLabel": "Child's age",

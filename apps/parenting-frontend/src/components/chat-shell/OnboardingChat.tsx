@@ -9,11 +9,30 @@ import { useAuth } from '../../state/auth.js';
 import { useAppContext } from '../app/AppContext.js';
 import { RoughBox } from '../rough/index.js';
 
-type Step = 'name' | 'role' | 'kids' | 'concerns' | 'partner' | 'suggestions';
+type Step = 'name' | 'role' | 'country' | 'kids' | 'concerns' | 'partner' | 'suggestions';
 
 type Kid = { name: string; ageLabel: string; ageYears: number };
 
-const STEP_ORDER: Step[] = ['name', 'role', 'kids', 'concerns', 'partner', 'suggestions'];
+const STEP_ORDER: Step[] = ['name', 'role', 'country', 'kids', 'concerns', 'partner', 'suggestions'];
+
+const COUNTRY_OPTIONS = [
+  { code: 'GB', flag: '🇬🇧', label: 'United Kingdom' },
+  { code: 'US', flag: '🇺🇸', label: 'United States' },
+  { code: 'AU', flag: '🇦🇺', label: 'Australia' },
+  { code: 'CA', flag: '🇨🇦', label: 'Canada' },
+  { code: 'NZ', flag: '🇳🇿', label: 'New Zealand' },
+  { code: 'IE', flag: '🇮🇪', label: 'Ireland' },
+  { code: 'IN', flag: '🇮🇳', label: 'India' },
+  { code: 'PK', flag: '🇵🇰', label: 'Pakistan' },
+  { code: 'NG', flag: '🇳🇬', label: 'Nigeria' },
+  { code: 'ZA', flag: '🇿🇦', label: 'South Africa' },
+  { code: 'AE', flag: '🇦🇪', label: 'UAE' },
+  { code: 'IR', flag: '🇮🇷', label: 'Iran' },
+  { code: 'DE', flag: '🇩🇪', label: 'Germany' },
+  { code: 'SE', flag: '🇸🇪', label: 'Sweden' },
+  { code: 'SG', flag: '🇸🇬', label: 'Singapore' },
+  { code: 'MY', flag: '🇲🇾', label: 'Malaysia' },
+];
 
 type OnboardingChatProps = {
   onComplete: (firstQuestion?: string) => void;
@@ -68,6 +87,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
   const [step, setStep] = useState<Step>('name');
   const [name, setName] = useState('');
   const [role, setRole] = useState<{ id: string; label: string } | null>(null);
+  const [country, setCountry] = useState<{ code: string; label: string } | null>(null);
   const [kids, setKids] = useState<Kid[]>([]);
   const [newKidName, setNewKidName] = useState('');
   const [newKidAge, setNewKidAge] = useState(AGE_OPTIONS[1].label);
@@ -121,6 +141,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
         name: name.trim() || undefined,
         roleInHousehold: role?.label || undefined,
         interests: concerns,
+        country: country?.code || undefined,
         onboarded: true,
       });
       setUser(profileRes.data.user);
@@ -167,6 +188,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
       // Never send names; only counts and age buckets.
       posthog.setPersonProperties({
         role_in_household: role?.id ?? null,
+        country: country?.code ?? null,
         kids_count: kids.length,
         kids_age_buckets: kids.map((k) => ageBucket(k.ageYears)),
         top_concerns: concerns,
@@ -245,7 +267,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
                 options={ROLES}
                 onSelect={(opt) => {
                   setRole(opt);
-                  advance('kids');
+                  advance('country');
                 }}
               />
             ) : role ? (
@@ -255,6 +277,51 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
         )}
 
         {isPast('role') && (
+          <>
+            <AssistantBubble>
+              {t('onboardingChat.askCountry', 'Where are you based? This helps me give you the right health guidance.')}
+            </AssistantBubble>
+            {step === 'country' ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap gap-2">
+                  {COUNTRY_OPTIONS.map((c) => (
+                    <RoughBox
+                      key={c.code}
+                      as="button"
+                      type="button"
+                      skipEnhancer
+                      onClick={() => {
+                        setCountry({ code: c.code, label: c.label });
+                        advance('kids');
+                      }}
+                      stroke="#D7E5DA"
+                      fill="#FFFFFF"
+                      strokeWidth={1.6}
+                      radius={9999}
+                      seedKey={`country-${c.code}`}
+                      className="px-4 py-2 text-[14px] font-semibold cursor-pointer text-text-primary transition-transform hover:scale-[1.02] active:scale-95"
+                    >
+                      {c.flag} {c.label}
+                    </RoughBox>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => advance('kids')}
+                  className="self-end rounded-xl px-4 py-2.5 text-[14px] font-semibold text-text-secondary hover:text-text-primary"
+                >
+                  {t('onboardingChat.skip', 'Skip')}
+                </button>
+              </div>
+            ) : country ? (
+              <UserBubble>{COUNTRY_OPTIONS.find((c) => c.code === country.code)?.flag} {country.label}</UserBubble>
+            ) : (
+              <UserBubble subdued>{t('onboardingChat.skipped', 'Skipped')}</UserBubble>
+            )}
+          </>
+        )}
+
+        {isPast('country') && (
           <>
             <AssistantBubble>
               {t('onboardingChat.askKids', 'Tell me about your kids. Add as many as you like.')}
