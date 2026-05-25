@@ -155,7 +155,7 @@ const CARD_SELECTOR = [
   '[class*="rounded-md"]',
   '[class*="rounded-full"]',
 ].join(', ');
-const CARD_TAG_BLOCKLIST = new Set(['BUTTON', 'INPUT', 'TEXTAREA', 'SELECT', 'IMG', 'PICTURE', 'VIDEO']);
+const CARD_TAG_ALLOWLIST = new Set(['DIV', 'SECTION', 'ASIDE', 'ARTICLE', 'LI', 'MAIN', 'NAV', 'HEADER', 'FOOTER', 'FIGURE', 'DETAILS']);
 const CARD_MIN_WIDTH = 36;
 const CARD_MIN_HEIGHT = 18;
 
@@ -168,7 +168,7 @@ function parseRgb(s: string): { r: number; g: number; b: number; a: number } | n
 }
 
 function isCardLike(el: HTMLElement): boolean {
-  if (CARD_TAG_BLOCKLIST.has(el.tagName)) return false;
+  if (!CARD_TAG_ALLOWLIST.has(el.tagName)) return false;
   if (el.matches?.(BTN_SELECTOR)) return false;
   if (el.dataset.roughSkip === 'true') return false;
   const rect = el.getBoundingClientRect();
