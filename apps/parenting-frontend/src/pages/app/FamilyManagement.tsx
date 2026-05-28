@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
-import { usePostHog } from '@posthog/react';
+import { useAnalytics } from '../../lib/analytics';
 import { useAuth } from '../../state/auth.js';
 import { useAppContext, type Family } from '../../components/app/AppContext.js';
 import { familiesApi } from '../../lib/appApi.js';
@@ -247,7 +247,7 @@ const FamilyCard = ({
   onToggle: () => void;
 }) => {
   const { t, i18n } = useTranslation();
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
   const { user } = useAuth();
   const { activeFamilyId, setActiveFamilyId, refreshFamilies } = useAppContext();
   const isActive = family.id === activeFamilyId;
@@ -292,7 +292,7 @@ const FamilyCard = ({
     try {
       const res = await familiesApi.addMember(family.id, { email });
       await refreshFamilies();
-      posthog.capture('family_member_invited', { family_id: family.id });
+      analytics.capture('family_member_invited', { family_id: family.id });
       if (res?.invited || res?.invite) toast.success(t('settingsPage.inviteSent'));
       else toast.success(t('settingsPage.memberAdded'));
       setInviteEmail('');
@@ -314,7 +314,7 @@ const FamilyCard = ({
         dueDate: draft.isUnborn ? (draft.dueDate || undefined) : undefined,
       });
       await refreshFamilies();
-      posthog.capture('child_added', { family_id: family.id, is_unborn: draft.isUnborn });
+      analytics.capture('child_added', { family_id: family.id, is_unborn: draft.isUnborn });
       toast.success(t('settingsPage.childAdded'));
       setAddingChild(false);
     } catch {
@@ -655,7 +655,7 @@ const FamilyCard = ({
 
 const NewFamilyForm = () => {
   const { t } = useTranslation();
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
   const { refreshFamilies } = useAppContext();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -669,7 +669,7 @@ const NewFamilyForm = () => {
     try {
       await familiesApi.create(next);
       await refreshFamilies();
-      posthog.capture('family_created');
+      analytics.capture('family_created');
       toast.success(t('settings.changesSaved'));
       setName('');
       setOpen(false);

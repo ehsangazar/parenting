@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { usePostHog } from '@posthog/react';
+import { useAnalytics } from '../../lib/analytics';
 import { switchLocalePath } from '../../lib/publicRoutes.js';
 import { api } from '../../lib/api.js';
 import { useAuth } from '../../state/auth.js';
@@ -115,7 +115,7 @@ export const SettingsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
   const { token, user, setUser, setToken } = useAuth();
   const { soundEnabled, setSoundEnabled, voiceEnabled, setVoiceEnabled, play } = useSoundManager();
   const [loading, setLoading] = useState(true);
@@ -185,14 +185,14 @@ export const SettingsPage = () => {
     try {
       const res = await profileApi.update({ name });
       setUser(res.user);
-      posthog.capture('profile_updated', { name });
+      analytics.capture('profile_updated', { name });
       toast.success(t('settingsPage.profileUpdated'));
     } catch {
       toast.error(t('settingsPage.profileUpdateFailed'));
     } finally {
       setSaving(false);
     }
-  }, [name, setUser, t, posthog]);
+  }, [name, setUser, t, analytics]);
 
   const persistNotificationPrefs = useCallback(async (next: NotificationPrefs) => {
     setSavingNotifications(true);
@@ -348,7 +348,7 @@ export const SettingsPage = () => {
       await installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
       if (outcome === 'accepted') {
-        posthog.capture('app_installed');
+        analytics.capture('app_installed');
         toast.success(t('settingsPage.installSuccess'));
         setInstallPrompt(null);
       }
@@ -358,8 +358,8 @@ export const SettingsPage = () => {
   };
 
   const handleSignOut = () => {
-    posthog.capture('user_signed_out');
-    posthog.reset();
+    analytics.capture('user_signed_out');
+    analytics.reset();
     setToken(null);
     setUser(null);
     setConfirmSignOut(false);
@@ -370,8 +370,8 @@ export const SettingsPage = () => {
     setDeleting(true);
     try {
       await profileApi.deleteAccount();
-      posthog.capture('account_deleted');
-      posthog.reset();
+      analytics.capture('account_deleted');
+      analytics.reset();
       toast.success(t('settingsPage.deleteAccountSuccess'));
       setToken(null);
       setUser(null);

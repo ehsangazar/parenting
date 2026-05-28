@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
-import { usePostHog } from '@posthog/react';
+import { useAnalytics } from '../../lib/analytics';
 import { useAuth } from '../../state/auth.js';
 import { learningApi } from '../../lib/appApi.js';
 import { PageContainer } from '../../components/app/PageContainer.js';
@@ -69,7 +69,7 @@ const NODE_OFFSETS = [0, 56, 28, -28, -56, -28, 28];
 
 export const CourseDetailPage = () => {
   const { t } = useTranslation();
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
   const { token } = useAuth();
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
@@ -207,12 +207,12 @@ export const CourseDetailPage = () => {
   const openLesson = useCallback((lesson: Lesson) => {
     setActiveLesson(lesson);
     setCardIndex(0);
-    posthog.capture('lesson_started', {
+    analytics.capture('lesson_started', {
       lesson_id: lesson.id,
       lesson_title: lesson.title,
       course_id: courseId,
     });
-  }, [posthog, courseId]);
+  }, [analytics, courseId]);
 
   const handleSelectLessonId = useCallback(
     (lessonId: string) => {
@@ -276,7 +276,7 @@ export const CourseDetailPage = () => {
       );
       const coins = result?.coinsAwarded ?? 0;
       const insight = result?.insightAwarded ?? 0;
-      posthog.capture('lesson_completed', {
+      analytics.capture('lesson_completed', {
         lesson_id: activeLesson.id,
         lesson_title: activeLesson.title,
         course_id: courseId,
@@ -332,7 +332,7 @@ export const CourseDetailPage = () => {
     } finally {
       setCompleting(false);
     }
-  }, [activeLesson, activeModule, courseId, posthog, t]);
+  }, [activeLesson, activeModule, courseId, analytics, t]);
 
   const advanceToNextLesson = useCallback(() => {
     if (!completion?.nextLesson) return;
@@ -342,13 +342,13 @@ export const CourseDetailPage = () => {
     setCompletion(null);
     setCardIndex(0);
     setActiveLesson(next);
-    posthog.capture('lesson_started', {
+    analytics.capture('lesson_started', {
       lesson_id: next.id,
       lesson_title: next.title,
       course_id: courseId,
       source: 'completion_continue',
     });
-  }, [completion, lessons, posthog, courseId]);
+  }, [completion, lessons, analytics, courseId]);
 
   const closeActiveLesson = useCallback(() => {
     setActiveLesson(null);

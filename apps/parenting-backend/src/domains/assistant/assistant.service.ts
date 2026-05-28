@@ -6,7 +6,7 @@ import { getOpenAI } from "../../shared/parenting-ai/openai.js";
 import { awardCoins, awardInsight } from "../../shared/gamification/index.js";
 import { POINTS } from "../../config/points.js";
 import { redactPII, applyBlocklist } from "../../shared/security/index.js";
-import { capture as capturePosthog } from "../../shared/analytics/posthog.js";
+import { capture as captureAnalytics } from "../../shared/analytics/openpanel.js";
 import {
   canSendAiMessage,
   incrementAiUsage,
@@ -190,7 +190,7 @@ export async function runQuery(
     });
   } catch (err) {
     orchestrationOk = false;
-    capturePosthog(userId, "openai_request", {
+    captureAnalytics(userId, "openai_request", {
       route: "user_query",
       success: false,
       latency_ms: Date.now() - orchestrationStartedAt,
@@ -199,7 +199,7 @@ export async function runQuery(
     });
     throw err;
   }
-  capturePosthog(userId, "openai_request", {
+  captureAnalytics(userId, "openai_request", {
     route: "user_query",
     success: orchestrationOk,
     latency_ms: Date.now() - orchestrationStartedAt,
@@ -249,7 +249,7 @@ export async function importGuestConversation(
     });
   }
 
-  capturePosthog(userId, "guest_conversation_imported", {
+  captureAnalytics(userId, "guest_conversation_imported", {
     messages_count: messages.length,
     total_chars: totalChars,
     locale: locale ?? null,
@@ -280,7 +280,7 @@ export async function runGuestQuery(
     : GUEST_SYSTEM_PROMPT;
   const model = "gpt-4o";
   const startedAt = Date.now();
-  // PostHog distinctId for anonymous visitors: hashed IP is overkill for v0,
+  // Analytics distinctId for anonymous visitors: hashed IP is overkill for v0,
   // so we tag with a stable "guest" bucket plus the IP as a property. This
   // ties guest events back to per-IP rate-limit cohorts without minting fake
   // user identities.
@@ -310,7 +310,7 @@ export async function runGuestQuery(
       }
     }
 
-    capturePosthog(distinctId, "openai_request", {
+    captureAnalytics(distinctId, "openai_request", {
       route: "guest_query",
       model,
       success: true,
@@ -322,7 +322,7 @@ export async function runGuestQuery(
       message_length: sanitized.length,
     });
   } catch (err) {
-    capturePosthog(distinctId, "openai_request", {
+    captureAnalytics(distinctId, "openai_request", {
       route: "guest_query",
       model,
       success: false,

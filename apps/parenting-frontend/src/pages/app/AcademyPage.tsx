@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { usePostHog } from '@posthog/react';
+import { useAnalytics } from '../../lib/analytics';
 import { clsx } from 'clsx';
 import { useAuth } from '../../state/auth.js';
 import { learningApi } from '../../lib/appApi.js';
@@ -324,13 +324,13 @@ const RecommendedCard = ({
   accent: Accent;
 }) => {
   const { t } = useTranslation();
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
   const styles = ACCENT_STYLES[accent];
   const phaseCount = course.phases?.length ?? 0;
   return (
     <Link
       to={`/academy/${course.id}`}
-      onClick={() => posthog.capture('course_opened', { course_id: course.id, course_title: course.title, badge })}
+      onClick={() => analytics.capture('course_opened', { course_id: course.id, course_title: course.title, badge })}
       className={clsx(
         'group flex h-full flex-col rounded-2xl border border-border bg-surface p-4 transition-all hover:-translate-y-0.5 hover:shadow-md',
         styles.ring,
@@ -389,12 +389,12 @@ const RecommendedCard = ({
 
 const CompactCourseLink = ({ course }: { course: Course }) => {
   const { t } = useTranslation();
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
   const phaseCount = course.phases?.length ?? 0;
   return (
     <Link
       to={`/academy/${course.id}`}
-      onClick={() => posthog.capture('course_opened', { course_id: course.id, course_title: course.title })}
+      onClick={() => analytics.capture('course_opened', { course_id: course.id, course_title: course.title })}
       className="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 transition-colors hover:border-brand-blue/40 hover:bg-surface-light"
     >
       <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-pink/10 text-brand-pink">

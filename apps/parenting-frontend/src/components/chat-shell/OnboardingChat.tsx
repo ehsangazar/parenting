@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
-import { usePostHog } from '@posthog/react';
+import { useAnalytics } from '../../lib/analytics';
 import { api } from '../../lib/api.js';
 import { familiesApi } from '../../lib/appApi.js';
 import { useAuth } from '../../state/auth.js';
@@ -42,11 +42,11 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
   const { t } = useTranslation();
   const { setUser } = useAuth();
   const { refreshFamilies, setActiveFamilyId } = useAppContext();
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
 
   useEffect(() => {
-    posthog.capture('onboarding_started');
-  }, [posthog]);
+    analytics.capture('onboarding_started');
+  }, [analytics]);
 
   const ROLES = useMemo(
     () => [
@@ -100,7 +100,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
   const isPast = (s: Step) => STEP_ORDER.indexOf(step) > STEP_ORDER.indexOf(s);
 
   const advance = (next: Step) => {
-    posthog.capture('onboarding_step_completed', {
+    analytics.capture('onboarding_step_completed', {
       from_step: step,
       to_step: next,
     });
@@ -176,7 +176,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
 
       // Person-level properties so funnels and cohorts can filter on these.
       // Never send names; only counts and age buckets.
-      posthog.setPersonProperties({
+      analytics.setPersonProperties({
         role_in_household: role?.id ?? null,
         country: country?.code ?? null,
         kids_count: kids.length,
@@ -184,7 +184,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
         top_concerns: concerns,
         partner_invited: !!partnerEmail.trim(),
       });
-      posthog.capture('onboarding_completed', {
+      analytics.capture('onboarding_completed', {
         kids_count: kids.length,
         concerns_count: concerns.length,
         partner_invited: !!partnerEmail.trim(),
@@ -531,7 +531,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
                   type="button"
                   disabled={saving}
                   onClick={() => {
-                    posthog.capture('onboarding_suggestion_clicked', {
+                    analytics.capture('onboarding_suggestion_clicked', {
                       suggestion_index: idx,
                       kids_age_bucket: kids[0] ? ageBucket(kids[0].ageYears) : 'none',
                     });
@@ -546,7 +546,7 @@ export const OnboardingChat = ({ onComplete }: OnboardingChatProps) => {
                 type="button"
                 disabled={saving}
                 onClick={() => {
-                  posthog.capture('onboarding_no_suggestion_picked');
+                  analytics.capture('onboarding_no_suggestion_picked');
                   persistAndComplete();
                 }}
                 className="rounded-2xl px-4 py-3 text-center text-[14px] font-semibold text-text-secondary hover:text-text-primary disabled:opacity-50"

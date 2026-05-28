@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react';
 import { toast } from 'sonner';
-import { usePostHog } from '@posthog/react';
+import { useAnalytics } from '../../lib/analytics';
 import { api, parseApiError } from '../../lib/api.js';
 import { useAuth } from '../../state/auth.js';
 import { useNotificationStore } from '../../state/notification.js';
@@ -32,7 +32,7 @@ type AuthChatProps = {
 
 export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
   const { t, i18n } = useTranslation();
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const next = searchParams.get('next') || '/';
@@ -98,8 +98,8 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
         setToken(res.data.token);
         const userRes = await api.get('/api/identity/me');
         setUser(userRes.data.user);
-        posthog.identify(userRes.data.user.id, { email: userRes.data.user.email });
-        posthog.capture('user_logged_in_with_google', { email: userRes.data.user.email });
+        analytics.identify(userRes.data.user.id, { email: userRes.data.user.email });
+        analytics.capture('user_logged_in_with_google', { email: userRes.data.user.email });
         navigate(next);
       } catch (err: unknown) {
         const status = (err as { response?: { status?: number } })?.response?.status;
@@ -109,7 +109,7 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
         setIsGoogleLoading(false);
       }
     },
-    [navigate, setToken, setUser, t, next, posthog],
+    [navigate, setToken, setUser, t, next, analytics],
   );
 
   // Render the Google Identity Services button into the bubble slot whenever
@@ -207,7 +207,7 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
           email: trimmedEmail,
           password,
         });
-        posthog.capture('user_signed_up', { email: trimmedEmail });
+        analytics.capture('user_signed_up', { email: trimmedEmail });
         token = signupRes.data?.token;
       }
       if (!token) {
@@ -221,8 +221,8 @@ export const AuthChat = ({ initialMode = 'login', onClose }: AuthChatProps) => {
       setToken(token);
       const userRes = await api.get('/api/identity/me');
       setUser(userRes.data.user);
-      posthog.identify(userRes.data.user.id, { email: userRes.data.user.email });
-      posthog.capture(mode === 'signup' ? 'user_logged_in_after_signup' : 'user_logged_in', {
+      analytics.identify(userRes.data.user.id, { email: userRes.data.user.email });
+      analytics.capture(mode === 'signup' ? 'user_logged_in_after_signup' : 'user_logged_in', {
         email: userRes.data.user.email,
       });
       navigate(next);

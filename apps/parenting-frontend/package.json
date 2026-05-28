@@ -16,9 +16,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@openpanel/web": "^1.0.0",
     "@parenting/shared": "workspace:*",
     "@parenting/ui": "workspace:*",
-    "@posthog/react": "^1.9.0",
     "@sentry/react": "^10.39.0",
     "@types/react-helmet-async": "^1.0.1",
     "axios": "^1.7.7",
@@ -31,7 +31,6 @@
     "lucide-react": "^1.16.0",
     "nodemailer": "7.0.12",
     "pdfjs-dist": "^3.11.174",
-    "posthog-js": "^1.246.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-helmet-async": "^2.0.5",

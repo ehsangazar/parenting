@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
-import { usePostHog } from '@posthog/react';
+import { useAnalytics } from '../../lib/analytics';
 import { Icon, type AnyIconName } from '../icons/index.js';
 import { appAssetIcons } from '../../lib/appAssetIcons.js';
 import { uiIcons } from '../../lib/iconSemantics.js';
@@ -346,7 +346,7 @@ function NavCardsRow({ cards }: { cards: NavCard[] }) {
 
 export const ChatPanel = () => {
   const { t, i18n } = useTranslation();
-  const posthog = usePostHog();
+  const analytics = useAnalytics();
   const navigate = useNavigate();
   const { token, user } = useAuth();
   const { activeFamily } = useAppContext();
@@ -523,13 +523,13 @@ export const ChatPanel = () => {
         } catch {
           // localStorage unavailable; non-fatal.
         }
-        posthog.capture('guest_send_after_wall', { message_length: message.length });
+        analytics.capture('guest_send_after_wall', { message_length: message.length });
         sendingRef.current = false;
         openAuth('login');
         return;
       }
 
-      posthog.capture('guest_send_clicked', {
+      analytics.capture('guest_send_clicked', {
         message_length: message.length,
         locale: i18n.language,
       });
@@ -559,7 +559,7 @@ export const ChatPanel = () => {
         });
 
         if (response.status === 429) {
-          posthog.capture('guest_answer_rate_limited');
+          analytics.capture('guest_answer_rate_limited');
           throw new Error(t('chatPage.guestRateLimited', 'Too many free questions, sign in to keep going.'));
         }
         if (!response.ok) throw new Error(`Server ${response.status}`);
@@ -625,7 +625,7 @@ export const ChatPanel = () => {
         if (hasContent) {
           sessionStorage.setItem('guestTurnUsed', '1');
           setGuestUsedTurn(true);
-          posthog.capture('guest_answer_completed');
+          analytics.capture('guest_answer_completed');
           // Persist the conversation now (not only on the explicit "Sign in"
           // click) so it survives any path to AuthChat: URL bar, /login link,
           // the auto-bounce after a second guest send, or a tab reload.
@@ -672,7 +672,7 @@ export const ChatPanel = () => {
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-    posthog.capture('chat_message_sent', {
+    analytics.capture('chat_message_sent', {
       message_length: message.length,
       has_active_child: !!activeChild,
     });
@@ -907,21 +907,21 @@ export const ChatPanel = () => {
       if (guestMessages.length > 0) {
         localStorage.setItem('guestConversation', JSON.stringify(guestMessages));
       }
-      posthog.capture('guest_signin_from_wall_clicked', {
+      analytics.capture('guest_signin_from_wall_clicked', {
         messages_count: guestMessages.length,
       });
     } catch {
       // localStorage unavailable; non-fatal.
     }
     openAuth('login');
-  }, [messages, posthog, openAuth]);
+  }, [messages, analytics, openAuth]);
 
   // Fire once when the conversion wall first appears for this session.
   useEffect(() => {
     if (!token && guestUsedTurn) {
-      posthog.capture('guest_wall_seen');
+      analytics.capture('guest_wall_seen');
     }
-  }, [token, guestUsedTurn, posthog]);
+  }, [token, guestUsedTurn, analytics]);
 
   // After login, replay any pending draft saved before the login redirect AND
   // rehydrate the local guest conversation as a real server-side thread so the
@@ -956,7 +956,7 @@ export const ChatPanel = () => {
         // Surface bubbles immediately so the user doesn't see an empty chat
         // while the import POST is in flight.
         if (!cancelled) setMessages(restored);
-        posthog.capture('guest_conversation_rehydrated_after_signin', {
+        analytics.capture('guest_conversation_rehydrated_after_signin', {
           messages_count: restored.length,
         });
 
@@ -968,7 +968,7 @@ export const ChatPanel = () => {
           if (cancelled) return;
           setActiveConversationId(res.conversationId);
           localStorage.removeItem('guestConversation');
-          posthog.capture('guest_conversation_imported', {
+          analytics.capture('guest_conversation_imported', {
             messages_count: rawGuest.length,
             conversation_id: res.conversationId,
           });
@@ -976,7 +976,7 @@ export const ChatPanel = () => {
           // Import failed (network/server). Keep the localStorage entry so the
           // next mount can retry; the in-memory rehydrate still lets the user
           // see their history this session.
-          posthog.capture('guest_conversation_import_failed', {
+          analytics.capture('guest_conversation_import_failed', {
             message: (err as Error)?.message?.slice(0, 200) ?? 'unknown',
           });
         }
@@ -992,7 +992,7 @@ export const ChatPanel = () => {
       const pending = localStorage.getItem('pendingChatMessage');
       if (pending) {
         localStorage.removeItem('pendingChatMessage');
-        posthog.capture('pending_message_replayed_after_signin', {
+        analytics.capture('pending_message_replayed_after_signin', {
           message_length: pending.length,
         });
         if (!cancelled) void handleSend(pending);
@@ -1197,8 +1197,8 @@ export const ChatPanel = () => {
                   onClick={() => switchChild(child.id)}
                   className={`flex-shrink-0 rounded-full px-3 py-1.5 min-h-0 text-[13px] font-semibold transition-colors whitespace-nowrap ${
                     activeChildId === child.id
-                      ? 'bg-brand-blue text-white'
-                      : 'bg-surface-light border border-border text-text-primary hover:border-brand-blue/40'
+                      ? 'bg-brand-blue text-white border border-brand-blue'
+                      : 'bg-surface-light border border-text-tertiary/30 text-text-primary hover:border-brand-blue/40'
                   }`}
                 >
                   {child.name}{child.age !== null ? ` · ${child.age}${t('chatPage.yearsShort')}` : ''}
@@ -1269,10 +1269,10 @@ export const ChatPanel = () => {
                     type="button"
                     onClick={() => handleSend()}
                     disabled={!input.trim()}
-                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-brand-blue px-4 text-[14px] font-bold text-white shadow-sm transition-colors hover:bg-accent-blueHover disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-blue"
+                    className="mb-1 ml-2 inline-flex h-11 min-h-0 flex-shrink-0 items-center gap-1.5 rounded-full bg-brand-blue px-4 text-[14px] font-bold text-white shadow-sm transition-colors hover:bg-accent-blueHover disabled:cursor-not-allowed disabled:bg-surface-light disabled:text-text-tertiary disabled:border disabled:border-border disabled:shadow-none disabled:hover:bg-surface-light"
                   >
                     {t('chatPage.send')}
-                    <Icon name={uiIcons.send} className="h-4 w-4 object-contain brightness-0 invert" alt="" />
+                    <Icon name={uiIcons.send} className={`h-4 w-4 object-contain ${input.trim() ? 'brightness-0 invert' : ''}`} alt="" />
                   </button>
                 )}
               </div>
