@@ -5,6 +5,8 @@ let client: PostHog | null = null;
 
 function getClient(): PostHog | null {
   if (!env.POSTHOG_API_KEY) return null;
+  // Skip PostHog outside production so local dev doesn't pollute analytics.
+  if (env.NODE_ENV !== "production") return null;
   if (!client) {
     client = new PostHog(env.POSTHOG_API_KEY, {
       host: env.POSTHOG_HOST ?? "https://us.i.posthog.com",

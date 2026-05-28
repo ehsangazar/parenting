@@ -56,7 +56,10 @@ const hasAnalyticsConsent: boolean = (() => {
   }
 })();
 
-if (import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN) {
+// Skip PostHog entirely on localhost so dev traffic doesn't pollute analytics.
+const isLocalhost = typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
+
+if (import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN && !isLocalhost) {
   posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN, {
     api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
     defaults: '2026-01-30',
